@@ -35,6 +35,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+            // Token is undefined?
+            System.out.println("The token in JwtFilter " + token);
             username = jwtService.extractUserName(token);
         }
 
@@ -51,3 +53,4 @@ public class JwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
+

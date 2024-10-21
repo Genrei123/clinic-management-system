@@ -63,6 +63,8 @@ public class JWTService {
     }
 
     private Claims extractAllClaims(String token) {
+
+        System.out.println("The token is: " + token);
         return Jwts.parser()
                 .verifyWith(getKey())
                 .build()
