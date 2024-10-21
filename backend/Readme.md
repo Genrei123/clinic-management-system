@@ -150,5 +150,3 @@ Ensure you have the following dependencies in your `pom.xml`:
 This project is licensed under the MIT License.
 
 ---
-
-Feel free to modify this documentation to better fit your project's specifics.
