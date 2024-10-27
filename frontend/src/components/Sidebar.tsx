@@ -1,10 +1,29 @@
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+import logo from '../assets/logo.svg';
+
 const Sidebar = () => {
+    const navigate = useNavigate();
+
+    const token = localStorage.getItem("token");
+    const decoded:string = jwtDecode(token!);
+
+    const username = decoded.sub.toString();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/');
+    }
+    
+
     return (
         <>
             <div className="flex h-screen flex-col justify-between border-e bg-white">
                 <div className="px-4 py-6">
-                    <span className="grid h-10 w-32 place-content-center rounded-lg bg-gray-100 text-xs text-gray-600">
-                    Logo
+                    
+
+                    <span className="grid h-32 w-32 place-content-center rounded-lg bg-gray-100 text-xs text-gray-600">
+                        <img src={logo} alt="logo" />
                     </span>
 
                     <ul className="mt-6 space-y-1">
@@ -13,7 +32,7 @@ const Sidebar = () => {
                         href="#"
                         className="block rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
                         >
-                        General
+                        Home
                         </a>
                     </li>
 
@@ -22,7 +41,7 @@ const Sidebar = () => {
                         <summary
                             className="flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                         >
-                            <span className="text-sm font-medium"> Teams </span>
+                            <span className="text-sm font-medium"> Patient </span>
 
                             <span className="shrink-0 transition duration-300 group-open:-rotate-180">
                             <svg
@@ -67,7 +86,7 @@ const Sidebar = () => {
                         href="#"
                         className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                         >
-                        Billing
+                        Inventory
                         </a>
                     </li>
 
@@ -76,7 +95,16 @@ const Sidebar = () => {
                         href="#"
                         className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                         >
-                        Invoices
+                        Employee
+                        </a>
+                    </li>
+
+                    <li>
+                        <a
+                        href="#"
+                        className="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                        >
+                        Report
                         </a>
                     </li>
 
@@ -127,6 +155,7 @@ const Sidebar = () => {
                                 <button
                                 type="submit"
                                 className="w-full rounded-lg px-4 py-2 text-sm font-medium text-gray-500 [text-align:_inherit] hover:bg-gray-100 hover:text-gray-700"
+                                onClick = { handleLogout }
                                 >
                                 Logout
                                 </button>
@@ -148,9 +177,8 @@ const Sidebar = () => {
 
                     <div>
                         <p className="text-xs">
-                        <strong className="block font-medium">Eric Frusciante</strong>
-
-                        <span> eric@frusciante.com </span>
+                        <strong className="block font-medium">{ username }</strong>
+                        <span> Lorem ipsum </span>
                         </p>
                     </div>
                     </a>
