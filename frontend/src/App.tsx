@@ -1,9 +1,17 @@
-import ListGroup from './components/ListGroup';
-import LoginForm from './components/LoginForm';
-
+import LoginForm from './pages/LoginForm';
+import Home from './pages/Home';
+import { Route, Routes } from 'react-router-dom';
 
 function App() {
-  return <div><LoginForm/></div>
+  
+  return (
+    <>
+        <Routes>
+          <Route path = "/" element = {<LoginForm/>} />
+          <Route path = "/home" element = {<Home/>} />
+        </Routes>
+    </>
+  );
 }
 
 export default App;
