@@ -50,13 +50,20 @@ public class UsersService {
 
     public Users updateUserByUsername(String username, Users userDetails) {
         Users existingUser = userRepo.findByUsername(username);
+
         if (existingUser != null) {
             existingUser.setUsername(userDetails.getUsername());
-            existingUser.setPassword(userDetails.getPassword());
+
+            if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+                String encryptedPassword = new BCryptPasswordEncoder().encode(userDetails.getPassword());
+                existingUser.setPassword(encryptedPassword);
+            }
+
             return userRepo.save(existingUser);
         }
         return null;
     }
+
 
     public boolean deleteUserByUsername(String username) {
         Users existingUser = userRepo.findByUsername(username);
