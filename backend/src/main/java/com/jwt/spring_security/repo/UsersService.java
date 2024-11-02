@@ -42,4 +42,28 @@ public class UsersService {
             return "User Not Authenticated";
         }
     }
+
+    public Users findByUsername(String username) {
+        return userRepo.findByUsername(username);
+    }
+
+
+    public Users updateUserByUsername(String username, Users userDetails) {
+        Users existingUser = userRepo.findByUsername(username);
+        if (existingUser != null) {
+            existingUser.setUsername(userDetails.getUsername());
+            existingUser.setPassword(userDetails.getPassword());
+            return userRepo.save(existingUser);
+        }
+        return null;
+    }
+
+    public boolean deleteUserByUsername(String username) {
+        Users existingUser = userRepo.findByUsername(username);
+        if (existingUser != null) {
+            userRepo.delete(existingUser);
+            return true;
+        }
+        return false;
+    }
 }
