@@ -1,56 +1,68 @@
 package com.jwt.spring_security.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Date;
 
 @Entity
 public class Item {
     @Id
-    private Long id;
-    private String name;
-    private String description;
-    private Long quantity;
-    private Date exp_date;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long itemID;
+    private String itemName;
+    private String itemDescription;
+    private Long itemQuantity;
+    private Date expDate;
 
-    public Long getId() {
-        return id;
+    @ManyToOne
+    @JoinColumn(name = "branchID", referencedColumnName = "branchID")
+    private Branch branch;
+
+    public Long getItemID() {
+        return itemID;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setItemID(Long itemID) {
+        this.itemID = itemID;
     }
 
-    public String getName() {
-        return name;
+    public String getItemName() {
+        return itemName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setItemName(String itemName) {
+        this.itemName = itemName;
     }
 
-    public String getDescription() {
-        return description;
+    public String getItemDescription() {
+        return itemDescription;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setItemDescription(String itemDescription) {
+        this.itemDescription = itemDescription;
     }
 
-    public Long getQuantity() {
-        return quantity;
+    public Long getItemQuantity() {
+        return itemQuantity;
     }
 
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
+    public void setItemQuantity(Long itemQuantity) {
+        this.itemQuantity = itemQuantity;
     }
 
-    public Date getExp_date() {
-        return exp_date;
+    public Date getExpDate() {
+        return expDate;
     }
 
-    public void setExp_date(Date exp_date) {
-        this.exp_date = exp_date;
+    public void setExpDate(Date expDate) {
+        this.expDate = expDate;
+    }
+
+    public Branch getBranch() {
+        return branch;
+    }
+
+    public void setBranch(Branch branch) {
+        this.branch = branch;
     }
 }
