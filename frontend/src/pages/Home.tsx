@@ -5,8 +5,8 @@ import { jwtDecode } from 'jwt-decode';
 
 function Home () {
 
-    const token = localStorage.getItem("token");
-    const decoded:string = jwtDecode(token!);
+    // const token = localStorage.getItem("token");
+    // const decoded:string = jwtDecode(token!);
     
     return (
         <div className="flex h-screen">

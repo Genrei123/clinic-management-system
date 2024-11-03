@@ -5,10 +5,10 @@ import logo from '../assets/logo.svg';
 const Sidebar = () => {
     const navigate = useNavigate();
 
-    const token = localStorage.getItem("token");
-    const decoded:string = jwtDecode(token!);
+    // const token = localStorage.getItem("token");
+    // const decoded:string = jwtDecode(token!);
 
-    const username = decoded.sub.toString();
+    // const username = decoded.sub.toString();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -177,7 +177,7 @@ const Sidebar = () => {
 
                     <div>
                         <p className="text-xs">
-                        <strong className="block font-medium">{ username }</strong>
+                        <strong className="block font-medium">username</strong>
                         <span> Lorem ipsum </span>
                         </p>
                     </div>
