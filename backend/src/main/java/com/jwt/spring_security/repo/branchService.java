@@ -12,4 +12,17 @@ public class branchService {
     public Branch findBranch(Long id) {
         return branchRepo.findByBranchID(id);
     }
+
+    public Branch saveBranch(Branch branch) {
+        return branch;
+    }
+
+    public boolean deleteByBranchID(Long id) {
+        if (branchRepo.existsById(id)) {
+            branchRepo.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
 }

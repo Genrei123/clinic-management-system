@@ -29,4 +29,9 @@ public class Branch {
     public String getBranchContact() {
         return branchContact;
     }
+
+    public void setBranchID(Long branchID) {
+        this.branchID = branchID;
+    }
+
 }
