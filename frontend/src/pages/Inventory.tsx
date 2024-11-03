@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../components/Sidebar'; // Ensure this is the correct path
 import './inventory.css'; // Ensure to import your CSS file
 
 const Inventory: React.FC = () => {
@@ -8,7 +8,6 @@ const Inventory: React.FC = () => {
         { id: 2, name: 'Vitamin B', quantity: 5, price: 5.0, expirationDate: '2024-12-15', colorClass: 'green' },
         { id: 3, name: 'Vitamin C', quantity: 20, price: 1.75, expirationDate: '2023-11-30', colorClass: 'blue' },
         { id: 4, name: 'Antibiotic', quantity: 15, price: 3.0, expirationDate: '2024-05-10', colorClass: 'orange' },
-        // Add more items as needed
         { id: 5, name: 'Item 5', quantity: 8, price: 4.0, expirationDate: '2023-09-25', colorClass: 'purple' },
         { id: 6, name: 'Item 6', quantity: 12, price: 6.5, expirationDate: '2024-03-20', colorClass: 'yellow' },
     ];
@@ -27,11 +26,11 @@ const Inventory: React.FC = () => {
     return (
         <div className="flex h-screen">
             <Sidebar />
-            <div className="flex-1 p-6">
+            <div className="flex-1 p-6 bg-gray-50">
                 <h1 className="text-2xl font-bold">Inventory</h1>
 
                 {/* Search Bar Container */}
-                <div className="search-container">
+                <div className="search-container mb-4">
                     <span className="search-icon">🔍</span>
                     <input
                         type="text"
@@ -44,7 +43,7 @@ const Inventory: React.FC = () => {
 
                 {/* Large Frame Rectangle */}
                 <div className="inventory-frame">
-                <h1 className="inventory-heading text-2xl font-bold">MEDICINE</h1>
+                    <h1 className="inventory-heading text-2xl font-bold">MEDICINE</h1>
                     <ul className="mt-2">
                         {filteredItems.map(item => (
                             <li key={item.id} className={`inventory-item ${item.colorClass}`}>
