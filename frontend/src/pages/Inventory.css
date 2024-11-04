@@ -1,0 +1,80 @@
+/* inventory.css */
+
+/* Style for the inventory frame */
+.inventory-frame {
+    border: 2px solid #ccc; /* Border for the frame */
+    padding: 16px; /* Padding inside the frame */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #fff; /* Background color */
+    margin-top: 20px; /* Space above the frame */
+    max-width: 1500px; /* Maximum width of the frame */
+}
+
+/* Style for individual inventory items */
+.inventory-item {
+    margin: 10px 0; /* Space between items */
+}
+
+/* General item container styling */
+.item-container {
+    padding: 10px; /* Padding around item content */
+    border: 1px solid transparent; /* Default border */
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Flexbox for item details */
+.item-details {
+    display: flex; /* Use flexbox for horizontal layout */
+    justify-content: space-between; /* Space items evenly */
+    align-items: center; /* Center items vertically */
+}
+
+/* Example color classes for items */
+.red {
+    border-color: #84c3eb;
+}
+.green {
+    border-color: #84c3eb;
+}
+.blue {
+    border-color: #84c3eb;
+}
+.orange {
+    border-color: #84c3eb;
+}
+.purple {
+    border-color: #84c3eb;
+}
+.yellow {
+    border-color: #84c3eb;
+}
+
+/* Style for item name */
+.item-name {
+    font-weight: bold; /* Bold item name */
+    flex: 1; /* Allow name to grow */
+}
+
+/* Style for item quantity, price, and expiration */
+.item-quantity,
+.item-price,
+.item-expiration {
+    margin-left: 10px; /* Space between each detail */
+    font-size: 0.875rem; /* Smaller text for details */
+    color: #666; /* Gray color for less prominence */
+}
+
+/* Search bar styles */
+.search-container {
+    display: flex; /* Flexbox for search container */
+    align-items: center; /* Center items vertically */
+    margin-bottom: 20px; /* Space below the search bar */
+}
+
+.search-bar {
+    margin-left: 10px; /* Space between icon and input */
+    padding: 8px; /* Padding for input */
+    border: 1px solid #ccc; /* Border for input */
+    border-radius: 4px; /* Rounded corners for input */
+    flex-grow: 1; /* Input takes remaining space */
+}

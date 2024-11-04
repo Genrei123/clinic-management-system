@@ -12,26 +12,29 @@ function LoginForm() {
   const handleSubmit = (e: any) => {
     e.preventDefault();
 
-    axios
-      .post("http://localhost:8080/login", {
-        username: e.target.username.value,
-        password: e.target.password.value,
-      })
-      .then((response) => {
-        if (response.data.token != null) {
-          console.log("Success!");
-          localStorage.setItem("token", response.data.token);
+    // axios
+    //   .post("http://localhost:8080/login", {
+    //     username: e.target.username.value,
+    //     password: e.target.password.value,
+    //   })
+    //   .then((response) => {
+    //     if (response.data.token != null) {
+    //       console.log("Success!");
+    //       localStorage.setItem("token", response.data.token);
 
-          const token = localStorage.getItem("token");
-          const decoded = jwtDecode(token!);
-          console.log(decoded);
+    //       const token = localStorage.getItem("token");
+    //       const decoded = jwtDecode(token!);
+    //       console.log(decoded);
 
-          navigate("/home");
-        }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    //       navigate("/home");
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
+
+    navigate("/home");
+    
   };
 
   return (

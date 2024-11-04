@@ -1,24 +1,22 @@
-import Navbar from '../components/Navbar';
+import React from 'react';
 import Sidebar from '../components/Sidebar';
-import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
+const Home: React.FC = () => {
+    const navigate = useNavigate();
 
-function Home () {
-
-    const token = localStorage.getItem("token");
-    const decoded:string = jwtDecode(token!);
-    
     return (
         <div className="flex h-screen">
             <Sidebar />
-
             <div className="flex-1 p-6">
                 <h1>Home Content</h1>
                 <p>This is the main content area on the right.</p>
+                <button onClick={() => navigate('/inventory')} className="mt-4 p-2 bg-blue-500 text-white rounded">
+                    Go to Inventory
+                </button>
             </div>
         </div>
     );
-
-}
+};
 
 export default Home;

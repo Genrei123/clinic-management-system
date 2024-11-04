@@ -1,17 +1,35 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './pages/LoginForm';
-import Home from './pages/Home';
-import { Route, Routes } from 'react-router-dom';
+import HomePage from './pages/Home';
+import Inventory from './pages/Inventory';
+import Employee from './pages/Employee';
+import BannedUsers from './pages/BannedUsers';
+import Calendar from './pages/Calendar';
+import Report from './pages/Report';
+import AccountDetails from './pages/AccountDetails';
+import AccountSecurity from './pages/AccountSecurity';
 
-function App() {
-  
-  return (
-    <>
-        <Routes>
-          <Route path = "/" element = {<LoginForm/>} />
-          <Route path = "/home" element = {<Home/>} />
-        </Routes>
-    </>
-  );
-}
+const App: React.FC = () => {
+    return (
+        <Router>
+            <div className="flex h-screen">
+                <div className="flex-1 p-4">
+                    <Routes>
+                        <Route path="/" element={<LoginForm />} />
+                        <Route path="/home" element={<HomePage />} />
+                        <Route path="/inventory" element={<Inventory />} />
+                        <Route path="/employees" element={<Employee />} />
+                        <Route path="/patients/banned-users" element={<BannedUsers />} />
+                        <Route path="/patients/calendar" element={<Calendar />} />
+                        <Route path="/reports" element={<Report />} />
+                        <Route path="/account/details" element={<AccountDetails />} />
+                        <Route path="/account/security" element={<AccountSecurity />} />
+                    </Routes>
+                </div>
+            </div>
+        </Router>
+    );
+};
 
 export default App;
