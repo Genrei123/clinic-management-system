@@ -1,8 +1,8 @@
-package com.jwt.spring_security.repo;
+package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Employee;
+import com.jwt.spring_security.repo.EmployeeRepo;
 import com.jwt.spring_security.util.Constants;
-import com.jwt.spring_security.service.JWTService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

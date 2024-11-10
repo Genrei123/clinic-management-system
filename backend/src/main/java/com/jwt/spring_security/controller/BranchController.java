@@ -2,6 +2,8 @@ package com.jwt.spring_security.controller;
 
 import com.jwt.spring_security.model.Branch;
 import java.util.List;
+
+import com.jwt.spring_security.service.BranchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class BranchController {
     @Autowired
-    private com.jwt.spring_security.repo.branchService branchService;
+    private BranchService branchService;
     @Autowired
     private com.jwt.spring_security.repo.branchRepo branchRepo;
 

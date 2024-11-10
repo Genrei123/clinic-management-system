@@ -11,7 +11,7 @@ public class Spouse {
     private Long spouse_id;
 
     @OneToOne
-    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
+    @JoinColumn(name = "clientID", referencedColumnName = "clientID")
     private Patient patient;
 
     private String spouse_name;

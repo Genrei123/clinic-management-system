@@ -1,7 +1,8 @@
 package com.jwt.spring_security.controller;
 
 import com.jwt.spring_security.model.Users;
-import com.jwt.spring_security.repo.UsersService;
+import com.jwt.spring_security.response.UserResponse;
+import com.jwt.spring_security.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

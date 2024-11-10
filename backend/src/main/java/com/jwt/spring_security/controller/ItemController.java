@@ -3,10 +3,9 @@ package com.jwt.spring_security.controller;
 import com.jwt.spring_security.model.Branch;
 import com.jwt.spring_security.model.Item;
 import com.jwt.spring_security.repo.ItemRepo;
-import com.jwt.spring_security.repo.ItemService;
-import com.jwt.spring_security.repo.branchService;
+import com.jwt.spring_security.service.ItemService;
+import com.jwt.spring_security.service.BranchService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -22,7 +21,7 @@ public class ItemController {
     private ItemService itemService;
 
     @Autowired
-    private branchService branchService;
+    private BranchService branchService;
     @Autowired
     private com.jwt.spring_security.repo.branchRepo branchRepo;
 

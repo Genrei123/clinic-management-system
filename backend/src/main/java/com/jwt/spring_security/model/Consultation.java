@@ -10,7 +10,7 @@ public class Consultation {
     @Id
     private Long consultation_id;
     @OneToOne
-    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
+    @JoinColumn(name = "clientID", referencedColumnName = "clientID")
     private Patient patient;
     private String consultation_date;
     private int AOG;
