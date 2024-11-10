@@ -37,11 +37,15 @@ public class UsersService {
                 authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
         if (authentication.isAuthenticated()) {
+            String encryptedPassword = new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(user.getPassword());
+            user.setPassword(encryptedPassword);
             return jwtService.generateToken(user.getUsername());
         } else {
             return "User Not Authenticated";
         }
     }
+
+
 
     public Users findByUsername(String username) {
         return userRepo.findByUsername(username);
