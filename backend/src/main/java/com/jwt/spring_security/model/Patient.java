@@ -20,6 +20,15 @@ public class Patient  {
     private String religion;
     private String occupation;
     private Date lastDelivery;
+    private String philhealthID;
+
+    public String getPhilhealthID() {
+        return philhealthID;
+    }
+
+    public void setPhilhealthID(String philhealthID) {
+        this.philhealthID = philhealthID;
+    }
 
     public Long getClientID() {
         return clientID;

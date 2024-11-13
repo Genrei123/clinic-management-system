@@ -1,5 +1,6 @@
 package com.jwt.spring_security.controller;
 
+import com.jwt.spring_security.model.Item;
 import com.jwt.spring_security.model.Patient;
 import com.jwt.spring_security.repo.PatientRepo;
 import org.apache.coyote.Response;
@@ -33,6 +34,11 @@ public class PatientController {
     @GetMapping("/getPatient/{id}")
     public Optional<Patient> getPatient(@RequestBody Long id) {
         return patientRepo.findById(id);
+    }
+
+    @PatchMapping("/updatePatient")
+    public Patient updatePatient(@RequestBody Patient patient) {
+        return patientRepo.save(patient);
     }
 
     @DeleteMapping("/deletePatient/{id}")
