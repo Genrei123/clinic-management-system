@@ -1,5 +1,6 @@
 package com.jwt.spring_security.service;
 
+import com.jwt.spring_security.model.Patient;
 import com.jwt.spring_security.repo.PatientRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,4 +19,7 @@ public class PatientService {
     }
 
 
+    public Patient findById(Long patientId) {
+        return patientRepo.findById(patientId).orElse(null);
+    }
 }

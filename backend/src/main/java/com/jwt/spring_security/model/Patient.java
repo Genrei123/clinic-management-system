@@ -1,8 +1,6 @@
 package com.jwt.spring_security.model;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import java.util.Date;
@@ -10,7 +8,7 @@ import java.util.Date;
 @Entity
 public class Patient  {
     @Id
-    private Long clientID;
+    private Long clientID;  // The unique ID of the patient
     private String lastName;
     private String givenName;
     private Character middleInitial;
@@ -22,20 +20,14 @@ public class Patient  {
     private Date lastDelivery;
     private String philhealthID;
 
-    public String getPhilhealthID() {
-        return philhealthID;
-    }
-
-    public void setPhilhealthID(String philhealthID) {
-        this.philhealthID = philhealthID;
-    }
+    // Getters and Setters
 
     public Long getClientID() {
-        return clientID;
+        return clientID;  // Return the clientID (patient's ID)
     }
 
     public void setClientID(Long clientID) {
-        this.clientID = clientID;
+        this.clientID = clientID;  // Set the clientID (patient's ID)
     }
 
     public String getLastName() {
@@ -109,4 +101,25 @@ public class Patient  {
     public void setLastDelivery(Date lastDelivery) {
         this.lastDelivery = lastDelivery;
     }
+
+    public String getPhilhealthID() {
+        return philhealthID;
+    }
+
+    public void setPhilhealthID(String philhealthID) {
+        this.philhealthID = philhealthID;
+    }
+
+
+    public Long getId() {
+        return this.clientID;  // Return the unique patient ID
+    }
+
+    public String getName() {
+        String fullName = givenName + " " + (middleInitial != null ? middleInitial + ". " : "") + lastName;
+        return fullName;
+    }
+
+
+
 }
