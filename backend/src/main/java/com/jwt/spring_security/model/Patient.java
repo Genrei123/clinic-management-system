@@ -1,7 +1,7 @@
 package com.jwt.spring_security.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
 
 import java.util.Date;
 
@@ -120,6 +120,15 @@ public class Patient  {
         return fullName;
     }
 
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private Spouse spouse;  // Optional: Not all patients will have a spouse
 
+    public Spouse getSpouse() {
+        return spouse;  // Returns the spouse, or null if not set
+    }
 
+    public void setSpouse(Spouse spouse) {
+        this.spouse = spouse;
+    }
 }

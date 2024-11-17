@@ -2,6 +2,7 @@ package com.jwt.spring_security.controller;
 
 import com.jwt.spring_security.model.Item;
 import com.jwt.spring_security.model.Patient;
+import com.jwt.spring_security.model.Spouse;
 import com.jwt.spring_security.repo.PatientRepo;
 import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,12 @@ public class PatientController {
 
     @PostMapping("/addPatient")
     public Patient addPatient(@RequestBody Patient patient) {
-        return patientRepo.save(patient);
+        // If spouse data is provided, ensure it's properly linked to the patient
+        if (patient.getSpouse() != null) {
+            Spouse spouse = patient.getSpouse();
+            spouse.setPatient(patient);  // Set the patient for the spouse
+        }
+        return patientRepo.save(patient);  // Save patient and cascade to save spouse
     }
 
     @GetMapping("/getPatient")
