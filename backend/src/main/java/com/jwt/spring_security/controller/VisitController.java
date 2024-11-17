@@ -19,7 +19,7 @@ public class VisitController {
     @Autowired
     private VisitRepository visitRepository;
 
-    @PostMapping("/addPatient")
+    @PostMapping("/addPatientLog")
     public ResponseEntity<String> addVisit(@RequestParam Long patientId, @RequestParam String purpose) {
         try {
             // Fetch the patient by ID
