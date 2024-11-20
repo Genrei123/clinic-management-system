@@ -16,4 +16,6 @@ public class SpringSecurityApplication {
 		return "home";
 	}
 
+	// Test command to check
+
 }
