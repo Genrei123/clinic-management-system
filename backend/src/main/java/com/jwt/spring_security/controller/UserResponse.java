@@ -1,4 +1,4 @@
-package com.jwt.spring_security.response;
+package com.jwt.spring_security.controller;
 
 
 import com.jwt.spring_security.model.Users;
