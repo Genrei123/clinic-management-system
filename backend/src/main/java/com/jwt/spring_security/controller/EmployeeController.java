@@ -2,7 +2,7 @@ package com.jwt.spring_security.controller;
 
 import com.jwt.spring_security.model.Employee;
 import com.jwt.spring_security.repo.EmployeeRepo;
-import com.jwt.spring_security.repo.EmployeeService;
+import com.jwt.spring_security.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

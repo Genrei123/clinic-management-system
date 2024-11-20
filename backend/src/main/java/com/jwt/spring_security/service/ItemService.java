@@ -1,10 +1,9 @@
-package com.jwt.spring_security.repo;
+package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Item;
+import com.jwt.spring_security.repo.ItemRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
 
 @Service
 public class ItemService {

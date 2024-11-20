@@ -1,13 +1,13 @@
-package com.jwt.spring_security.repo;
+package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Branch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class branchService {
+public class BranchService {
     @Autowired
-    branchRepo branchRepo;
+    com.jwt.spring_security.repo.branchRepo branchRepo;
 
     public Branch findBranch(Long id) {
         return branchRepo.findByBranchID(id);

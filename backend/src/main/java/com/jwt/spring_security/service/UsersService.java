@@ -1,7 +1,7 @@
-package com.jwt.spring_security.repo;
+package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Users;
-import com.jwt.spring_security.service.JWTService;
+import com.jwt.spring_security.repo.UserRepo;
 import com.jwt.spring_security.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
