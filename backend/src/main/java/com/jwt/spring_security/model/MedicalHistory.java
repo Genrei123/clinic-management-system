@@ -11,7 +11,7 @@ public class MedicalHistory {
     private Long medical_history_id;
 
     @OneToOne
-    @JoinColumn(name = "clientID", referencedColumnName = "clientID")
+    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private Patient patient;
 
     private boolean smoking;

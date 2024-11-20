@@ -13,7 +13,7 @@ public class Pregnancy {
     private Long pregnancy_id;
 
     @OneToOne
-    @JoinColumn(name = "clientID", referencedColumnName = "clientID")
+    @JoinColumn(name = "client_id", referencedColumnName = "client_id")
     private Patient patient;
 
     private int gravida;
