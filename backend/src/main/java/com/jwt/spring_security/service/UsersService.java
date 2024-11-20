@@ -1,7 +1,7 @@
-package com.jwt.spring_security.repo;
+package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Users;
-import com.jwt.spring_security.service.JWTService;
+import com.jwt.spring_security.repo.UserRepo;
 import com.jwt.spring_security.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -37,15 +37,11 @@ public class UsersService {
                 authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
         if (authentication.isAuthenticated()) {
-            String encryptedPassword = new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(user.getPassword());
-            user.setPassword(encryptedPassword);
             return jwtService.generateToken(user.getUsername());
         } else {
             return "User Not Authenticated";
         }
     }
-
-
 
     public Users findByUsername(String username) {
         return userRepo.findByUsername(username);
