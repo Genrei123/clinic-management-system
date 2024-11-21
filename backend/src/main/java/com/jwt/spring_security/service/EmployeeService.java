@@ -31,6 +31,10 @@ public class EmployeeService {
         return employeeRepo.findByEmployeeID(employeeID);
     }
 
+    public boolean existsByEmployeeID(int employeeID) {
+        return employeeRepo.findByEmployeeID(employeeID) != null;
+    }
+
     public boolean deleteByEmployeeID(int employeeID) {
         if (employeeRepo.existsById((long) employeeID)) {
             employeeRepo.deleteById((long) employeeID);
@@ -39,19 +43,19 @@ public class EmployeeService {
         return false;
     }
 
-
     public Employee updateEmployee(int employeeID, Employee employeeDetails) {
         Employee existingEmployee = employeeRepo.findByEmployeeID(employeeID);
-
         if (existingEmployee != null) {
             existingEmployee.setUsername(employeeDetails.getUsername());
-            existingEmployee.setPassword(employeeDetails.getPassword());
             if (employeeDetails.getPassword() != null && !employeeDetails.getPassword().isEmpty()) {
                 existingEmployee.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(employeeDetails.getPassword()));
             }
             return employeeRepo.save(existingEmployee);
         }
-
         return null;
     }
 }
+
+
+
+

@@ -1,12 +1,14 @@
 package com.jwt.spring_security.controller;
 
-import com.jwt.spring_security.model.Item;
 import com.jwt.spring_security.model.Patient;
 import com.jwt.spring_security.model.Spouse;
 import com.jwt.spring_security.repo.PatientRepo;
-import org.apache.coyote.Response;
+import com.jwt.spring_security.service.PatientService;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,42 +19,78 @@ public class PatientController {
     @Autowired
     private PatientRepo patientRepo;
 
+    @Autowired
+    private PatientService patientService;
+
     @PostMapping("/addPatient")
-    public Patient addPatient(@RequestBody Patient patient) {
-        // If spouse data is provided, ensure it's properly linked to the patient
+    public ResponseEntity<?> addPatient(@Validated @RequestBody Patient patient) {
+        // Check if patient with the same ID already exists
+        if (patientRepo.existsById(patient.getClientID())) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Patient with ID " + patient.getClientID() + " already exists.");
+        }
+
+        // Link spouse to patient if provided
         if (patient.getSpouse() != null) {
             Spouse spouse = patient.getSpouse();
-            spouse.setPatient(patient);  // Set the patient for the spouse
+            spouse.setPatient(patient);
         }
-        return patientRepo.save(patient);  // Save patient and cascade to save spouse
+
+        // Save patient
+        Patient savedPatient = patientRepo.save(patient);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedPatient);
     }
 
     @GetMapping("/getPatient")
-    public List<Patient> getPatients() {
-        return patientRepo.findAll();
+    public ResponseEntity<?> getPatients() {
+        List<Patient> patients = patientRepo.findAll();
+        if (patients.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No patients found.");
+        }
+        return ResponseEntity.ok(patients);
     }
 
     @GetMapping("/searchPatients")
-    public List<Patient> searchPatient(@RequestParam String query) {
-        return patientRepo.findPatientByGivenName(query);
+    public ResponseEntity<?> searchPatient(@RequestParam String query) {
+        List<Patient> patients = patientRepo.findPatientByGivenName(query);
+        if (patients.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No patients found with the given name: " + query);
+        }
+        return ResponseEntity.ok(patients);
     }
 
     @GetMapping("/getPatient/{id}")
-    public Optional<Patient> getPatient(@RequestBody Long id) {
-        return patientRepo.findById(id);
+    public ResponseEntity<?> getPatient(@PathVariable Long id) {
+        Optional<Patient> patient = patientRepo.findById(id);
+        if (patient.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient with ID " + id + " not found.");
+        }
+        return ResponseEntity.ok(patient);
     }
 
     @PatchMapping("/updatePatient")
-    public Patient updatePatient(@RequestBody Patient patient) {
-        return patientRepo.save(patient);
+    public ResponseEntity<?> updatePatient(@Validated @RequestBody Patient patient) {
+        // Check if patient exists
+        if (!patientRepo.existsById(patient.getClientID())) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient with ID " + patient.getClientID() + " not found.");
+        }
+
+        // Update patient details
+        Patient updatedPatient = patientRepo.save(patient);
+        return ResponseEntity.ok(updatedPatient);
     }
 
     @DeleteMapping("/deletePatient/{id}")
-    public String deletePatient(@PathVariable Long id) {
+    public ResponseEntity<?> deletePatient(@PathVariable Long id) {
+        // Check if patient exists
         if (!patientRepo.existsById(id)) {
-            return "Patient not found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient with ID " + id + " not found.");
         }
+
+        // Delete patient
         patientRepo.deleteById(id);
-        return "Patient Found";
+        return ResponseEntity.ok("Patient with ID " + id + " deleted successfully.");
     }
 }
+

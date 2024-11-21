@@ -2,6 +2,7 @@ package com.jwt.spring_security.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity

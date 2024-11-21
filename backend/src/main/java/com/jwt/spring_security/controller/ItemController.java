@@ -6,6 +6,7 @@ import com.jwt.spring_security.repo.ItemRepo;
 import com.jwt.spring_security.service.ItemService;
 import com.jwt.spring_security.service.BranchService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -36,46 +37,51 @@ public class ItemController {
     }
 
     @PostMapping("/addItem")
-    public Item addItems(@RequestBody Item item) {
+    public ResponseEntity<Item> addItems(@RequestBody Item item) {
         Branch branchExists = branchRepo.findByBranchID(item.getBranch().getBranchID());
-        if (branchExists != null) {
-            item.setBranch(branchExists);
-            return itemRepo.save(item);
+        if (branchExists == null) {
+            return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
-        return null;
-
+        item.setBranch(branchExists);
+        Item savedItem = itemRepo.save(item);
+        return ResponseEntity.ok(savedItem); // 200 OK
     }
+
 
     @PostMapping("/addItems")
-    public List<Item> addItems(@RequestBody List<Item> items) {
+    public ResponseEntity<List<Item>> addItems(@RequestBody List<Item> items) {
         if (items.isEmpty()) {
-            return Collections.emptyList();
+            return ResponseEntity.badRequest().body(Collections.emptyList()); // 400 Bad Request
         }
-
-        // Retrieve the branch from the first item (all items are assumed to belong to the same branch)
         Long branchId = items.get(0).getBranch().getBranchID();
-        Branch branch = branchRepo.findById(branchId).orElseThrow(() ->
-                new IllegalArgumentException("Branch with ID " + branchId + " not found"));
-
-        // Set the branch for each item
-        items.forEach(item -> item.setBranch(branch));
-
-        // Save all items in a single batch operation
-        return itemRepo.saveAll(items);
-    }
-
-
-    @PostMapping("/updateItems/{id}")
-    public Item updateItems(@RequestBody Item item) {
-        Item itemExists = itemRepo.findByItemID(item.getItemID());
-
-        if (itemExists != null) {
-            item.setItemID(itemExists.getItemID());
-            return itemRepo.save(item);
+        Branch branch = branchRepo.findByBranchID(branchId);
+        if (branch == null) {
+            return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
-
-        return null;
+        items.forEach(item -> item.setBranch(branch));
+        List<Item> savedItems = itemRepo.saveAll(items);
+        return ResponseEntity.ok(savedItems); // 200 OK
     }
+
+
+
+    @PutMapping("/updateItems/{id}")
+    public ResponseEntity<Item> updateItems(@PathVariable Long id, @RequestBody Item itemDetails) {
+        Item existingItem = itemRepo.findByItemID(id);
+        if (existingItem == null) {
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        }
+        // Update properties
+        existingItem.setItemName(itemDetails.getItemName());
+        existingItem.setItemDescription(itemDetails.getItemDescription());
+        existingItem.setItemQuantity(itemDetails.getItemQuantity());
+        existingItem.setExpDate(itemDetails.getExpDate());
+        existingItem.setBranch(itemDetails.getBranch());
+
+        Item updatedItem = itemRepo.save(existingItem);
+        return ResponseEntity.ok(updatedItem); // 200 OK
+    }
+
 
     @DeleteMapping("/deleteItems/{id}")
     public boolean deleteItems(@PathVariable Long id) {
