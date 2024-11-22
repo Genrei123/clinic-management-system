@@ -1,10 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+
+  // State for modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // State for form data
+  const [formData, setFormData] = useState({
+    name: "",
+    age: "",
+  });
+
+  // Function to open the modal
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to close the modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // Function to handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Placeholder for form submission
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Form Submitted:", formData); // Placeholder action
+    alert(`Patient Profile Created:\nName: ${formData.name}\nAge: ${formData.age}`);
+    setIsModalOpen(false);
+    setFormData({ name: "", age: "" }); // Reset form
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -97,17 +131,68 @@ const Home: React.FC = () => {
             </div>
             <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
               <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg">
-                Generate QR Code
+                Scan QR Code
               </button>
             </div>
             <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-              <button className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg">
+              <button
+                className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg"
+                onClick={openModal}
+              >
                 Create Patient Profile
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Create Patient Profile</h3>
+            <form onSubmit={handleFormSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-bold mb-2">Patient Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter patient name"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-bold mb-2">Age</label>
+                <input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter age"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  className="bg-gray-300 px-4 py-2 rounded-lg"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
