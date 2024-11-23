@@ -73,4 +73,61 @@ public class PDFService {
         // Call PDFUtil to generate the filled PDF
         PDFUtil.populatePdf(templatePath, outputPath, fieldValues);
     }
+
+    public void generateClaimForm1(Long patientId, String outputPath2) throws IOException {
+        // Fetch patient details based on patientId (simulate it)
+        Patient patient = patientRepo.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        // Prepare the data to be filled into the Claim Form
+        Map<String, String> fieldValues = new HashMap<>();
+
+        // Populate required fields from the Patient entity
+        fieldValues.put("MI_last_name", patient.getLastName()); // Last Name
+        fieldValues.put("MI_first_name", patient.getGivenName()); // First Name
+
+        // Fetch spouse's contact number if available
+        if (patient.getSpouse() != null) {
+            fieldValues.put("MI_mobile_no", patient.getSpouse().getSpouse_contact_number());
+        } else {
+            fieldValues.put("MI_mobile_no", ""); // Leave blank if no spouse
+        }
+
+        // Template path (should point to the Claim Form 1 PDF in resources or templates folder)
+        String templatePath = "ClaimForm1.pdf";  // Name of the PDF file for the claim form
+
+        // Ensure the output directory exists, if not create it
+        File outputDir = new File("output");
+        if (!outputDir.exists()) {
+            outputDir.mkdir(); // Create the directory if it does not exist
+        }
+
+        // Call PDFUtil to generate the filled Claim Form 1 PDF
+        PDFUtil.populatePdf(templatePath, outputPath2, fieldValues);
+    }
+    public void generateClaimForm2(Long patientId, String outputPath3) throws IOException {
+        // Fetch patient details based on patientId (simulate it)
+        Patient patient = patientRepo.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        // Prepare the data to be filled into the Claim Form
+        Map<String, String> fieldValues = new HashMap<>();
+
+        // Populate required fields from the Patient entity
+        fieldValues.put("last_name", patient.getLastName()); // Last Name
+        fieldValues.put("first_name", patient.getGivenName()); // First Name
+
+
+        // Template path (should point to the Claim Form 2 PDF in resources or templates folder)
+        String templatePath = "ClaimForm2.pdf";  // Name of the PDF file for the claim form
+
+        // Ensure the output directory exists, if not create it
+        File outputDir = new File("output");
+        if (!outputDir.exists()) {
+            outputDir.mkdir(); // Create the directory if it does not exist
+        }
+
+        // Call PDFUtil to generate the filled Claim Form 2 PDF
+        PDFUtil.populatePdf(templatePath, outputPath3, fieldValues);
+    }
 }
