@@ -12,11 +12,12 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
-  
+
   // Modal visibility states
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Sample patient data
   const patients: Patient[] = [
@@ -38,14 +39,16 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = () => { 
     localStorage.removeItem("token");
     navigate("/");
   };
 
   const toggleCalendarModal = () => setIsCalendarOpen(!isCalendarOpen);
   const toggleSettingsModal = () => setIsSettingsOpen(!isSettingsOpen);
-  const toggleNotificationsModal = () => setIsNotificationsOpen(!isNotificationsOpen);
+  const toggleNotificationsModal = () =>
+    setIsNotificationsOpen(!isNotificationsOpen);
+  const toggleLogoutModal = () => setIsLogoutModalOpen(!isLogoutModalOpen);
 
   return (
     <div className="bg-gray-100 shadow-md">
@@ -98,7 +101,7 @@ const Navbar: React.FC = () => {
           {/* Logout Button */}
           <button
             className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600"
-            onClick={handleLogout}
+            onClick={toggleLogoutModal}
           >
             Logout
           </button>
@@ -127,6 +130,30 @@ const Navbar: React.FC = () => {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Confirm Logout</h2>
+            <p className="mb-6">Are you sure you want to log out?</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                onClick={toggleLogoutModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
