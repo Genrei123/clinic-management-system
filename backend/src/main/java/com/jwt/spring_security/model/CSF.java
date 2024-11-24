@@ -1,4 +1,4 @@
-package com.jwt.spring_security.model.Documents;
+package com.jwt.spring_security.model;
 
 import jakarta.persistence.Entity;
 

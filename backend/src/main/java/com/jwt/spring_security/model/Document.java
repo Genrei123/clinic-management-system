@@ -1,6 +1,5 @@
-package com.jwt.spring_security.model.Documents;
+package com.jwt.spring_security.model;
 
-import com.jwt.spring_security.model.Patient;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
