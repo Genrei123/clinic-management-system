@@ -1,67 +1,226 @@
-import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar'; // Ensure this is the correct path
-import './inventory.css'; // Ensure to import your CSS file
+import React, { useState } from "react";
+import { styled } from "@mui/material/styles";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell, { tableCellClasses } from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import Checkbox from "@mui/material/Checkbox";
+import Sidebar from "../components/Sidebar";
+import "./inventory.css";
+
+// Define the structure of an inventory item
+interface InventoryItem {
+  id: number;
+  name: string;
+  quantity: number;
+  price: number;
+  manufacturedDate: string;
+  expirationDate: string;
+  branch: string;
+  status: string;
+  statusColor: string;
+}
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  "&:nth-of-type(odd)": {
+    backgroundColor: theme.palette.action.hover,
+  },
+  "&:last-child td, &:last-child th": {
+    border: 0,
+  },
+}));
 
 const Inventory: React.FC = () => {
-    const initialItems = [
-        { id: 1, name: 'Paracetamol', quantity: 10, price: 2.5, expirationDate: '2025-01-01', colorClass: 'red' },
-        { id: 2, name: 'Vitamin B', quantity: 5, price: 5.0, expirationDate: '2024-12-15', colorClass: 'green' },
-        { id: 3, name: 'Vitamin C', quantity: 20, price: 1.75, expirationDate: '2023-11-30', colorClass: 'blue' },
-        { id: 4, name: 'Antibiotic', quantity: 15, price: 3.0, expirationDate: '2024-05-10', colorClass: 'orange' },
-        { id: 5, name: 'Item 5', quantity: 8, price: 4.0, expirationDate: '2023-09-25', colorClass: 'purple' },
-        { id: 6, name: 'Item 6', quantity: 12, price: 6.5, expirationDate: '2024-03-20', colorClass: 'yellow' },
-    ];
+  const initialItems: InventoryItem[] = [
+    {
+      id: 1,
+      name: "Paracetamol",
+      quantity: 50,
+      price: 2.5,
+      manufacturedDate: "2023-01-10",
+      expirationDate: "2024-01-10",
+      branch: "Phase X",
+      status: "In Stock",
+      statusColor: "green",
+    },
+    // Other items...
+  ];
 
-    const [searchQuery, setSearchQuery] = useState('');
-    const [items] = useState(initialItems);
+  const [items, setItems] = useState<InventoryItem[]>(initialItems);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  // Will set this once I've enabled the functions in the Filter Buttons
+  const [isFilterActive, setIsFilterActive] = useState<boolean>(false);
+  const [showFilterPopup, setShowFilterPopup] = useState<boolean>(false);
 
-    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(event.target.value);
-    };
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    const filteredItems = items.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleEdit = (id: number) => {
+    const itemToEdit = items.find((item) => item.id === id);
+    if (itemToEdit) {
+      // Open a modal or form to edit the item details
+      console.log('Edit item:', itemToEdit);
+    }
+  };
+
+  const handleSelect = (id: number) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
+  };
 
-    return (
-        <div className="flex h-screen">
-            <Sidebar />
-            <div className="flex-1 p-6 bg-gray-50">
-                <h1 className="text-2xl font-bold">Inventory</h1>
+  const handleDelete = () => {
+    setItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
+    setSelectedItems([]);
+  };
 
-                {/* Search Bar Container */}
-                <div className="search-container mb-4">
-                    <span className="search-icon">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Search items..."
-                        value={searchQuery}
-                        onChange={handleSearchChange}
-                        className="search-bar"
-                    />
-                </div>
+  const toggleFilterPopup = () => {
+    setShowFilterPopup((prev) => !prev);
+  };
 
-                {/* Large Frame Rectangle */}
-                <div className="inventory-frame">
-                    <h1 className="inventory-heading text-2xl font-bold">MEDICINE</h1>
-                    <ul className="mt-2">
-                        {filteredItems.map(item => (
-                            <li key={item.id} className={`inventory-item ${item.colorClass}`}>
-                                <div className={`item-container ${item.colorClass}`}>
-                                    <div className="item-details">
-                                        <span className="item-name">{item.name}</span>
-                                        <span className="item-quantity">Quantity: {item.quantity}</span>
-                                        <span className="item-price">Price: ${item.price.toFixed(2)}</span>
-                                        <span className="item-expiration">Expiration Date: {item.expirationDate}</span>
-                                    </div>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="inventory-container p-4 w-full">
+        <h1 className="text-2xl font-bold mb-4">Inventory Overview</h1>
+        <div className="search-bar mb-4 flex gap-2 relative">
+          <div className="relative w-full">
+            <input
+              type="text"
+              className="border p-2 w-full rounded"
+              placeholder="Search for a product..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={toggleFilterPopup}
+            className={`px-4 py-2 rounded ${
+              isFilterActive ? "bg-gray-300 text-black" : "bg-blue-500 text-white"
+            }`}
+          >
+            Filter
+          </button>
+          <button
+            onClick={handleDelete}
+            className="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            disabled={selectedItems.length === 0}
+          >
+            Delete Selected
+          </button>
+
+          {showFilterPopup && (
+            <div className="filter-popup">
+              <div className="filter-section">
+                <h3 className="font-semibold">Sort by:</h3>
+                <button className="filter-button">A-Z</button>
+                <button className="filter-button">Price</button>
+                <button className="filter-button">Ascending</button>
+              </div>
+              <div className="filter-section">
+                <h3 className="font-semibold">Sort by (Branch):</h3>
+                <button className="filter-button">Phase X</button>
+                <button className="filter-button">Phase Y</button>
+                <button className="filter-button">Phase Z</button>
+              </div>
+              <div className="filter-section">
+                <h3 className="font-semibold">Sort by (Status):</h3>
+                <button className="filter-button">In Stock</button>
+                <button className="filter-button">Low Stock</button>
+                <button className="filter-button">Expiring</button>
+                <button className="filter-button">Out of Stock</button>
+              </div>
             </div>
+          )}
         </div>
-    );
+
+        <TableContainer component={Paper}>
+          <Table className="inventory-table" aria-label="customized table">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell padding="checkbox">
+                  <Checkbox
+                    indeterminate={
+                      selectedItems.length > 0 && selectedItems.length < items.length
+                    }
+                    checked={
+                      items.length > 0 && selectedItems.length === items.length
+                    }
+                    onChange={(e) =>
+                      setSelectedItems(
+                        e.target.checked ? items.map((item) => item.id) : []
+                      )
+                    }
+                  />
+                </StyledTableCell>
+                <StyledTableCell>Medicine</StyledTableCell>
+                <StyledTableCell align="right">Quantity</StyledTableCell>
+                <StyledTableCell align="right">Price (₱/pc)</StyledTableCell>
+                <StyledTableCell align="right">Manufactured Date</StyledTableCell>
+                <StyledTableCell align="right">Expiration Date</StyledTableCell>
+                <StyledTableCell align="right">Branch</StyledTableCell>
+                <StyledTableCell align="right">Status</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredItems.map((item) => (
+                <StyledTableRow key={item.id}>
+                  <StyledTableCell padding="checkbox">
+                    <Checkbox
+                      checked={selectedItems.includes(item.id)}
+                      onChange={() => handleSelect(item.id)}
+                    />
+                  </StyledTableCell>
+                  <StyledTableCell component="th" scope="row">
+                    {item.name}
+                  </StyledTableCell>
+                  <StyledTableCell align="right">{item.quantity}</StyledTableCell>
+                  <StyledTableCell align="right">{item.price}</StyledTableCell>
+                  <StyledTableCell align="right">
+                    {item.manufacturedDate}
+                  </StyledTableCell>
+                  <StyledTableCell align="right">
+                    {item.expirationDate}
+                  </StyledTableCell>
+                  <StyledTableCell align="right">{item.branch}</StyledTableCell>
+                  <StyledTableCell
+                    align="right"
+                    style={{ color: item.statusColor }}
+                  >
+                    {item.status}
+                  </StyledTableCell>
+                </StyledTableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <div className="flex justify-start mt-4">
+          <button
+            onClick={() => handleEdit(selectedItems[0])}
+            className="p-2 bg-yellow-500 text-white rounded"
+            disabled={selectedItems.length !== 1}
+          >
+            Edit Selected
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Inventory;
