@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
+import Sidebar from '../../components/Sidebar';
 import './employee.css'; // Optional: You can create a separate CSS file for styling.
 
 const Employee: React.FC = () => {

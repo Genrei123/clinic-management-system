@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();

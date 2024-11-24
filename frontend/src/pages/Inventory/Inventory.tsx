@@ -8,7 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Checkbox from "@mui/material/Checkbox";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import "./inventory.css";
 
 // Define the structure of an inventory item
