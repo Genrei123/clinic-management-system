@@ -1,14 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
+import Navbar from "../../components/Navbar";
 
-const Patient = () => {
-  const { id } = useParams();
+interface Visit {
+  visitDate: string;
+  reason: string;
+}
+
+interface Patient {
+  id: string;
+  name: string;
+  birthdate: string;
+  visitHistory: Visit[];
+}
+
+const Patient: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patientImage, setPatientImage] = useState(null);
+  const [patientImage, setPatientImage] = useState<string | null>(null);
 
-  const patient = {
-    id: id,
+  // Mocked patient data (in real app, this would come from an API)
+  const patient: Patient = {
+    id: id || "",
     name: "Cristobal, Genrey O.",
     birthdate: "24/05/2024",
     visitHistory: [
@@ -17,121 +31,137 @@ const Patient = () => {
     ],
   };
 
-  const generateClaimForm = (formType: "Insurance" | "Medical Certificate" | "Reimbursement") => {
-    alert(`Generating ${formType} claim form for ${patient.name}...`);
-    // Add logic to handle claim form generation and editing (e.g., PDF customization).
-  };
-  
+  const handleImageUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          setPatientImage(result);
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    []
+  );
+
+  const generateClaimForm = useCallback(
+    (formType: string) => {
+      // In a real application, this would trigger actual form generation
+      console.log(`Generating ${formType} claim form for ${patient.name}`);
+    },
+    [patient.name]
+  );
 
   return (
     <div className="flex">
       <Sidebar />
-      <div className="ml-20 flex-grow p-6 bg-gray-100 min-h-screen">
-        <div className="content-container bg-white p-6 rounded-md shadow-lg w-full max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6 text-center text-blue-600">
-            {patient.name}'s Records
-          </h2>
-          <div className="mb-6 flex justify-center">
-            {patientImage ? (
-              <img
-                src={patientImage}
-                alt="Patient"
-                className="h-48 w-48 object-cover rounded-lg shadow"
-              />
-            ) : (
-              <div className="h-48 w-48 bg-gray-200 flex items-center justify-center rounded-lg shadow">
-                <p className="text-gray-500 font-medium">No Image</p>
-              </div>
-            )}
-          </div>
-          <div className="text-center mb-6">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              id="file-upload"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (e) => setPatientImage(e.target.result as any);
-                  reader.readAsDataURL(file);
-                }
-              }}
-            />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Upload Image
-            </label>
-          </div>
 
-          {/* Generate Claim Form Button */}
-          <div className="text-center mb-6">
-            <button
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-2"
-              onClick={() =>
-                alert("Select a claim form type to generate for this patient.")
-              }
-            >
-              Generate Claim Forms
-            </button>
-            <div className="inline-block relative">
-              <select
-                onChange={(e) => generateClaimForm(e.target.value as any)}
-                className="block appearance-none bg-gray-200 border border-gray-300 hover:border-gray-400 text-gray-700 py-2 px-4 pr-8 rounded focus:outline-none focus:shadow-outline"
-              >
-                <option value="" disabled selected>
-                  Select Claim Type
-                </option>
-                <option value="Insurance">Insurance</option>
-                <option value="Medical Certificate">Medical Certificate</option>
-                <option value="Reimbursement">Reimbursement</option>
-              </select>
+      <div className="ml-128 w-full">
+        {/* Navbar */}
+        <Navbar />
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-blue-600 text-white p-4">
+              <h2 className="text-2xl font-bold">
+                {patient.name}'s Medical Profile
+              </h2>
             </div>
-          </div>
 
-          {/* Visit History */}
-          <div className="visit-history">
-            <h3 className="text-xl font-semibold mb-4">Visit History</h3>
-            <table className="table-auto border-collapse border border-gray-300 w-full text-left">
-              <thead>
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-100">
-                    Visit Date
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-100">
-                    Reason
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 bg-gray-100">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {patient.visitHistory.map((visit, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-2">
-                      {visit.visitDate}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      {visit.reason}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2">
-                      <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                        onClick={() =>
-                          navigate(`/patients/${patient.id}/visits/${index}`)
-                        }
-                      >
-                        View
-                      </button>
-                    </td>
+            {/* Content Container */}
+            <div className="p-6 grid md:grid-cols-2 gap-6">
+              {/* Patient Image Section */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
+                  {patientImage ? (
+                    <img
+                      src={patientImage}
+                      alt="Patient"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <p className="text-gray-500">No Image Uploaded</p>
+                  )}
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="patient-image-upload"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <label
+                  htmlFor="patient-image-upload"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
+                >
+                  Upload Image
+                </label>
+              </div>
+
+              {/* Patient Details and Actions */}
+              <div className="space-y-6">
+                {/* Patient Basic Info */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="mb-2">
+                    <strong>Birthdate:</strong> {patient.birthdate}
+                  </p>
+                  <p>
+                    <strong>Patient ID:</strong> {patient.id}
+                  </p>
+                </div>
+
+                {/* Claim Form Generation */}
+                <div className="space-y-4">
+                  <select
+                    onChange={(e) => generateClaimForm(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Select Claim Form</option>
+                    <option value="Insurance">Insurance Claim</option>
+                    <option value="Medical Certificate">
+                      Medical Certificate
+                    </option>
+                    <option value="Reimbursement">Reimbursement Form</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Visit History */}
+            <div className="p-6 border-t">
+              <h3 className="text-xl font-semibold mb-4">Visit History</h3>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border p-2">Visit Date</th>
+                    <th className="border p-2">Reason</th>
+                    <th className="border p-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {patient.visitHistory.map((visit, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="border p-2">{visit.visitDate}</td>
+                      <td className="border p-2">{visit.reason}</td>
+                      <td className="border p-2 text-center">
+                        <button
+                          onClick={() =>
+                            navigate(`/patients/${patient.id}/visits/${index}`)
+                          }
+                          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
