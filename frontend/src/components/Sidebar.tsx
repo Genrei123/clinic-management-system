@@ -41,8 +41,8 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <Link
-                            to="/patient"
-                            className={getLinkClassName('/patient')}
+                            to="/patientrecords"
+                            className={getLinkClassName('/patientrecords')}
                         >
                             Patient
                         </Link>
