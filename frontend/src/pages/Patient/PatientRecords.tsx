@@ -5,39 +5,31 @@ import Navbar from "../../components/Navbar";
 
 const PatientRecords: React.FC = () => {
   // Initial patient data
-  const initialPatients = [
-    {
-      id: 1,
-      name: "Alice Johnson",
-      position: "Software Engineer",
-      department: "Development",
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Bob Smith",
-      position: "Project Manager",
-      department: "Management",
-      status: "Inactive",
-    },
-    {
-      id: 3,
-      name: "Carol Williams",
-      position: "Designer",
-      department: "Design",
-      status: "Active",
-    },
-    {
-      id: 4,
-      name: "David Brown",
-      position: "QA Engineer",
-      department: "Quality Assurance",
-      status: "Active",
-    },
-  ];
+  const initialPatients = Array.from({ length: 100 }, (_, index) => ({
+    id: index + 1,
+    name: `Patient ${index + 1}`,
+    position: `Position ${index + 1}`,
+    department: `Department ${Math.ceil((index + 1) / 10)}`,
+    status: index % 2 === 0 ? "Active" : "Inactive",
+  }));
 
   const [patients] = useState(initialPatients);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
+
   const navigate = useNavigate();
+
+  // Pagination logic
+  const totalPages = Math.ceil(patients.length / rowsPerPage);
+  const paginatedPatients = patients.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleViewClick = (id: number) => {
     navigate(`/patient/${id}`);
@@ -78,7 +70,7 @@ const PatientRecords: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {patients.map((patient) => (
+                {paginatedPatients.map((patient) => (
                   <tr key={patient.id} className="hover:bg-gray-50">
                     <td className="border border-gray-300 px-4 py-2">
                       {patient.id}
@@ -104,6 +96,37 @@ const PatientRecords: React.FC = () => {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 mx-1 text-white bg-gray-500 rounded hover:bg-gray-700 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-4 py-2 mx-1 rounded ${
+                    currentPage === index + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 mx-1 text-white bg-gray-500 rounded hover:bg-gray-700 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
