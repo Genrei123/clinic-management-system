@@ -15,15 +15,9 @@ const Home: React.FC = () => {
     age: "",
   });
 
-  // Function to open the modal
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  // Function to close the modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  // Functions for modal handling
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   // Function to handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,10 +25,9 @@ const Home: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Placeholder for form submission
+  // Form submission handler
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData); // Placeholder action
     alert(`Patient Profile Created:\nName: ${formData.name}\nAge: ${formData.age}`);
     setIsModalOpen(false);
     setFormData({ name: "", age: "" }); // Reset form
@@ -51,6 +44,19 @@ const Home: React.FC = () => {
         <Navbar />
 
         <div className="p-6 space-y-6">
+          {/* Action Buttons */}
+          <div className="flex justify-between mb-6">
+            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+              Scan QR Code
+            </button>
+            <button
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
+              onClick={openModal}
+            >
+              Create Patient Profile
+            </button>
+          </div>
+
           {/* Services Section */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">Services</h2>
@@ -113,35 +119,6 @@ const Home: React.FC = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold">Total Employees</h3>
-                <p className="text-3xl font-bold">3</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold">Patients Pending</h3>
-                <p className="text-3xl font-bold">3</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-              <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg">
-                Scan QR Code
-              </button>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-              <button
-                className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg"
-                onClick={openModal}
-              >
-                Create Patient Profile
-              </button>
-            </div>
           </div>
         </div>
       </div>
