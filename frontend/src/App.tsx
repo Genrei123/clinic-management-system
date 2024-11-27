@@ -10,6 +10,8 @@ import Patient from "./pages/Patient/Patient";
 import AccountDetails from "./pages/AccountDetails";
 import AccountSecurity from "./pages/AccountSecurity";
 import LandingPage from "./pages/Landing Page/LandingPage";
+import GeneratePDF from "./pages/Patient/GeneratedPDF";
+
 
 const App: React.FC = () => {
   return (
@@ -23,6 +25,7 @@ const App: React.FC = () => {
         <Route path="/patientrecords" element={<PatientRecords />} />
         <Route path = "/patient/:id" element = {<Patient />} />
         <Route path = "/patient/:id/visits/:index" element = {<Patient />} />
+        <Route path="/generate-pdf" element={<GeneratePDF />} />
         <Route path="/reports" element={<Report />} />
         <Route path="/account/details" element={<AccountDetails />} />
         <Route path="/account/security" element={<AccountSecurity />} />

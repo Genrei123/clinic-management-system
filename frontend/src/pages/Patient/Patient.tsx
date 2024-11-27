@@ -19,8 +19,8 @@ const Patient: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patientImage, setPatientImage] = useState<string | null>(null);
+  const [selectedForm, setSelectedForm] = useState<string>("");
 
-  // Mocked patient data (in real app, this would come from an API)
   const patient: Patient = {
     id: id || "",
     name: "Cristobal, Genrey O.",
@@ -46,34 +46,49 @@ const Patient: React.FC = () => {
     []
   );
 
-  const generateClaimForm = useCallback(
-    (formType: string) => {
-      // In a real application, this would trigger actual form generation
-      console.log(`Generating ${formType} claim form for ${patient.name}`);
-    },
-    [patient.name]
-  );
+  const generateClaimForm = useCallback(() => {
+    if (selectedForm) {
+      console.log(`Generating ${selectedForm} for ${patient.name}`);
+      alert(`PDF for ${selectedForm} will be generated.`);
+    } else {
+      alert("Please select a form to generate.");
+    }
+  }, [selectedForm, patient.name]);
+
+  const uploadOtherFiles = useCallback(() => {
+    console.log("Uploading other files to Google Drive (placeholder).");
+    alert("File uploaded to Google Drive (placeholder).");
+  }, []);
+
+  const logAttendance = useCallback(() => {
+    console.log(`Logging attendance for ${patient.name}`);
+    alert(`Attendance logged for ${patient.name}`);
+  }, [patient.name]);
+
+  const handleGeneratePDF = useCallback(() => {
+    if (!selectedForm) {
+      alert("Please select a form to generate.");
+      return;
+    }
+    navigate(`/generate-pdf?form=${selectedForm}&patientId=${patient.id}`);
+  }, [selectedForm, navigate, patient.id]);
 
   return (
     <div className="flex">
       <Sidebar />
 
       <div className="ml-128 w-full">
-        {/* Navbar */}
         <Navbar />
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-            {/* Header */}
             <div className="bg-blue-600 text-white p-4">
               <h2 className="text-2xl font-bold">
                 {patient.name}'s Medical Profile
               </h2>
             </div>
 
-            {/* Content Container */}
             <div className="p-6 grid md:grid-cols-2 gap-6">
-              {/* Patient Image Section */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
                   {patientImage ? (
@@ -102,9 +117,7 @@ const Patient: React.FC = () => {
                 </label>
               </div>
 
-              {/* Patient Details and Actions */}
               <div className="space-y-6">
-                {/* Patient Basic Info */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="mb-2">
                     <strong>Birthdate:</strong> {patient.birthdate}
@@ -114,24 +127,40 @@ const Patient: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Claim Form Generation */}
                 <div className="space-y-4">
                   <select
-                    onChange={(e) => generateClaimForm(e.target.value)}
+                    onChange={(e) => setSelectedForm(e.target.value)}
                     className="w-full p-2 border rounded"
                   >
                     <option value="">Select Claim Form</option>
-                    <option value="Insurance">Insurance Claim</option>
-                    <option value="Medical Certificate">
-                      Medical Certificate
-                    </option>
-                    <option value="Reimbursement">Reimbursement Form</option>
+                    <option value="CSF">CSF</option>
+                    <option value="Claim Form 1">Claim Form 1</option>
+                    <option value="Claim Form 2">Claim Form 2</option>
                   </select>
+                  <button
+                    onClick={handleGeneratePDF}
+                    className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full"
+                  >
+                    Generate PDF
+                  </button>
+
+                  <button
+                    onClick={uploadOtherFiles}
+                    className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded w-full"
+                  >
+                    Upload Other Files
+                  </button>
+
+                  <button
+                    onClick={logAttendance}
+                    className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded w-full"
+                  >
+                    Log Attendance
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Visit History */}
             <div className="p-6 border-t">
               <h3 className="text-xl font-semibold mb-4">Visit History</h3>
               <table className="w-full border-collapse">
