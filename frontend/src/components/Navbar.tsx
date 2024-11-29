@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+interface NavbarProps {
+  hideSearch: boolean; // Add hideSearch prop to conditionally hide the search bar
+}
+
 interface Patient {
   id: number;
   name: string;
   gender: string;
   age: number;
-}
-
-interface NavbarProps {
-  hideSearch?: boolean; // Optional prop to hide search bar
 }
 
 const Navbar: React.FC<NavbarProps> = ({ hideSearch }) => {
@@ -61,7 +61,8 @@ const Navbar: React.FC<NavbarProps> = ({ hideSearch }) => {
         <div className="flex items-center space-x-4">
           {/* Logo */}
           <div className="text-xl font-bold text-gray-800">Jimirene Clinic</div>
-          {/* Conditionally render Search Bar based on hideSearch prop */}
+
+          {/* Conditionally render the Search Bar */}
           {!hideSearch && (
             <div className="relative w-full max-w-md">
               <input
@@ -80,7 +81,7 @@ const Navbar: React.FC<NavbarProps> = ({ hideSearch }) => {
           {/* Notification Icon */}
           <button
             className="p-2 text-gray-600 hover:text-blue-500"
-            onClick={toggleNotificationsModal} // Toggle notifications modal visibility
+            onClick={toggleNotificationsModal}
           >
             <i className="fas fa-check-circle text-xl"></i>
             <a>Notification</a>
@@ -89,7 +90,7 @@ const Navbar: React.FC<NavbarProps> = ({ hideSearch }) => {
           {/* Calendar Icon */}
           <button
             className="p-2 text-gray-600 hover:text-blue-500"
-            onClick={toggleCalendarModal} // Toggle calendar modal visibility
+            onClick={toggleCalendarModal}
           >
             <i className="fas fa-calendar-alt text-xl"></i>
             <a>Calendar</a>
@@ -98,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ hideSearch }) => {
           {/* Gear Icon */}
           <button
             className="p-2 text-gray-600 hover:text-blue-500"
-            onClick={toggleSettingsModal} // Toggle settings modal visibility
+            onClick={toggleSettingsModal}
           >
             <i className="fas fa-cog text-xl"></i>
             <a>Settings</a>
@@ -139,8 +140,78 @@ const Navbar: React.FC<NavbarProps> = ({ hideSearch }) => {
         </div>
       )}
 
-      {/* Modal Components */}
-      {/* Modal implementations remain unchanged */}
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Confirm Logout</h2>
+            <p className="mb-6">Are you sure you want to log out?</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                onClick={toggleLogoutModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar Modal */}
+      {isCalendarOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-4">Calendar</h2>
+            {/* You can replace this with a real calendar component */}
+            <div className="border p-4 mb-4">Your calendar goes here</div>
+            <button
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              onClick={toggleCalendarModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-4">Settings</h2>
+            <div className="mb-4">Your settings options go here</div>
+            <button
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              onClick={toggleSettingsModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications Modal */}
+      {isNotificationsOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-semibold mb-4">Notifications</h2>
+            <div className="mb-4">Your notifications go here</div>
+            <button
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              onClick={toggleNotificationsModal}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -113,7 +113,7 @@ const Report: React.FC = () => {
 
           <section className="grid grid-cols-2 gap-6">
             {/* Service Rendered */}
-            <div className="bg-white shadow rounded-lg p-40">
+            <div className="bg-white shadow rounded-lg p-36">
               <h2 className="text-lg font-bold mb-4">Service Rendered</h2>
               <div className="flex items-center justify-center">
                 <div
@@ -141,7 +141,7 @@ const Report: React.FC = () => {
             </div>
 
             {/* Medicine Sold */}
-            <div className="bg-white shadow rounded-lg p-40">
+            <div className="bg-white shadow rounded-lg p-36">
               <h2 className="text-lg font-bold mb-4">Medicine Sold</h2>
               <div className="flex items-center justify-center">
                 <div
