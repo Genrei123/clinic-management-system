@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -10,10 +10,102 @@ import {
   Card,
   CardContent,
   Link,
+  Tabs,
+  Tab,
 } from "@mui/material";
 
+const NavButton: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Button
+    color="inherit"
+    sx={{
+      mx: 1,
+      '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.08)' },
+      textTransform: 'none',
+    }}
+  >
+    {children}
+  </Button>
+);
+
+const InfoBox: React.FC<{ title: string; content: string }> = ({ title, content }) => (
+  <Box
+    sx={{
+      backgroundColor: "#102A43",
+      p: 4,
+      borderRadius: 2,
+      textAlign: "center",
+      height: "100%",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
+      '&:hover': {
+        transform: "translateY(-5px)",
+        boxShadow: 3
+      }
+    }}
+  >
+    <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+      {title}
+    </Typography>
+    <Typography>{content}</Typography>
+  </Box>
+);
+
+const BranchCard: React.FC<{
+  name: string;
+  address: string;
+  fbLink: string;
+  mapLink: string;
+}> = ({ name, address, fbLink, mapLink }) => (
+  <Card sx={{
+    backgroundColor: "#102A43",
+    color: "#FFFFFF",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    transition: "transform 0.3s ease-in-out",
+    '&:hover': {
+      transform: "translateY(-5px)"
+    }
+  }}>
+    <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+        {name}
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 2, flexGrow: 1 }}>
+        {address}
+      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link
+          href={fbLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: "#2196F3", '&:hover': { textDecoration: "underline" } }}
+        >
+          Visit Facebook
+        </Link>
+        <Button
+          variant="outlined"
+          size="small"
+          sx={{
+            color: "#FFFFFF",
+            borderColor: "#FFFFFF",
+            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.08)' }
+          }}
+          href={mapLink}
+          target="_blank"
+        >
+          Get Location
+        </Button>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 const LandingPage: React.FC = () => {
-  // Example data for branches
+  const [activeTab, setActiveTab] = useState(0);
+
   const branches = [
     {
       name: "Branch 1",
@@ -35,25 +127,31 @@ const LandingPage: React.FC = () => {
     },
   ];
 
+  const infoBoxes = [
+    { title: "Our Mission", content: "To provide high-quality, accessible healthcare services to the community." },
+    { title: "Our Vision", content: "To become the leading clinic, recognized for innovative and compassionate care." },
+    { title: "Locations", content: "Find us in multiple locations across the city for your convenience." },
+  ];
+
   return (
-    <div style={{ backgroundColor: "#0A1929", color: "#FFFFFF", minHeight: "100vh" }}>
-      {/* Navbar */}
-      <AppBar position="sticky" style={{ backgroundColor: "#0A1929" }} elevation={2}>
-        <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="h6" style={{ fontWeight: "bold" }}>
+    <Box sx={{ backgroundColor: "#0A1929", color: "#FFFFFF", minHeight: "100vh" }}>
+      <AppBar position="sticky" sx={{ backgroundColor: "#0A1929", boxShadow: 3 }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", letterSpacing: 1 }}>
             ClinicName
           </Typography>
           <Box>
-            <Button color="inherit" style={{ marginRight: "1rem" }}>
-              About Us
-            </Button>
-            <Button color="inherit" style={{ marginRight: "1rem" }}>
-              Locations
-            </Button>
+            <NavButton>About Us</NavButton>
+            <NavButton>Locations</NavButton>
             <Button
               variant="outlined"
-              style={{ color: "#FFFFFF", borderColor: "#FFFFFF" }}
-              onClick={() => (window.location.href = "/login")} // Navigates to Login Page
+              sx={{
+                color: "#FFFFFF",
+                borderColor: "#FFFFFF",
+                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.08)' },
+                textTransform: 'none',
+              }}
+              onClick={() => (window.location.href = "/login")}
             >
               Login
             </Button>
@@ -61,18 +159,25 @@ const LandingPage: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Hero Section */}
-      <Container style={{ textAlign: "center", padding: "4rem 0" }}>
-        <Typography variant="h3" style={{ fontWeight: 700, marginBottom: "1rem" }}>
-          Welcome to <span style={{ color: "#2196F3" }}>Our Clinic</span>
+      <Container sx={{ textAlign: "center", py: 8 }}>
+        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
+          Welcome to <Box component="span" sx={{ color: "#2196F3" }}>Our Clinic</Box>
         </Typography>
-        <Typography variant="h6" style={{ marginBottom: "2rem" }}>
+        <Typography variant="h6" sx={{ mb: 4, maxWidth: "800px", mx: "auto" }}>
           Providing cutting-edge healthcare solutions tailored to your needs.
         </Typography>
         <Button
           variant="contained"
-          style={{ backgroundColor: "#2196F3", color: "#FFFFFF" }}
-          href="https://facebook.com/clinicpage" // Replace with your Facebook page link
+          sx={{
+            backgroundColor: "#2196F3",
+            color: "#FFFFFF",
+            py: 1.5,
+            px: 4,
+            fontSize: "1.1rem",
+            '&:hover': { backgroundColor: '#1976D2' },
+            textTransform: 'none',
+          }}
+          href="https://facebook.com/clinicpage"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -80,110 +185,52 @@ const LandingPage: React.FC = () => {
         </Button>
       </Container>
 
-      {/* Mission, Vision, and Locations Section */}
-      <Container style={{ padding: "2rem 0" }}>
+      <Container sx={{ py: 6 }}>
         <Grid container spacing={4}>
-          <Grid item xs={12} md={4}>
-            <Box
-              style={{
-                backgroundColor: "#102A43",
-                padding: "2rem",
-                borderRadius: "10px",
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="h5" style={{ fontWeight: 600, marginBottom: "1rem" }}>
-                Our Mission
-              </Typography>
-              <Typography>
-                To provide high-quality, accessible healthcare services to the community.
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box
-              style={{
-                backgroundColor: "#102A43",
-                padding: "2rem",
-                borderRadius: "10px",
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="h5" style={{ fontWeight: 600, marginBottom: "1rem" }}>
-                Our Vision
-              </Typography>
-              <Typography>
-                To become the leading clinic, recognized for innovative and compassionate care.
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box
-              style={{
-                backgroundColor: "#102A43",
-                padding: "2rem",
-                borderRadius: "10px",
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="h5" style={{ fontWeight: 600, marginBottom: "1rem" }}>
-                Locations
-              </Typography>
-              <Typography>
-                Find us in multiple locations across the city for your convenience.
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Container>
-
-      {/* Branches Section */}
-      <Container style={{ padding: "2rem 0" }}>
-        <Typography variant="h4" style={{ textAlign: "center", marginBottom: "2rem" }}>
-          Our Branches
-        </Typography>
-        <Grid container spacing={4}>
-          {branches.map((branch, index) => (
+          {infoBoxes.map((box, index) => (
             <Grid item xs={12} md={4} key={index}>
-              <Card style={{ backgroundColor: "#102A43", color: "#FFFFFF" }}>
-                <CardContent>
-                  <Typography variant="h6" style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
-                    {branch.name}
-                  </Typography>
-                  <Typography variant="body2" style={{ marginBottom: "1rem" }}>
-                    {branch.address}
-                  </Typography>
-                  <Box style={{ display: "flex", justifyContent: "space-between" }}>
-                    <Link
-                      href={branch.fbLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#2196F3" }}
-                    >
-                      Visit Facebook
-                    </Link>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      style={{ color: "#FFFFFF", borderColor: "#FFFFFF" }}
-                      href={branch.mapLink}
-                      target="_blank"
-                    >
-                      Get Location
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+              <InfoBox title={box.title} content={box.content} />
             </Grid>
           ))}
         </Grid>
       </Container>
 
-      {/* Footer */}
-      <Box style={{ backgroundColor: "#102A43", padding: "1rem", textAlign: "center" }}>
+      <Container sx={{ py: 6 }}>
+        <Typography variant="h4" sx={{ textAlign: "center", mb: 4 }}>
+          Our Branches
+        </Typography>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          centered
+          sx={{
+            mb: 4,
+            '& .MuiTab-root': {
+              color: '#FFFFFF',
+              '&.Mui-selected': {
+                color: '#2196F3',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#2196F3',
+            },
+          }}
+        >
+          {branches.map((branch, index) => (
+            <Tab key={index} label={branch.name} />
+          ))}
+        </Tabs>
+        <Grid container justifyContent="center">
+          <Grid item xs={12} md={8}>
+            <BranchCard {...branches[activeTab]} />
+          </Grid>
+        </Grid>
+      </Container>
+
+      <Box sx={{ backgroundColor: "#102A43", py: 3, textAlign: "center" }}>
         <Typography variant="body2">&copy; 2024 ClinicName. All rights reserved.</Typography>
       </Box>
-    </div>
+    </Box>
   );
 };
 
