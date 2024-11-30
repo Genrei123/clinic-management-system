@@ -1,152 +1,166 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import logo from '../assets/logo.svg';
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Home,
+  User,
+  Package,
+  Users,
+  FileText,
+  ChevronDown,
+  LogOut,
+  Settings,
+  Menu,
+  X,
+} from "lucide-react";
+import logo from "../assets/logo.svg";
 
-const Sidebar = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/');
-    };
+const Sidebar: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const isActiveLink = (path: string) => {
-        return location.pathname === path;
-    };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
 
-    const getLinkClassName = (path: string) => {
-        const baseClasses = "block rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200";
-        return isActiveLink(path)
-            ? `${baseClasses} bg-blue-100 text-blue-700`
-            : `${baseClasses} text-gray-500 hover:bg-gray-100 hover:text-gray-700`;
-    };
+  const isActiveLink = (path: string) => location.pathname === path;
 
-    return (
-        <div className="flex h-screen flex-col justify-between border-e bg-white">
-            <div className="px-4 py-6">
-                {/* Logo */}
-                <span className="grid h-32 w-32 place-content-center rounded-lg bg-gray-100 text-xs text-gray-600">
-                    <img src={logo} alt="logo" />
-                </span>
+  const getLinkClassName = (path: string) => {
+    const baseClasses =
+      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200";
+    return isActiveLink(path)
+      ? `${baseClasses} bg-blue-100 text-blue-700`
+      : `${baseClasses} text-gray-700 hover:bg-gray-100 hover:text-blue-600`;
+  };
 
-                {/* Navigation Links */}
-                <ul className="mt-6 space-y-1">
-                    <li>
-                        <Link
-                            to="/home"
-                            className={getLinkClassName('/home')}
-                        >
-                            Home
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            to="/patientrecords"
-                            className={getLinkClassName('/patientrecords')}
-                        >
-                            Patient
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            to="/inventory"
-                            className={getLinkClassName('/inventory')}
-                        >
-                            Inventory
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            to="/employees"
-                            className={getLinkClassName('/employees')}
-                        >
-                            Employees
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            to="/reports"
-                            className={getLinkClassName('/reports')}
-                        >
-                            Reports
-                        </Link>
-                    </li>
+  const navItems = [
+    { path: "/home", label: "Home", icon: Home },
+    { path: "/patientrecords", label: "Patient", icon: User },
+    { path: "/inventory", label: "Inventory", icon: Package },
+    { path: "/employees", label: "Employees", icon: Users },
+    { path: "/reports", label: "Reports", icon: FileText },
+  ];
 
-                    <li>
-                        <details className="group [&_summary::-webkit-details-marker]:hidden">
-                            <summary 
-                                className={`flex cursor-pointer items-center justify-between rounded-lg px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 ${
-                                    (isActiveLink('/account/details') || isActiveLink('/account/security'))
-                                    ? 'bg-blue-100 text-blue-700'
-                                    : ''
-                                }`}
-                            >
-                                <span className="text-sm font-medium"> Account </span>
-                                <span className="shrink-0 transition duration-300 group-open:-rotate-180">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="size-5"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                </span>
-                            </summary>
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
-                            <ul className="mt-2 space-y-1 px-4">
-                                <li>
-                                    <Link
-                                        to="/account/details"
-                                        className={getLinkClassName('/account/details')}
-                                    >
-                                        Details
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        to="/account/security"
-                                        className={getLinkClassName('/account/security')}
-                                    >
-                                        Security
-                                    </Link>
-                                </li>
-                                <li>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                                    >
-                                        Logout
-                                    </button>
-                                </li>
-                            </ul>
-                        </details>
-                    </li>
-                </ul>
+  return (
+    <div
+      className={`flex h-screen flex-col justify-between border-r bg-white transition-all duration-300 ${
+        isCollapsed ? "w-20" : "w-64"
+      }`}
+    >
+      {/* Header */}
+      <div className="px-4 py-6 flex items-center justify-between">
+        {!isCollapsed && (
+          <Link to="/home" className="flex items-center gap-2">
+            <img src={logo} alt="logo" className="h-8 w-auto" />
+            <span className="text-xl font-bold text-gray-900">JIMIRENE</span>
+          </Link>
+        )}
+        <button
+          onClick={toggleSidebar}
+          className={`p-1 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isCollapsed ? "ml-auto" : ""
+          }`}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {isCollapsed ? <Menu size={24} /> : <X size={24} />}
+        </button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-grow px-4 pb-4 space-y-1">
+        {navItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`${getLinkClassName(item.path)} ${
+              isCollapsed ? "justify-center" : ""
+            }`}
+            title={isCollapsed ? item.label : undefined} // Tooltip for collapsed icons
+          >
+            <item.icon className="h-6 w-6 flex-shrink-0" />
+            {!isCollapsed && <span>{item.label}</span>}
+          </Link>
+        ))}
+
+        {/* Account Section */}
+        {isCollapsed ? (
+          <Link
+            to="/account/details"
+            className="flex justify-center text-gray-700 hover:bg-gray-100 hover:text-blue-600 rounded-lg px-3 py-2 text-sm font-medium"
+            title="Account"
+          >
+            <Settings className="h-6 w-6 flex-shrink-0" />
+          </Link>
+        ) : (
+          <details className="group [&_summary::-webkit-details-marker]:hidden">
+            <summary
+              className={`flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium ${
+                isActiveLink("/account/details") ||
+                isActiveLink("/account/security")
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Settings className="h-6 w-6 flex-shrink-0" />
+                <span>Account</span>
+              </div>
+              <ChevronDown className="h-5 w-5 transition duration-300 group-open:-rotate-180" />
+            </summary>
+            <nav className="mt-1.5 ml-8 flex flex-col">
+              <Link
+                to="/account/details"
+                className={getLinkClassName("/account/details")}
+              >
+                Details
+              </Link>
+              <Link
+                to="/account/security"
+                className={getLinkClassName("/account/security")}
+              >
+                Security
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
+              >
+                <LogOut className="h-6 w-6 flex-shrink-0" />
+                Logout
+              </button>
+            </nav>
+          </details>
+        )}
+      </nav>
+
+      {/* Footer */}
+      <div className="sticky inset-x-0 bottom-0 border-t border-gray-100 bg-white p-4">
+        <div
+          className={`flex items-center gap-4 ${
+            isCollapsed ? "justify-center" : ""
+          }`}
+        >
+          <img
+            alt="User avatar"
+            src="https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
+            className="h-10 w-10 rounded-full object-cover"
+          />
+          {!isCollapsed && (
+            <div className="flex-grow">
+              <p className="text-sm">
+                <strong className="block font-medium text-gray-900">
+                  John Doe
+                </strong>
+                <span className="text-gray-600">john.doe@example.com</span>
+              </p>
             </div>
-
-            {/* Footer with User Info */}
-            <div className="sticky inset-x-0 bottom-0 border-t border-gray-100">
-                <a href="#" className="flex items-center gap-2 bg-white p-4 hover:bg-gray-50">
-                    <img
-                        alt="User avatar"
-                        src="https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
-                        className="size-10 rounded-full object-cover"
-                    />
-                    <div>
-                        <p className="text-xs">
-                            <strong className="block font-medium">username</strong>
-                            <span> Lorem ipsum </span>
-                        </p>
-                    </div>
-                </a>
-            </div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default Sidebar;
