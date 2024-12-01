@@ -47,15 +47,6 @@ const Patient: React.FC = () => {
     []
   );
 
-  const generateClaimForm = useCallback(() => {
-    if (selectedForm) {
-      console.log(`Generating ${selectedForm} for ${patient.name}`);
-      alert(`PDF for ${selectedForm} will be generated.`);
-    } else {
-      alert("Please select a form to generate.");
-    }
-  }, [selectedForm, patient.name]);
-
   const uploadOtherFiles = useCallback(() => {
     console.log("Uploading other files to Google Drive (placeholder).");
     alert("File uploaded to Google Drive (placeholder).");
@@ -169,7 +160,7 @@ const Patient: React.FC = () => {
                         className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
                       >
                         <UserCheck className="w-5 h-5 mr-2" />
-                        Log Attendance
+                        Log Checkup
                       </button>
                     </div>
                   </div>
@@ -184,7 +175,7 @@ const Patient: React.FC = () => {
                       <tr className="bg-gray-50">
                         <th className="border border-gray-200 p-2 text-left">Visit Date</th>
                         <th className="border border-gray-200 p-2 text-left">Reason</th>
-                        <th className="border border-gray-200 p-2 text-center">Actions</th>
+                        
                       </tr>
                     </thead>
                     <tbody>
@@ -201,15 +192,6 @@ const Patient: React.FC = () => {
                               <Clock className="w-5 h-5 mr-2 text-gray-500" />
                               {visit.reason}
                             </div>
-                          </td>
-                          <td className="border border-gray-200 p-2 text-center">
-                            <button
-                              onClick={() => navigate(`/patients/${patient.id}/visits/${index}`)}
-                              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-md transition duration-200 ease-in-out inline-flex items-center"
-                            >
-                              View Details
-                              <ChevronRight className="w-4 h-4 ml-1" />
-                            </button>
                           </td>
                         </tr>
                       ))}

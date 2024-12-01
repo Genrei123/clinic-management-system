@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { PDFDocument } from "pdf-lib";
+import { ArrowLeft } from 'lucide-react';
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 
@@ -17,6 +18,7 @@ const GeneratePDF: React.FC = () => {
   const patientId = searchParams.get("patientId");
   const [loading, setLoading] = useState(true);
   const [iframeKey, setIframeKey] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setSearchParams((params) => {
@@ -74,6 +76,10 @@ const GeneratePDF: React.FC = () => {
     setIframeKey(prevKey => prevKey + 1);
   };
 
+  const handleGoBack = () => {
+    navigate('/patientrecords');
+  };
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -82,7 +88,14 @@ const GeneratePDF: React.FC = () => {
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
           <div className="container mx-auto px-4 py-8">
             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-              <div className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+              <div className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex items-center">
+                <Link
+                  to={`/patient/${patientId}`}
+                  className="mr-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors duration-200 flex items-center"
+                  aria-label="Go back to Patient Records"
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </Link>
                 <h2 className="text-3xl font-bold">Generate PDF</h2>
               </div>
               <div className="p-6">
@@ -156,26 +169,7 @@ const GeneratePDF: React.FC = () => {
                   ></iframe>
                 </div>
               </div>
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
-                <button
-                  onClick={() => window.print()}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                >
-                  Print Form
-                </button>
-                <button
-                  onClick={downloadFlattenedPDF}
-                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-                >
-                  Download PDF
-                </button>
-                <button
-                  onClick={() => alert("PDF edited and saved!")}
-                  className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                >
-                  Save Changes
-                </button>
-              </div>
+              
             </div>
           </div>
         </main>

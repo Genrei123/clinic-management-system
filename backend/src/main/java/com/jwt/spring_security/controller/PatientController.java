@@ -10,7 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,10 +26,34 @@ public class PatientController {
     @Autowired
     private PatientService patientService;
 
+    @PostMapping("/uploadPatientImage")
+    public ResponseEntity<?> uploadPatientImage(@RequestParam("file") MultipartFile file, @RequestParam("patientId") Long patientId) {
+        try {
+            // Define the path where the file will be saved
+            Path uploadPath = Paths.get("uploads/patient_images");
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // Save the file
+            Path filePath = uploadPath.resolve(file.getOriginalFilename());
+            Files.copy(file.getInputStream(), filePath);
+
+            // Update the patient's image path in the database (assuming you have a field for this)
+            Patient patient = patientRepo.findById(patientId).orElseThrow(() -> new RuntimeException("Patient not found"));
+            patient.setImagePath(filePath.toString());
+            patientRepo.save(patient);
+
+            return ResponseEntity.ok("Image uploaded successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload image");
+        }
+    }
+
     @PostMapping("/addPatient")
     public ResponseEntity<?> addPatient(@Validated @RequestBody Patient patient) {
-        // Check if patient with the same ID already exists
-        if (patientRepo.existsById(patient.getClientID())) {
+        // Prevent conflict if clientID is provided manually (should be null for new patients)
+        if (patient.getClientID() != null && patientRepo.existsById(patient.getClientID())) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body("Patient with ID " + patient.getClientID() + " already exists.");
