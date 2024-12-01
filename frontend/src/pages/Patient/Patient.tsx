@@ -2,11 +2,17 @@ import React, { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
-import { Camera, Upload, FileText, UserCheck, Calendar, Clock, ChevronRight } from 'lucide-react';
+import { Camera, Upload, FileText, UserCheck, Calendar, Clock, ChevronRight, Edit, Plus, Trash2 } from 'lucide-react';
 
 interface Visit {
   visitDate: string;
   reason: string;
+}
+
+interface File {
+  name: string;
+  uploadDate: string;
+  type: string;
 }
 
 interface Patient {
@@ -14,6 +20,7 @@ interface Patient {
   name: string;
   birthdate: string;
   visitHistory: Visit[];
+  files: File[];
 }
 
 const Patient: React.FC = () => {
@@ -21,8 +28,10 @@ const Patient: React.FC = () => {
   const navigate = useNavigate();
   const [patientImage, setPatientImage] = useState<string | null>(null);
   const [selectedForm, setSelectedForm] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAddingDetails, setIsAddingDetails] = useState(false);
 
-  const patient: Patient = {
+  const [patient, setPatient] = useState<Patient>({
     id: id || "",
     name: "Cristobal, Genrey O.",
     birthdate: "24/05/2024",
@@ -30,7 +39,11 @@ const Patient: React.FC = () => {
       { visitDate: "2024-11-20", reason: "Routine Checkup" },
       { visitDate: "2024-11-15", reason: "Follow-Up" },
     ],
-  };
+    files: [
+      { name: "Medical History.pdf", uploadDate: "2024-11-20", type: "PDF" },
+      { name: "Lab Results.jpg", uploadDate: "2024-11-15", type: "Image" },
+    ],
+  });
 
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +63,16 @@ const Patient: React.FC = () => {
   const uploadOtherFiles = useCallback(() => {
     console.log("Uploading other files to Google Drive (placeholder).");
     alert("File uploaded to Google Drive (placeholder).");
+    // In a real implementation, you would upload the file and then add it to the patient's files array
+    const newFile: File = {
+      name: "New File.pdf",
+      uploadDate: new Date().toISOString().split('T')[0],
+      type: "PDF"
+    };
+    setPatient(prev => ({
+      ...prev,
+      files: [...prev.files, newFile]
+    }));
   }, []);
 
   const logAttendance = useCallback(() => {
@@ -64,6 +87,33 @@ const Patient: React.FC = () => {
     }
     navigate(`/generate-pdf?form=${selectedForm}&patientId=${patient.id}`);
   }, [selectedForm, navigate, patient.id]);
+
+  const handleEditPatient = () => {
+    setIsEditing(true);
+  };
+
+  const handleSavePatient = () => {
+    setIsEditing(false);
+    // In a real implementation, you would save the changes to the backend here
+    alert("Patient details saved!");
+  };
+
+  const handleAddDetails = () => {
+    setIsAddingDetails(true);
+  };
+
+  const handleSaveDetails = () => {
+    setIsAddingDetails(false);
+    // In a real implementation, you would save the new details to the backend here
+    alert("New patient details added!");
+  };
+
+  const handleDeleteFile = (fileName: string) => {
+    setPatient(prev => ({
+      ...prev,
+      files: prev.files.filter(file => file.name !== fileName)
+    }));
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -111,14 +161,46 @@ const Patient: React.FC = () => {
                   </div>
 
                   <div className="bg-gray-50 p-4 rounded-lg shadow">
-                    <p className="flex items-center text-gray-700 mb-2">
-                      <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Birthdate:</span> {patient.birthdate}
-                    </p>
-                    <p className="flex items-center text-gray-700">
-                      <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Patient ID:</span> {patient.id}
-                    </p>
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="text"
+                          value={patient.name}
+                          onChange={(e) => setPatient(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full p-2 mb-2 border rounded"
+                        />
+                        <input
+                          type="date"
+                          value={patient.birthdate}
+                          onChange={(e) => setPatient(prev => ({ ...prev, birthdate: e.target.value }))}
+                          className="w-full p-2 mb-2 border rounded"
+                        />
+                        <button
+                          onClick={handleSavePatient}
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
+                        >
+                          Save Changes
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="flex items-center text-gray-700 mb-2">
+                          <Calendar className="w-5 h-5 mr-2 text-blue-500" />
+                          <span className="font-semibold mr-2">Birthdate:</span> {patient.birthdate}
+                        </p>
+                        <p className="flex items-center text-gray-700">
+                          <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
+                          <span className="font-semibold mr-2">Patient ID:</span> {patient.id}
+                        </p>
+                        <button
+                          onClick={handleEditPatient}
+                          className="mt-2 bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition duration-200 flex items-center"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Patient
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -162,10 +244,41 @@ const Patient: React.FC = () => {
                         <UserCheck className="w-5 h-5 mr-2" />
                         Log Checkup
                       </button>
+                      <button
+                        onClick={handleAddDetails}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Add Patient Details
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {isAddingDetails && (
+                <div className="p-6 border-t border-gray-200">
+                  <h3 className="text-xl font-semibold mb-4 text-gray-800">Add Patient Details</h3>
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      placeholder="Detail Name"
+                      className="w-full p-2 border rounded"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Detail Value"
+                      className="w-full p-2 border rounded"
+                    />
+                    <button
+                      onClick={handleSaveDetails}
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
+                    >
+                      Save Details
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="p-6 border-t border-gray-200">
                 <h3 className="text-xl font-semibold mb-4 text-gray-800">Visit History</h3>
@@ -175,7 +288,6 @@ const Patient: React.FC = () => {
                       <tr className="bg-gray-50">
                         <th className="border border-gray-200 p-2 text-left">Visit Date</th>
                         <th className="border border-gray-200 p-2 text-left">Reason</th>
-                        
                       </tr>
                     </thead>
                     <tbody>
@@ -199,6 +311,44 @@ const Patient: React.FC = () => {
                   </table>
                 </div>
               </div>
+
+              <div className="p-6 border-t border-gray-200">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800">Associated Files</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border border-gray-200 p-2 text-left">File Name</th>
+                        <th className="border border-gray-200 p-2 text-left">Upload Date</th>
+                        <th className="border border-gray-200 p-2 text-left">Type</th>
+                        <th className="border border-gray-200 p-2 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {patient.files.map((file, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-200 p-2">
+                            <div className="flex items-center">
+                              <FileText className="w-5 h-5 mr-2 text-gray-500" />
+                              {file.name}
+                            </div>
+                          </td>
+                          <td className="border border-gray-200 p-2">{file.uploadDate}</td>
+                          <td className="border border-gray-200 p-2">{file.type}</td>
+                          <td className="border border-gray-200 p-2">
+                            <button
+                              onClick={() => handleDeleteFile(file.name)}
+                              className="text-red-500 hover:text-red-700 transition duration-200"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -208,4 +358,3 @@ const Patient: React.FC = () => {
 };
 
 export default Patient;
-

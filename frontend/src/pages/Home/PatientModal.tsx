@@ -1,18 +1,32 @@
 import React, { useState } from "react";
+import { Patient } from "../../types/Patient";
 
-interface Patient {
-  clientID: number;
-  lastName: string;
-  givenName: string;
-  middleInitial?: string;
-  address: string;
-  age: number;
-  birthday: string;
-  religion: string;
-  occupation: string;
-  lastDelivery?: string;
-  philhealthID: string;
-}
+const mapPatientData = (patientData: Patient): Patient => {
+    return {
+        clientID: patientData.clientID,
+        varcharID: patientData.varcharID,
+        lastName: patientData.lastName,
+        givenName: patientData.givenName,
+        middleInitial: patientData.middleInitial ?? null,
+        sex: patientData.sex, 
+        address: patientData.address,
+        age: patientData.age,
+        birthday: patientData.birthday,
+        religion: patientData.religion,
+        occupation: patientData.occupation,
+        lastDelivery: patientData.lastDelivery,
+        philhealthID: patientData.philhealthID,
+        spouse: patientData.spouse,
+        aog: patientData.aog,
+        bp: patientData.bp,
+        fh: patientData.fh,
+        fht: patientData.fht,
+        consultation: patientData.consultation,
+        remarks: patientData.remarks,
+        weight: patientData.weight,
+    };
+};
+
 
 interface PatientModalProps {
   isOpen: boolean;
@@ -30,10 +44,6 @@ const PatientModal: React.FC<PatientModalProps> = ({ isOpen, onClose, onLogVisit
 
   const handleSearch = () => {
     // Mock fetch for patients by last name
-    const mockPatients = [
-      { clientID: 1, lastName: "Doe", givenName: "John", age: 30, birthday: "1993-01-01", address: "123 St", religion: "Catholic", occupation: "Engineer", philhealthID: "12345" },
-    ];
-    setPatients(mockPatients.filter((p) => p.lastName.toLowerCase() === lastName.toLowerCase()));
   };
 
   const handleCreatePatient = () => {
