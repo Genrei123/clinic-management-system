@@ -107,6 +107,7 @@ const PatientRecords: React.FC = () => {
                           <th className="px-6 py-3">Name</th>
                           <th className="px-6 py-3">Address</th>
                           <th className="px-6 py-3">Sex</th>
+                          <th className="px-6 py-3">EDC</th>
                           <th className="px-6 py-3">Action</th>
                         </tr>
                       </thead>
@@ -118,9 +119,8 @@ const PatientRecords: React.FC = () => {
                               {patient.givenName} 
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">{patient.address}</td>
-
                             <td className="px-6 py-4 whitespace-nowrap">{patient.sex}</td>
-                            
+                            <td className="px-6 py-4 whitespace-nowrap">{patient.edc ? patient.edc.toDateString() : ''}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <button
                                 onClick={() => handleViewClick(patient.clientID)}

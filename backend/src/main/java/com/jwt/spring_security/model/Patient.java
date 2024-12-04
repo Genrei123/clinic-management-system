@@ -12,8 +12,8 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generate clientID
     private Long clientID;
 
-    @Column(nullable = false, unique = true)
-    private String varcharID;
+    @Column(nullable = true, unique = true)
+    private String patientID;
     private String imagePath;
 
     private String lastName;
@@ -34,19 +34,54 @@ public class Patient {
 
     private String philhealthID;
 
-    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL) // Bi-directional relationship with Spouse
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Spouse spouse;
 
-    private Date consultation_date;
-    private int AOG;
-    private String BP;
-    private float weight;
-    private float FH;
-    private float FHT;
-    private String remarks;
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Pregnancy pregnancy;
+
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Consultation consultation;
+
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private MedicalHistory medicalHistory;
 
     // Getters and setters
+    public MedicalHistory getMedicalHistory() {
+        return medicalHistory;
+    }
 
+    public void setMedicalHistory(MedicalHistory medicalHistory) {
+        this.medicalHistory = medicalHistory;
+    }
+
+    public String getPatientID() {
+        return patientID;
+    }
+
+    public void setPatientID(String patientID) {
+        this.patientID = patientID;
+    }
+
+    public Pregnancy getPregnancy() {
+        return pregnancy;
+    }
+
+    public void setPregnancy(Pregnancy pregnancy) {
+        this.pregnancy = pregnancy;
+    }
+
+    public Consultation getConsultation() {
+        return consultation;
+    }
+
+    public void setConsultation(Consultation consultation) {
+        this.consultation = consultation;
+    }
 
     public String getImagePath() {
         return imagePath;
@@ -65,11 +100,11 @@ public class Patient {
     }
 
     public String getVarcharID() {
-        return varcharID;
+        return patientID;
     }
 
     public void setVarcharID(String varcharID) {
-        this.varcharID = varcharID;
+        this.patientID = varcharID;
     }
 
     public Spouse getSpouse() {

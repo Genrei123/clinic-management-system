@@ -1,29 +1,111 @@
-interface Spouse {
-    name: string;
-}
+export default interface Patient {
 
-export interface Patient {
-    clientID: number;
-    varcharID: string;
-    lastName: string;
-    givenName: string;
-    middleInitial: string | null;  // 'null' in case middle initial is not provided
-    sex: 'M' | 'F';  // Assuming 'M' for Male and 'F' for Female
-    address: string;
-    age: number;
-    birthday: string;  // Date as a string in 'YYYY-MM-DD' format
-    religion: string;
-    occupation: string;
-    lastDelivery?: string;  // Date as a string in 'YYYY-MM-DD' format
-    philhealthID?: string;
-    spouse?: Spouse;  // Optional field
-    aog?: number;  // Age of Gestation
-    bp?: string;  // Blood Pressure
-    // Fundal height
-    fh?: number;
-    fht?: number;  // Fetal Heart Tone
-    consultation?: string;  // Consultation
-    remarks?: string;  // Remarks
-    weight?: number;  // Weight
-}
+  patientID: string;
 
+  imagePath: string;
+
+  lastName: string;
+
+  givenName: string;
+
+  middleInitial: string;
+
+  sex: string;
+
+  address: string;
+
+  age: number;
+
+  birthday: string;
+
+  religion: string;
+
+  occupation: string;
+
+  lastDelivery: string | null;
+
+  philhealthID: string;
+
+  spouse: {
+
+    spouseName: string;
+
+    spouseBirthday: string;
+
+    spouseReligion: string;
+
+    spouseOccupation: string;
+
+    spouseContactNumber: string;
+
+    spouseAge: number;
+
+  };
+
+  pregnancy: {
+
+    gravida: number;
+
+    para: number;
+
+    term: number;
+
+    preTerm: number;
+
+    abortion: number;
+
+    living: number;
+
+    LMP: string;
+
+    EDC: string;
+
+    ITDate: string | null;
+
+    menarche: string;
+
+  };
+
+  consultation: {
+
+    consultationDate: string;
+
+    AOG: number;
+
+    BP: string;
+
+    weight: number;
+
+    FH: number;
+
+    FHT: number;
+
+    remarks: string;
+
+  };
+
+  medicalHistory: {
+
+    smoking: boolean;
+
+    allergies: string;
+
+    drugIntake: boolean;
+
+    bleedingAnemia: boolean;
+
+    diabetesCongenitalAnomalies: boolean;
+
+    previousCSection: boolean;
+
+    consectuivemiscarriage: boolean;
+
+    postPartumHemorrhage: boolean;
+
+    forcepDelivery: boolean;
+
+    hypertension: boolean;
+
+  };
+
+}

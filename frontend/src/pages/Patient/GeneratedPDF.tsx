@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { PDFDocument } from "pdf-lib";
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 
-import CSF from "../../assets/pdf/CF2.pdf";
-import ClaimForm1 from "../../assets/pdf/CF2.pdf";
+import CSF from "../../assets/pdf/CSF.pdf";
+import ClaimForm1 from "../../assets/pdf/CF1.pdf";
 import ClaimForm2 from "../../assets/pdf/CF2.pdf";
 
-type PatientType = 'Parent' | 'Child';
+type PatientType = "Parent" | "Child";
 
 const GeneratePDF: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [formType, setFormType] = useState<string | null>(searchParams.get("form") || "CSF");
-  const [patientType, setPatientType] = useState<PatientType>('Parent');
+  const [formType, setFormType] = useState<string | null>(
+    searchParams.get("form") || "CSF"
+  );
+  const [patientType, setPatientType] = useState<PatientType>("Parent");
   const patientId = searchParams.get("patientId");
   const [loading, setLoading] = useState(true);
   const [iframeKey, setIframeKey] = useState(0);
@@ -42,42 +44,52 @@ const GeneratePDF: React.FC = () => {
 
   const handleIframeLoad = () => setLoading(false);
 
-  const downloadFlattenedPDF = async () => {
-    try {
-      const pdfBytes = await fetch(getPDFFile()).then(res => res.arrayBuffer());
-      const pdfDoc = await PDFDocument.load(pdfBytes);
-
-      // Flatten all form fields
-      const form = pdfDoc.getForm();
-      form.flatten();
-
-      // Save the flattened PDF
-      const flattenedBytes = await pdfDoc.save();
-      const blob = new Blob([flattenedBytes], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `flattened_${formType?.replace(/\s+/g, '_').toLowerCase()}_${patientType.toLowerCase()}_${patientId}.pdf`;
-      link.click();
-    } catch (error) {
-      console.error("Error flattening PDF:", error);
-      alert("An error occurred while flattening the PDF. Please try again.");
-    }
+  const getPrefilledPDFFile = async () => {
+    const pdfBytes = await fetch(getPDFFile()).then((res) => res.arrayBuffer());
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const form = pdfDoc.getForm();
+  
+    // Log all form field names to debug
+    const fields = form.getFields();
+    fields.forEach((field) => {
+      console.log("Field Name:", field.getName());
+    });
+  
+    // Update form fields based on the correct names
+    // form.getTextField("Actual_Field_Name").setText("John Doe"); 
+    // form.getTextField("Another_Field_Name").setText(patientId || "");
+  
+    const updatedPdfBytes = await pdfDoc.save();
+    const blob = new Blob([updatedPdfBytes], { type: "application/pdf" });
+    return URL.createObjectURL(blob);
   };
+  
+
+  useEffect(() => {
+    const loadPrefilledPDF = async () => {
+      setLoading(true); // Show loader
+      const prefilledPDFUrl = await getPrefilledPDFFile();
+      setPdfUrl(prefilledPDFUrl); // Set new PDF URL
+      setIframeKey((prevKey) => prevKey + 1); // Force iframe reload with new key
+      setLoading(false); // Hide loader
+    };
+
+    loadPrefilledPDF();
+  }, [formType, patientType, patientId]);
 
   const handleFormChange = (newFormType: string) => {
-    setFormType(newFormType);
-    setLoading(true);
-    setIframeKey(prevKey => prevKey + 1);
+    setFormType(newFormType); // Triggers useEffect
   };
 
   const handlePatientTypeChange = (newPatientType: PatientType) => {
-    setPatientType(newPatientType);
-    setLoading(true);
-    setIframeKey(prevKey => prevKey + 1);
+    setPatientType(newPatientType); // Triggers useEffect
   };
 
+  // State to hold the pre-filled PDF URL.
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
   const handleGoBack = () => {
-    navigate('/patientrecords');
+    navigate("/patientrecords");
   };
 
   return (
@@ -101,11 +113,17 @@ const GeneratePDF: React.FC = () => {
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-gray-700">Patient ID:</span>
-                    <span className="bg-gray-200 px-3 py-1 rounded-full text-gray-700">{patientId}</span>
+                    <span className="font-semibold text-gray-700">
+                      Patient ID:
+                    </span>
+                    <span className="bg-gray-200 px-3 py-1 rounded-full text-gray-700">
+                      {patientId}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2 col-span-2">
-                    <span className="font-semibold text-gray-700">Form Type:</span>
+                    <span className="font-semibold text-gray-700">
+                      Form Type:
+                    </span>
                     <div className="flex space-x-2">
                       {["CSF", "Claim Form 1", "Claim Form 2"].map((type) => (
                         <button
@@ -125,26 +143,31 @@ const GeneratePDF: React.FC = () => {
                 </div>
 
                 <div className="mb-6">
-                  <span className="font-semibold text-gray-700 mr-2">Patient Type:</span>
-                  <div className="inline-flex rounded-md shadow-sm" role="group">
+                  <span className="font-semibold text-gray-700 mr-2">
+                    Patient Type:
+                  </span>
+                  <div
+                    className="inline-flex rounded-md shadow-sm"
+                    role="group"
+                  >
                     <button
                       type="button"
-                      onClick={() => handlePatientTypeChange('Parent')}
+                      onClick={() => handlePatientTypeChange("Parent")}
                       className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                        patientType === 'Parent'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                        patientType === "Parent"
+                          ? "bg-blue-500 text-white"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
                       } border border-gray-200`}
                     >
                       Parent
                     </button>
                     <button
                       type="button"
-                      onClick={() => handlePatientTypeChange('Child')}
+                      onClick={() => handlePatientTypeChange("Child")}
                       className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                        patientType === 'Child'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                        patientType === "Child"
+                          ? "bg-blue-500 text-white"
+                          : "bg-white text-gray-700 hover:bg-gray-50"
                       } border border-gray-200`}
                     >
                       Child
@@ -152,24 +175,28 @@ const GeneratePDF: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="relative rounded-lg overflow-hidden shadow-md" style={{ height: "70vh" }}>
+                <div
+                  className="relative rounded-lg overflow-hidden shadow-md"
+                  style={{ height: "70vh" }}
+                >
                   {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
                       <div className="loader border-t-4 border-blue-500 rounded-full w-12 h-12 animate-spin"></div>
                     </div>
                   )}
-                  <iframe
-                    key={`${iframeKey}-${patientType}`}
-                    src={getPDFFile()}
-                    title="PDF Viewer"
-                    width="100%"
-                    height="100%"
-                    className="border-none"
-                    onLoad={handleIframeLoad}
-                  ></iframe>
+                  {pdfUrl && (
+                    <iframe
+                      key={iframeKey}
+                      src={pdfUrl}
+                      title="PDF Viewer"
+                      width="100%"
+                      height="100%"
+                      className="border-none"
+                      onLoad={handleIframeLoad}
+                    />
+                  )}
                 </div>
               </div>
-              
             </div>
           </div>
         </main>
@@ -179,4 +206,3 @@ const GeneratePDF: React.FC = () => {
 };
 
 export default GeneratePDF;
-

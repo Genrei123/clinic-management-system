@@ -1,5 +1,7 @@
 package com.jwt.spring_security.controller;
 
+import com.jwt.spring_security.DTO.ConsultationDTO;
+import com.jwt.spring_security.DTO.PatientDTO;
 import com.jwt.spring_security.model.Patient;
 import com.jwt.spring_security.model.Spouse;
 import com.jwt.spring_security.repo.PatientRepo;
@@ -51,23 +53,9 @@ public class PatientController {
     }
 
     @PostMapping("/addPatient")
-    public ResponseEntity<?> addPatient(@Validated @RequestBody Patient patient) {
-        // Prevent conflict if clientID is provided manually (should be null for new patients)
-        if (patient.getClientID() != null && patientRepo.existsById(patient.getClientID())) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body("Patient with ID " + patient.getClientID() + " already exists.");
-        }
-
-        // Link spouse to patient if provided
-        if (patient.getSpouse() != null) {
-            Spouse spouse = patient.getSpouse();
-            spouse.setPatient(patient);
-        }
-
-        // Save patient
-        Patient savedPatient = patientRepo.save(patient);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedPatient);
+    public ResponseEntity<String> addPatient(@RequestBody PatientDTO patientDTO) {
+        patientService.addPatient(patientDTO);
+        return ResponseEntity.ok("Patient successfully added!");
     }
 
     @GetMapping("/getPatient")

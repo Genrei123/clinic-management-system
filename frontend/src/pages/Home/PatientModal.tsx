@@ -1,33 +1,6 @@
 import React, { useState } from "react";
 import { Patient } from "../../types/Patient";
 
-const mapPatientData = (patientData: Patient): Patient => {
-    return {
-        clientID: patientData.clientID,
-        varcharID: patientData.varcharID,
-        lastName: patientData.lastName,
-        givenName: patientData.givenName,
-        middleInitial: patientData.middleInitial ?? null,
-        sex: patientData.sex, 
-        address: patientData.address,
-        age: patientData.age,
-        birthday: patientData.birthday,
-        religion: patientData.religion,
-        occupation: patientData.occupation,
-        lastDelivery: patientData.lastDelivery,
-        philhealthID: patientData.philhealthID,
-        spouse: patientData.spouse,
-        aog: patientData.aog,
-        bp: patientData.bp,
-        fh: patientData.fh,
-        fht: patientData.fht,
-        consultation: patientData.consultation,
-        remarks: patientData.remarks,
-        weight: patientData.weight,
-    };
-};
-
-
 interface PatientModalProps {
   isOpen: boolean;
   onClose: () => void;
