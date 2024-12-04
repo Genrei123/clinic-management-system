@@ -37,7 +37,13 @@ public class Patient {
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL) // Bi-directional relationship with Spouse
     private Spouse spouse;
 
-
+    private Date consultation_date;
+    private int AOG;
+    private String BP;
+    private float weight;
+    private float FH;
+    private float FHT;
+    private String remarks;
 
     // Getters and setters
 
