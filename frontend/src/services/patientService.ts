@@ -1,5 +1,5 @@
 import axiosInstance from "../config/axiosConfig";
-import { Patient } from "../types/Patient"; // Assume you have a `Patient` type/interface defined.
+import Patient from "../types/Patient"; // Assume you have a `Patient` type/interface defined.
 
 // Add a patient
 export const addPatient = async (patient: Patient): Promise<Patient> => {

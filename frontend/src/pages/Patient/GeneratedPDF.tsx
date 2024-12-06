@@ -22,6 +22,8 @@ const GeneratePDF: React.FC = () => {
   const [iframeKey, setIframeKey] = useState(0);
   const navigate = useNavigate();
 
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
   useEffect(() => {
     setSearchParams((params) => {
       params.set("form", formType || "CSF");
@@ -44,49 +46,62 @@ const GeneratePDF: React.FC = () => {
 
   const handleIframeLoad = () => setLoading(false);
 
-  const getPrefilledPDFFile = async () => {
-    const pdfBytes = await fetch(getPDFFile()).then((res) => res.arrayBuffer());
-    const pdfDoc = await PDFDocument.load(pdfBytes);
-    const form = pdfDoc.getForm();
-  
-    // Log all form field names to debug
-    const fields = form.getFields();
-    fields.forEach((field) => {
-      console.log("Field Name:", field.getName());
-    });
-  
-    // Update form fields based on the correct names
-    // form.getTextField("Actual_Field_Name").setText("John Doe"); 
-    // form.getTextField("Another_Field_Name").setText(patientId || "");
-  
-    const updatedPdfBytes = await pdfDoc.save();
-    const blob = new Blob([updatedPdfBytes], { type: "application/pdf" });
-    return URL.createObjectURL(blob);
+  const fetchPatientData = async () => {
+    const response = await fetch(`http://localhost:8080/getPatient?patientId=${patientId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch patient data.");
+    }
+    return response.json();
   };
-  
+
+  const getPrefilledPDFFile = async () => {
+    try {
+      const pdfBytes = await fetch(getPDFFile()).then((res) => res.arrayBuffer());
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const form = pdfDoc.getForm();
+
+      const patientData = await fetchPatientData();
+
+      console.log("Patient Data:", patientData);
+
+      // Update form fields based on the data returned
+      form.getTextField("MI_Last_Name").setText(
+        `${patientData.givenName} ${patientData.lastName}`
+      );
+      form.getTextField("MI_birth_date_month").setText(patientData.address);
+      form.getTextField("Text-cO2Y8NkwuI").setText(patientData.philhealthID || "");
+      form.getTextField("MI_Patient_last_name").setText(patientData.age.toString());
+      form.getTextField("MI_Patient_first_name").setText(patientData.sex);
+      form.getTextField("Occupation").setText(patientData.occupation);
+
+      const updatedPdfBytes = await pdfDoc.save();
+      const blob = new Blob([updatedPdfBytes], { type: "application/pdf" });
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error("Error pre-filling PDF:", error);
+      return getPDFFile(); // Return original PDF if error occurs
+    }
+  };
 
   useEffect(() => {
     const loadPrefilledPDF = async () => {
-      setLoading(true); // Show loader
+      setLoading(true);
       const prefilledPDFUrl = await getPrefilledPDFFile();
-      setPdfUrl(prefilledPDFUrl); // Set new PDF URL
-      setIframeKey((prevKey) => prevKey + 1); // Force iframe reload with new key
-      setLoading(false); // Hide loader
+      setPdfUrl(prefilledPDFUrl);
+      setIframeKey((prevKey) => prevKey + 1);
+      setLoading(false);
     };
 
     loadPrefilledPDF();
   }, [formType, patientType, patientId]);
 
   const handleFormChange = (newFormType: string) => {
-    setFormType(newFormType); // Triggers useEffect
+    setFormType(newFormType);
   };
 
   const handlePatientTypeChange = (newPatientType: PatientType) => {
-    setPatientType(newPatientType); // Triggers useEffect
+    setPatientType(newPatientType);
   };
-
-  // State to hold the pre-filled PDF URL.
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const handleGoBack = () => {
     navigate("/patientrecords");

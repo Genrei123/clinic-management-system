@@ -26,6 +26,8 @@ export default interface Patient {
 
   philhealthID: string;
 
+  expectedDateConfinement: string;
+
   spouse: {
 
     spouseName: string;
@@ -68,7 +70,7 @@ export default interface Patient {
 
   consultation: {
 
-    consultationDate: string;
+    consultation_date: string;
 
     AOG: number;
 
