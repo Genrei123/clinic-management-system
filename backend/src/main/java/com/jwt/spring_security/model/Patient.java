@@ -6,28 +6,113 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
-public class Patient  {
+public class Patient {
+
     @Id
-    private Long clientID;  // The unique ID of the patient
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto-generate clientID
+    private Long clientID;
+
+    @Column(nullable = true, unique = true)
+    private String patientID;
+    private String imagePath;
+
     private String lastName;
     private String givenName;
     private Character middleInitial;
+    private Character sex;
     private String address;
     private int age;
+
+    @Temporal(TemporalType.DATE)
     private Date birthday;
+
     private String religion;
     private String occupation;
+
+    @Temporal(TemporalType.DATE)
     private Date lastDelivery;
+
     private String philhealthID;
 
-    // Getters and Setters
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Spouse spouse;
+
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Pregnancy pregnancy;
+
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private Consultation consultation;
+
+    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private MedicalHistory medicalHistory;
+
+    // Getters and setters
+    public MedicalHistory getMedicalHistory() {
+        return medicalHistory;
+    }
+
+    public void setMedicalHistory(MedicalHistory medicalHistory) {
+        this.medicalHistory = medicalHistory;
+    }
+
+    public String getPatientID() {
+        return patientID;
+    }
+
+    public void setPatientID(String patientID) {
+        this.patientID = patientID;
+    }
+
+    public Pregnancy getPregnancy() {
+        return pregnancy;
+    }
+
+    public void setPregnancy(Pregnancy pregnancy) {
+        this.pregnancy = pregnancy;
+    }
+
+    public Consultation getConsultation() {
+        return consultation;
+    }
+
+    public void setConsultation(Consultation consultation) {
+        this.consultation = consultation;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
 
     public Long getClientID() {
-        return clientID;  // Return the clientID (patient's ID)
+        return clientID;
     }
 
     public void setClientID(Long clientID) {
-        this.clientID = clientID;  // Set the clientID (patient's ID)
+        this.clientID = clientID;
+    }
+
+    public String getVarcharID() {
+        return patientID;
+    }
+
+    public void setVarcharID(String varcharID) {
+        this.patientID = varcharID;
+    }
+
+    public Spouse getSpouse() {
+        return spouse;
+    }
+
+    public void setSpouse(Spouse spouse) {
+        this.spouse = spouse;
     }
 
     public String getLastName() {
@@ -52,6 +137,14 @@ public class Patient  {
 
     public void setMiddleInitial(Character middleInitial) {
         this.middleInitial = middleInitial;
+    }
+
+    public Character getSex() {
+        return sex;
+    }
+
+    public void setSex(Character sex) {
+        this.sex = sex;
     }
 
     public String getAddress() {
@@ -110,25 +203,5 @@ public class Patient  {
         this.philhealthID = philhealthID;
     }
 
-
-    public Long getId() {
-        return this.clientID;  // Return the unique patient ID
-    }
-
-    public String getName() {
-        String fullName = givenName + " " + (middleInitial != null ? middleInitial + ". " : "") + lastName;
-        return fullName;
-    }
-
-    @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private Spouse spouse;  // Optional: Not all patients will have a spouse
-
-    public Spouse getSpouse() {
-        return spouse;  // Returns the spouse, or null if not set
-    }
-
-    public void setSpouse(Spouse spouse) {
-        this.spouse = spouse;
-    }
+    // Other getters and setters...
 }
