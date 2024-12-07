@@ -1,4 +1,5 @@
 export default interface Patient {
+  clientID: number;
 
   patientID: string;
 

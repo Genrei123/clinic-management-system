@@ -3,6 +3,7 @@ import Patient from "../../types/Patient";
 import { searchPatients, addPatient } from "../../services/patientService";
 import { addPatientLog } from "../../services/visitService";
 import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
+import { createEmptyPatient } from "../../utils/Patient";
 
 interface PatientProfileModalProps {
   isOpen: boolean;
@@ -19,62 +20,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   const [patients, setPatients] = useState<
     { id: number; lastName: string; givenName: string }[]
   >([]);
-  const [formData, setFormData] = useState<Patient>({
-    patientID: "",
-    imagePath: "",
-    lastName: "",
-    givenName: "",
-    middleInitial: "",
-    sex: "",
-    address: "",
-    age: 0,
-    birthday: "",
-    religion: "",
-    occupation: "",
-    lastDelivery: null,
-    philhealthID: "",
-    spouse: {
-      spouseName: "",
-      spouseBirthday: "",
-      spouseReligion: "",
-      spouseOccupation: "",
-      spouseContactNumber: "",
-      spouseAge: 0,
-    },
-    pregnancy: {
-      gravida: 0,
-      para: 0,
-      term: 0,
-      preTerm: 0,
-      abortion: 0,
-      living: 0,
-      LMP: "",
-      EDC: "",
-      ITDate: null,
-      menarche: "",
-    },
-    consultation: {
-      consultationDate: "",
-      AOG: 0,
-      BP: "",
-      weight: 0,
-      FH: 0,
-      FHT: 0,
-      remarks: "",
-    },
-    medicalHistory: {
-      smoking: false,
-      allergies: "",
-      drugIntake: false,
-      bleedingAnemia: false,
-      diabetesCongenitalAnomalies: false,
-      previousCSection: false,
-      consectuivemiscarriage: false,
-      postPartumHemorrhage: false,
-      forcepDelivery: false,
-      hypertension: false,
-    }
-  });
+  const [formData, setFormData] = useState<Patient>(createEmptyPatient());
 
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     null
@@ -159,7 +105,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
 
     try {
       const newPatient = await addPatient(formData);
-      await addPatientLog(newPatient.clientID, visitPurpose);
+      await addPatientLog(Number(newPatient), visitPurpose);
       setSuccessMessage(
         `Patient profile for ${newPatient.lastName} was successfully created and visit logged.`
       );
@@ -194,28 +140,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
           "An error occurred while logging the visit. Please try again."
         );
       }
-    }
-  };
-
-  // Inside the component, initialize toggle states
-  const [showSpouse, setShowSpouse] = useState(false);
-  const [showPregnancy, setShowPregnancy] = useState(false);
-  const [showMedicalHistory, setShowMedicalHistory] = useState(false);
-
-  // Handle toggle changes
-  const handleToggleChange = (section) => {
-    switch (section) {
-      case "spouse":
-        setShowSpouse(!showSpouse);
-        break;
-      case "pregnancy":
-        setShowPregnancy(!showPregnancy);
-        break;
-      case "medicalHistory":
-        setShowMedicalHistory(!showMedicalHistory);
-        break;
-      default:
-        break;
     }
   };
 
@@ -425,33 +349,56 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                 ))}
 
                 {/* Medical History Fields */}
-                <h3 className = "col-span-2 font-bold mt-4">Medical History</h3>
+                <h3 className="col-span-2 font-bold mt-4">Medical History</h3>
                 {[
                   "smoking",
                   "allergies",
                   "drugIntake",
-                  "bleeding Anemia",
+                  "bleedingAnemia",
                   "previousCSection",
                   "consectuivemiscarriage",
                   "postPartumHemorrhage",
                   "forcepDelivery",
                   "hypertension",
                 ].map((field) => (
-                  <div key={field}>
+                  <div key={field} className="mb-4">
                     <label
                       htmlFor={field}
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium mb-2"
                     >
-                      {field}
+                      {field === "allergies" ? "Allergies (Specify)" : field}
                     </label>
-                    <input
-                      id={field}
-                      name={`medicalHistory.${field}`}
-                      type="bool"
-                      value={(formData.medicalHistory as any)[field] || ""}
-                      onChange={handleInputChange}
-                      className="w-full border rounded-lg p-2"
-                    />
+                    {field === "allergies" ? (
+                      <input
+                        id={field}
+                        name={`medicalHistory.${field}`}
+                        type="text"
+                        value={(formData.medicalHistory as any)[field] || ""}
+                        onChange={handleInputChange}
+                        className="w-full border rounded-lg p-2"
+                        placeholder="Write allergies here"
+                      />
+                    ) : (
+                      <input
+                        id={field}
+                        name={`medicalHistory.${field}`}
+                        type="checkbox"
+                        checked={
+                          (formData.medicalHistory as any)[field] || false
+                        }
+                        onChange={(e) => {
+                          const { name, checked } = e.target;
+                          setFormData((prev) => ({
+                            ...prev,
+                            medicalHistory: {
+                              ...prev.medicalHistory,
+                              [field]: checked,
+                            },
+                          }));
+                        }}
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring focus:ring-blue-500"
+                      />
+                    )}
                   </div>
                 ))}
 

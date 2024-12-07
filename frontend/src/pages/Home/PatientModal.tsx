@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Patient } from "../../types/Patient";
+import Patient from "../../types/Patient";
 
 interface PatientModalProps {
   isOpen: boolean;
@@ -32,6 +32,8 @@ const PatientModal: React.FC<PatientModalProps> = ({ isOpen, onClose, onLogVisit
     }
   };
 
+  
+
   if (!isOpen) return null;
 
   return (
@@ -54,7 +56,7 @@ const PatientModal: React.FC<PatientModalProps> = ({ isOpen, onClose, onLogVisit
               <div>
                 <h3 className="text-lg font-semibold mt-4">Search Results</h3>
                 {patients.map((patient) => (
-                  <div key={patient.clientID} className="border p-2 mb-2 flex justify-between items-center">
+                  <div key={patient.patientID} className="border p-2 mb-2 flex justify-between items-center">
                     <span>
                       {patient.givenName} {patient.lastName} ({patient.age} years old)
                     </span>
