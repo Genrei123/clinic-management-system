@@ -34,6 +34,8 @@ public class Patient {
 
     private String philhealthID;
 
+    private Date expectedDateConfinement;
+
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
     private Spouse spouse;
@@ -51,6 +53,15 @@ public class Patient {
     private MedicalHistory medicalHistory;
 
     // Getters and setters
+
+    public Date getExpectedDateConfinement() {
+        return expectedDateConfinement;
+    }
+
+    public void setExpectedDateConfinement(Date expectedDateConfinement) {
+        this.expectedDateConfinement = expectedDateConfinement;
+    }
+
     public MedicalHistory getMedicalHistory() {
         return medicalHistory;
     }
