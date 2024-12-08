@@ -20,12 +20,10 @@ public class BranchController {
 
     @PostMapping("/addBranch")
     public ResponseEntity<?> addBranch(@RequestBody @Validated Branch branch) {
-        if (branchRepo.existsById(branch.getBranchID())) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiErrorResponse("Validation Error", "Branch ID already exists", branch.getBranchID()));
-        }
+        // No need to check for branch ID existence here, since the ID is auto-incremented
         return ResponseEntity.ok(branchRepo.save(branch));
     }
+
 
     @GetMapping("/branches")
     public ResponseEntity<List<Branch>> getAllBranches() {
