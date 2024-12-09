@@ -85,8 +85,10 @@ public class ItemController {
     }
 
 
-    @DeleteMapping("/deleteItems/{id}")
-    public boolean deleteItems(@PathVariable Long id) {
-        return itemService.deleteByItemID(id);
+    @DeleteMapping("/deleteItems")
+    public ResponseEntity<String> deleteItems(@RequestBody List<Long> itemIDs) {
+        return itemService.deleteByItemIDs(itemIDs);
     }
+
+
 }

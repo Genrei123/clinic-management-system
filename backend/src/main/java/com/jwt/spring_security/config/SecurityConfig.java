@@ -37,7 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(customizer -> customizer.disable()).
                 authorizeHttpRequests(request -> request
-                        .requestMatchers("login", "register", "/updateItems/{id}", "/deleteItems/{id}", "/addItem", "/addItems", "/addPatient", "/getPatient","/getPatient/{id}", "/searchPatients", "/deletePatient/{id}", "/generateqr", "/scanqr", "/addPatientLog", "/generatepdf/{patientId}", "addBranch").permitAll()
+                        .requestMatchers("login", "register", "/updateItems/{id}", "/deleteItems", "/addItem", "/items", "/addItems", "/addPatient", "/getPatient","/getPatient/{id}", "/searchPatients", "/deletePatient/{id}", "/generateqr", "/scanqr", "/addPatientLog", "/generatepdf/{patientId}", "addBranch").permitAll()
                         .anyRequest().authenticated()).
                 httpBasic(Customizer.withDefaults()).
                 sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

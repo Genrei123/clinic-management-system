@@ -149,6 +149,9 @@ const Inventory: React.FC = () => {
     setCurrentPage(value);
   };
 
+
+  // For the INSIDE of TABLE
+
   const handleSelect = (id: number) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
@@ -157,15 +160,21 @@ const Inventory: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      await Promise.all(
-        selectedItems.map((id) => axiosInstance.delete(`/inventory/${id}`)) // Delete from the backend
-      );
-      setItems((prev) => prev.filter((item) => !selectedItems.includes(item.itemID))); // Update frontend state
+      // Send a DELETE request with the selected IDs to the backend
+      await axiosInstance.delete('/deleteItems', {
+        data: selectedItems,  // Axios allows passing request body in DELETE method
+      });
+  
+      // Update the frontend state after deleting items
+      setItems((prev) => prev.filter((item) => !selectedItems.includes(item.itemID)));
+  
+      // Clear selected items
       setSelectedItems([]);
     } catch (error) {
       console.error('Error deleting items:', error);
     }
   };
+  
 
   const handleEdit = (id: number) => {
     const itemToEdit = items.find((item) => item.itemID === id);
@@ -362,35 +371,32 @@ const Inventory: React.FC = () => {
         <StyledTableCell align="right">Status</StyledTableCell>
       </TableRow>
     </TableHead>
+    
+        <TableBody>
+      {displayedItems.map((item) => (
+        <StyledTableRow key={`item-${item.itemID}`}>
+          <StyledTableCell padding="checkbox">
+            <Checkbox
+              checked={selectedItems.includes(item.itemID)}
+              onChange={() => handleSelect(item.itemID)}
+            />
+          </StyledTableCell>
 
-<TableBody>
-  {items.map((item) => (
-    <StyledTableRow key={`item-${item.itemID}`}>
-      <StyledTableCell padding="checkbox">
-        <Checkbox
-          checked={selectedItems.includes(item.itemID)}
-          onChange={() => handleSelect(item.itemID)}
-        />
-      </StyledTableCell>
+          <StyledTableCell>{item.item_name}</StyledTableCell>
+          <StyledTableCell align="right">{item.item_quantity}</StyledTableCell>
+          <StyledTableCell align="right">{item.item_price}</StyledTableCell>
 
-      <StyledTableCell>{item.item_name}</StyledTableCell>
-      <StyledTableCell align="right">{item.item_quantity}</StyledTableCell>
-      <StyledTableCell align="right">{item.item_price}</StyledTableCell>
+          <StyledTableCell align="right">{item.manufacture_date}</StyledTableCell>
+          <StyledTableCell align="right">{item.exp_date}</StyledTableCell>
 
-      <StyledTableCell align="right">{item.manufacture_date}</StyledTableCell>
-      <StyledTableCell align="right">{item.exp_date}</StyledTableCell>
+          <StyledTableCell align="right">{item.branch}</StyledTableCell>
 
-      <StyledTableCell align="right">{item.branch}</StyledTableCell>
-
-      <StyledTableCell align="right" style={{ color: item.statusColor }}>
-        {item.status}
-      </StyledTableCell>
-    </StyledTableRow>
-  ))}
-</TableBody>
-
-
-
+          <StyledTableCell align="right" style={{ color: getStatusColor(item.status) }}>
+          {item.status}
+          </StyledTableCell>
+        </StyledTableRow>
+      ))}
+    </TableBody>
   </Table>
 </TableContainer>
 
