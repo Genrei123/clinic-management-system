@@ -2,6 +2,8 @@ package com.jwt.spring_security.model;
 
 import jakarta.persistence.*;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 
 @Entity
@@ -9,13 +11,24 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long itemID;
+
+    @JsonProperty("item_name")
     private String itemName;
+
+    @JsonProperty("item_quantity")
     private Long itemQuantity;
+
+    @JsonProperty("item_price")
     private Double itemPrice;
+
+    @JsonProperty("manufacture_date")
     @Temporal(TemporalType.DATE)
     private Date manufactureDate;
+
+    @JsonProperty("exp_date")
     @Temporal(TemporalType.DATE)
     private Date expDate;
+
     private String status;
 
     @ManyToOne
