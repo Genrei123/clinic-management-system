@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { styled } from "@mui/material/styles";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -13,18 +13,21 @@ import Pagination from "@mui/material/Pagination";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import "./inventory.css";
+import axiosInstance from '../../config/axiosConfig'; // Adjust path as necessary
+
 
 interface InventoryItem {
-  id: number;
-  name: string;
-  quantity: number;
-  price: number;
-  manufacturedDate: string;
-  expirationDate: string;
-  branch: string;
+  itemID: number;
+  item_name: string; // Changed from 'name' to 'item_name'
+  item_quantity: number; // Changed from 'quantity' to 'item_quantity'
+  item_price: number; // Changed from 'price' to 'item_price'
+  manufacture_date: string; // Changed from 'manufacturedDate' to 'manufacture_date'
+  exp_date: string; // Changed from 'expirationDate' to 'exp_date'
   status: string;
-  statusColor: string;
+  branch: string;
+  statusColor?: string; // Optional, for frontend display purposes
 }
+
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -80,51 +83,67 @@ const getStatusColor = (status: string): string => {
 };
 
 const Inventory: React.FC = () => {
-  const initialItems: InventoryItem[] = [
-    {
-      id: 1,
-      name: "Paracetamol",
-      quantity: 50,
-      price: 2.5,
-      manufacturedDate: "2023-01-10",
-      expirationDate: "2024-01-10",
-      branch: "Phase X",
-      status: "In Stock",
-      statusColor: getStatusColor("In Stock"),
-    },
-    // Add more items as needed...
-  ];
-
-  const [items, setItems] = useState<InventoryItem[]>(initialItems);
+  const [items, setItems] = useState<InventoryItem[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false); // Add Item modal state
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [newItems, setNewItems] = useState<InventoryItem[]>([
-    {
-      id: items.length + 1,
-      name: "",
-      quantity: 0,
-      price: 0,
-      manufacturedDate: "",
-      expirationDate: "",
-      branch: "",
-      status: "In Stock",  // Default value for status
-      statusColor: getStatusColor("In Stock"),  // Default color
-    },
-  ]);
+  const [newItems, setNewItems] = useState<InventoryItem[]>([{
+    itemID: 1,
+    item_name: "",
+    item_quantity: 0,
+    item_price: 0,
+    manufacture_date: "",
+    exp_date: "",
+    branch: "",
+    status: "In Stock",  // Default value for status
+  }]);
+
+  // Fetching data when the component mounts
+  useEffect(() => {
+    const fetchInventoryData = async () => {
+      try {
+        const response = await axiosInstance.get('/items');
+        console.log('Fetched inventory data:', response.data); // Log the response data
+        
+        const fetchedItems = response.data.map((item: any) => ({
+          itemID: item.itemID,                
+          item_name: item.item_name,           
+          item_quantity: item.item_quantity,   
+          item_price: item.item_price,         
+          manufacture_date: new Date(item.manufacture_date).toLocaleDateString(),  
+          exp_date: new Date(item.exp_date).toLocaleDateString(),  
+          branch: item.branch?.branch_name,          
+          status: item.status || 'In Stock', 
+        }));
+        
+        console.log('Mapped items:', fetchedItems); // Log the mapped items
+        setItems(fetchedItems);
+      } catch (error) {
+        console.error('Error fetching inventory data:', error);
+      }
+    };
+    
+    fetchInventoryData();
+    
+  }, []);
+
+
+  // Pagination and filtering logic
+
 
   const itemsPerPage = 10;
   const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.item_name && item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const displayedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
@@ -136,35 +155,45 @@ const Inventory: React.FC = () => {
     );
   };
 
-  const handleDelete = () => {
-    setItems((prev) => prev.filter((item) => !selectedItems.includes(item.id)));
-    setSelectedItems([]);
+  const handleDelete = async () => {
+    try {
+      await Promise.all(
+        selectedItems.map((id) => axiosInstance.delete(`/inventory/${id}`)) // Delete from the backend
+      );
+      setItems((prev) => prev.filter((item) => !selectedItems.includes(item.itemID))); // Update frontend state
+      setSelectedItems([]);
+    } catch (error) {
+      console.error('Error deleting items:', error);
+    }
   };
 
   const handleEdit = (id: number) => {
-    const itemToEdit = items.find((item) => item.id === id);
+    const itemToEdit = items.find((item) => item.itemID === id);
     if (itemToEdit) {
       setEditingItem(itemToEdit);
       setIsModalOpen(true);
     }
   };
   
-  const handleEditSubmit = () => {
+  const handleEditSubmit = async () => {
     if (editingItem) {
-      // Recalculate statusColor based on the updated status
       const updatedItem = {
         ...editingItem,
         statusColor: getStatusColor(editingItem.status),
       };
   
-      // Update the inventory list
-      setItems((prevItems) =>
-        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-      );
-  
-      handleModalClose(); // Close the modal
+      try {
+        await axiosInstance.put(`/inventory/${updatedItem.itemID}`, updatedItem); // Update the item in the database
+        setItems((prevItems) =>
+          prevItems.map((item) => (item.itemID === updatedItem.itemID ? updatedItem : item))
+        );
+        handleModalClose(); // Close the modal
+      } catch (error) {
+        console.error('Error updating item:', error);
+      }
     }
   };
+  
   
 
   const handleEditChange = (field: keyof InventoryItem, value: string | number) => {
@@ -188,15 +217,14 @@ const Inventory: React.FC = () => {
     setIsAddModalOpen(false);
     setNewItems([
       {
-        id: items.length + 1,
-        name: "",
-        quantity: 0,
-        price: 0,
-        manufacturedDate: "",
-        expirationDate: "",
+        itemID: items.length + 1,
+        item_name: "",
+        item_quantity: 0,
+        item_price: 0,
+        manufacture_date: "",
+        exp_date: "",
         branch: "",
         status: "In Stock",  // Default value for status
-        statusColor: getStatusColor("In Stock"), // Default color
       },
     ]);
   };
@@ -226,30 +254,59 @@ const Inventory: React.FC = () => {
     setNewItems((prevItems) => [
       ...prevItems,
       {
-        id: items.length + prevItems.length + 1, // Incrementing the ID for each new item
-        name: "",
-        quantity: 0,
-        price: 0,
-        manufacturedDate: "",
-        expirationDate: "",
-        branch: "",
-        status: "In Stock",
-        statusColor: getStatusColor("In Stock"),
+        itemID: items.length + prevItems.length + 1, // Incrementing the ID for each new item
+        item_name: "",  // matching the property name with the database field
+        item_quantity: 0,
+        item_price: 0,
+        manufacture_date: "",
+        exp_date: "",
+        branch: "",  // matching the property name with the database field
+        status: "In Stock",  // Default value for status
       },
     ]);
   };
+  
 
-  const handleAddItemSubmit = () => {
-    // Ensure unique IDs by using the current length of `items`
-    const updatedItems = newItems.map((item, index) => ({
-      ...item,
-      id: items.length + index + 1, // Correct ID generation
-    }));
+  const handleAddItemSubmit = async () => {
+    try {
+      // If there's only one item, use the addItem endpoint
+      if (newItems.length === 1) {
+        const formattedItem = {
+          item_name: newItems[0].item_name,
+          item_quantity: newItems[0].item_quantity,
+          item_price: newItems[0].item_price,
+          manufacture_date: newItems[0].manufacture_date,
+          exp_date: newItems[0].exp_date,
+          branch: newItems[0].branch,
+          status: newItems[0].status,
+        };
   
-    setItems((prev) => [...prev, ...updatedItems]); // Update the items state with the new items
-    handleAddModalClose(); // Close the modal after adding items
+        const response = await axiosInstance.post('/addItem', formattedItem);
+        const addedItem = response.data;
+        setItems((prev) => [...prev, addedItem]);
+      }
+      // If there are multiple items, use the addItems endpoint
+      else {
+        const formattedItems = newItems.map((item) => ({
+          item_name: item.item_name,
+          item_quantity: item.item_quantity,
+          item_price: item.item_price,
+          manufacture_date: item.manufacture_date,
+          exp_date: item.exp_date,
+          branch: item.branch,
+          status: item.status,
+        }));
+  
+        const response = await axiosInstance.post('/addItems', formattedItems);
+        const addedItems = response.data;
+        setItems((prev) => [...prev, ...addedItems]);
+      }
+  
+      handleAddModalClose(); // Close the modal after adding items
+    } catch (error) {
+      console.error('Error adding items:', error);
+    }
   };
-  
   
 
   return (
@@ -282,49 +339,62 @@ const Inventory: React.FC = () => {
           </div>
 
           <TableContainer component={Paper} className="shadow-md rounded-lg overflow-hidden">
-            <Table className="inventory-table" aria-label="customized table">
-              <TableHead>
-                <TableRow>
-                  <StyledTableCell padding="checkbox">
-                    <Checkbox
-                      indeterminate={selectedItems.length > 0 && selectedItems.length < displayedItems.length}
-                      checked={displayedItems.length > 0 && selectedItems.length === displayedItems.length}
-                      onChange={(e) => setSelectedItems(e.target.checked ? displayedItems.map((item) => item.id) : [])}
-                    />
-                  </StyledTableCell>
-                  <StyledTableCell>Medicine</StyledTableCell>
-                  <StyledTableCell align="right">Quantity</StyledTableCell>
-                  <StyledTableCell align="right">Price (₱/pc)</StyledTableCell>
-                  <StyledTableCell align="right">Manufactured Date</StyledTableCell>
-                  <StyledTableCell align="right">Expiration Date</StyledTableCell>
-                  <StyledTableCell align="right">Branch</StyledTableCell>
-                  <StyledTableCell align="right">Status</StyledTableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {displayedItems.map((item) => (
-                  <StyledTableRow key={item.id}>
-                    <StyledTableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => handleSelect(item.id)}
-                      />
-                    </StyledTableCell>
-                    <StyledTableCell>{item.name}</StyledTableCell>
-                    <StyledTableCell align="right">{item.quantity}</StyledTableCell>
-                    <StyledTableCell align="right">{item.price.toFixed(2)}</StyledTableCell>
-                    <StyledTableCell align="right">{item.manufacturedDate}</StyledTableCell>
-                    <StyledTableCell align="right">{item.expirationDate}</StyledTableCell>
-                    <StyledTableCell align="right">{item.branch}</StyledTableCell>
-                    <StyledTableCell align="right" style={{ color: item.statusColor }}>
-                      {item.status}
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+  <Table className="inventory-table" aria-label="customized table">
+    <TableHead>
+      <TableRow>
+        <StyledTableCell padding="checkbox">
+          <Checkbox
+            indeterminate={selectedItems.length > 0 && selectedItems.length < items.length}
+            checked={items.length > 0 && selectedItems.length === items.length}
+            onChange={(e) =>
+              setSelectedItems(
+                e.target.checked ? items.map((item) => item.itemID) : []
+              )
+            }
+          />
+        </StyledTableCell>
+        <StyledTableCell>Medicine</StyledTableCell>
+        <StyledTableCell align="right">Quantity</StyledTableCell>
+        <StyledTableCell align="right">Price (₱/pc)</StyledTableCell>
+        <StyledTableCell align="right">Manufactured Date</StyledTableCell>
+        <StyledTableCell align="right">Expiration Date</StyledTableCell>
+        <StyledTableCell align="right">Branch</StyledTableCell>
+        <StyledTableCell align="right">Status</StyledTableCell>
+      </TableRow>
+    </TableHead>
 
+<TableBody>
+  {items.map((item) => (
+    <StyledTableRow key={`item-${item.itemID}`}>
+      <StyledTableCell padding="checkbox">
+        <Checkbox
+          checked={selectedItems.includes(item.itemID)}
+          onChange={() => handleSelect(item.itemID)}
+        />
+      </StyledTableCell>
+
+      <StyledTableCell>{item.item_name}</StyledTableCell>
+      <StyledTableCell align="right">{item.item_quantity}</StyledTableCell>
+      <StyledTableCell align="right">{item.item_price}</StyledTableCell>
+
+      <StyledTableCell align="right">{item.manufacture_date}</StyledTableCell>
+      <StyledTableCell align="right">{item.exp_date}</StyledTableCell>
+
+      <StyledTableCell align="right">{item.branch}</StyledTableCell>
+
+      <StyledTableCell align="right" style={{ color: item.statusColor }}>
+        {item.status}
+      </StyledTableCell>
+    </StyledTableRow>
+  ))}
+</TableBody>
+
+
+
+  </Table>
+</TableContainer>
+
+          
           <div className="mt-6 flex justify-between items-center">
             <Pagination
               count={totalPages}
@@ -361,36 +431,36 @@ const Inventory: React.FC = () => {
                 <label className="block mb-2 font-semibold">Name:</label>
                 <input
                   type="text"
-                  value={item.name}
-                  onChange={(e) => handleAddItemChange(index, "name", e.target.value)}
+                  value={item.item_name}
+                  onChange={(e) => handleAddItemChange(index, "item_name", e.target.value)}
                   className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
                 />
                 <label className="block mb-2 font-semibold">Quantity:</label>
                 <input
                   type="number"
-                  value={item.quantity}
-                  onChange={(e) => handleAddItemChange(index, "quantity", Number(e.target.value))}
+                  value={item.item_quantity}
+                  onChange={(e) => handleAddItemChange(index, "item_quantity", Number(e.target.value))}
                   className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
                 />
                 <label className="block mb-2 font-semibold">Price:</label>
                 <input
                   type="number"
-                  value={item.price}
-                  onChange={(e) => handleAddItemChange(index, "price", Number(e.target.value))}
+                  value={item.item_price}
+                  onChange={(e) => handleAddItemChange(index, "item_price", Number(e.target.value))}
                   className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
                 />
                 <label className="block mb-2 font-semibold">Manufactured Date:</label>
                 <input
                   type="date"
-                  value={item.manufacturedDate}
-                  onChange={(e) => handleAddItemChange(index, "manufacturedDate", e.target.value)}
+                  value={item.manufacture_date}
+                  onChange={(e) => handleAddItemChange(index, "manufacture_date", e.target.value)}
                   className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
                 />
                 <label className="block mb-2 font-semibold">Expiration Date:</label>
                 <input
                   type="date"
-                  value={item.expirationDate}
-                  onChange={(e) => handleAddItemChange(index, "expirationDate", e.target.value)}
+                  value={item.exp_date}
+                  onChange={(e) => handleAddItemChange(index, "exp_date", e.target.value)}
                   className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
                 />
                 <label className="block mb-2 font-semibold">Branch:</label>
@@ -444,41 +514,41 @@ const Inventory: React.FC = () => {
     {editingItem && (
       <div className="overflow-y-auto max-h-[60vh] pr-4">
         <p className="mb-4">
-          Editing: <span className="font-semibold">{editingItem.name}</span>
+          Editing: <span className="font-semibold">{editingItem.item_name}</span>
         </p>
         <label className="block mb-2 font-semibold">Name:</label>
         <input
           type="text"
-          value={editingItem.name}
-          onChange={(e) => handleEditChange("name", e.target.value)}
+          value={editingItem.item_name}
+          onChange={(e) => handleEditChange("item_name", e.target.value)}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         />
         <label className="block mb-2 font-semibold">Quantity:</label>
         <input
           type="number"
-          value={editingItem.quantity}
-          onChange={(e) => handleEditChange("quantity", Number(e.target.value))}
+          value={editingItem.item_quantity}
+          onChange={(e) => handleEditChange("item_quantity", Number(e.target.value))}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         />
         <label className="block mb-2 font-semibold">Price:</label>
         <input
           type="number"
-          value={editingItem.price}
-          onChange={(e) => handleEditChange("price", Number(e.target.value))}
+          value={editingItem.item_price}
+          onChange={(e) => handleEditChange("item_price", Number(e.target.value))}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         />
         <label className="block mb-2 font-semibold">Manufactured Date:</label>
         <input
           type="date"
-          value={editingItem.manufacturedDate}
-          onChange={(e) => handleEditChange("manufacturedDate", e.target.value)}
+          value={editingItem.manufacture_date}
+          onChange={(e) => handleEditChange("manufacture_date", e.target.value)}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         />
         <label className="block mb-2 font-semibold">Expiration Date:</label>
         <input
           type="date"
-          value={editingItem.expirationDate}
-          onChange={(e) => handleEditChange("expirationDate", e.target.value)}
+          value={editingItem.exp_date}
+          onChange={(e) => handleEditChange("exp_date", e.target.value)}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         />
         <label className="block mb-2 font-semibold">Branch:</label>
