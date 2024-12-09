@@ -23,6 +23,7 @@ const Employee: React.FC = () => {
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
   const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false); // State for popup visibility
+  const [isEditing, setIsEditing] = useState<boolean>(false); // Track if in edit mode
 
   const rowsPerPage = 5;
 
@@ -75,11 +76,13 @@ const Employee: React.FC = () => {
   };
 
   const handleImageClickAdd = () => {
+    setIsEditing(false); // Not in edit mode, it's an add operation
     setShowPopup(true); // Show the popup for registration
   };
 
   const handleImageClickEdit = () => {
-    navigate("/new-page"); // Redirect to a new page (adjust path as necessary)
+    setIsEditing(true); // Set to edit mode
+    setShowPopup(true); // Show the popup for editing patient details
   };
 
   const timeEntries = [
@@ -131,30 +134,66 @@ const Employee: React.FC = () => {
               <div className="space-y-6">
                 <div className="flex space-x-4 mb-6">
                   <button
-                    onClick={handleEmployeeTrackerClick} 
+                    onClick={handleEmployeeTrackerClick}
                     className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Check-ins
-                  </button>
-                  <button
-                    onClick={handleCheckInClick} 
-                    className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
                   >
                     Employee Tracker
                   </button>
+                  <button
+                    onClick={handleCheckInClick}
+                    className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
+                  >
+                    Employee Check-ins
+                  </button>
                   <img
                     src="/adds.png"
-                    alt="Employee Check-ins"
+                    alt="Add Employee"
                     className="w-5 h-5 cursor-pointer"
                     onClick={handleImageClickAdd} // Show popup on click
                   />
                   <img
                     src="/edits.png"
-                    alt="Employee Tracker"
+                    alt="Edit Patient"
                     className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickEdit} // Redirect on click
+                    onClick={handleImageClickEdit} // Calls handleImageClickEdit when clicked
                   />
                 </div>
+
+                {/* Employee Tracker */}
+                {showEmployeeTracker && (
+                  <div className="mt-6">
+                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
+                    <div className="rounded-md border">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr>
+                            <th className="w-[150px] font-medium">Date of Edit</th>
+                            <th className="w-[150px] font-medium">File Record</th>
+                            <th className="w-[200px] font-medium">Patient</th>
+                            <th className="w-[100px] font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[1, 2, 3, 4].map((record, index) => (
+                            <tr key={index}>
+                              <td>24/05/2024</td>
+                              <td>CSF</td>
+                              <td>Genrey O. Cristobal</td>
+                              <td>
+                                <button
+                                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                                  onClick={() => navigate(`/patient/${record}`)}
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 {/* Time Log */}
                 {showTimeLog && (
@@ -179,42 +218,6 @@ const Employee: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Employee Tracker */}
-                {showEmployeeTracker && (
-                  <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
-                    <div className="rounded-md border">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="w-[150px] font-medium">Date of Edit</th>
-                            <th className="w-[150px] font-medium">File Record</th>
-                            <th className="w-[200px] font-medium">Patient</th>
-                            <th className="w-[100px] font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[1, 2, 3, 4].map((record, index) => (
-                            <tr key={index}>
-                              <td>24/05/2024</td>
-                              <td>CSF</td>
-                              <td>Genrey O. Cristobal</td>
-                              <td>
-                                <button 
-                                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                                  onClick={() => navigate(`/patient/${record}`)}
-                                >
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -224,152 +227,149 @@ const Employee: React.FC = () => {
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">CREATE EMPLOYEE ACCOUNT</h2>
-           {/* Employee Registration Form */}
-<form className="space-y-6">
-  <div className="grid grid-cols-2 gap-4">
-    <div className="flex flex-col">
-      <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
-      <input
-        type="text"
-        id="first-name"
-        className="border-2 rounded-md p-2"
-      />
-    </div>
-    <div className="flex flex-col">
-      <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
-      <input
-        type="text"
-        id="last-name"
-        className="border-2 rounded-md p-2"
-      />
-    </div>
-  </div>
+            <h2 className="text-2xl font-bold text-center mb-6">
+              {isEditing ? "Edit Employee Account" : "Create Employee Account"}
+            </h2>
+            {/* Employee Registration Form */}
+            <form className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
+                  <input
+                    type="text"
+                    id="first-name"
+                    className="border-2 rounded-md p-2"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
+                  <input
+                    type="text"
+                    id="last-name"
+                    className="border-2 rounded-md p-2"
+                  />
+                </div>
+              </div>
 
-  {/* Email and Password */}
-  <div className="flex flex-col">
-    <label htmlFor="email" className="text-sm font-medium">Email Address</label>
-    <input
-      type="email"
-      id="email"
-      className="border-2 rounded-md p-2"
-      placeholder="Enter your email"
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="password" className="text-sm font-medium">Password</label>
-    <input
-      type="password"
-      id="password"
-      className="border-2 rounded-md p-2"
-      placeholder="Enter your password"
-    />
-  </div>
+              {/* Email and Password */}
+              <div className="flex flex-col">
+                <label htmlFor="email" className="text-sm font-medium">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  className="border-2 rounded-md p-2"
+                  placeholder="Enter your email"
+                />
+              </div>
+              
+              <div className="flex flex-col">
+                <label htmlFor="password" className="text-sm font-medium">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  className="border-2 rounded-md p-2"
+                  placeholder="Enter your password"
+                />
+              </div>
 
-  <div className="flex flex-col">
-    <label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</label>
-    <input
-      type="password"
-      id="confirm-password"
-      className="border-2 rounded-md p-2"
-      placeholder="Confirm your password"
-    />
-  </div>
+              <div className="flex flex-col">
+                <label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirm-password"
+                  className="border-2 rounded-md p-2"
+                  placeholder="Confirm your password"
+                />
+              </div>
 
-  {/* Birthday Section: Separate Day, Month, and Year */}
-  <div className="flex space-x-4">
-    {/* Day */}
-    <div className="flex flex-col w-1/3">
-      <label htmlFor="birth-day" className="text-sm font-medium">Day</label>
-      <select id="birth-day" className="border-2 rounded-md p-2">
-        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-          <option key={day} value={day}>{day}</option>
-        ))}
-      </select>
-    </div>
+              {/* Birthday Section */}
+              <div className="flex space-x-4">
+                {/* Day */}
+                <div className="flex flex-col w-1/3">
+                  <label htmlFor="birth-day" className="text-sm font-medium">Day</label>
+                  <select id="birth-day" className="border-2 rounded-md p-2">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                </div>
 
-    {/* Month */}
-    <div className="flex flex-col w-1/3">
-      <label htmlFor="birth-month" className="text-sm font-medium">Month</label>
-      <select id="birth-month" className="border-2 rounded-md p-2">
-        {[
-          "January", "February", "March", "April", "May", "June", 
-          "July", "August", "September", "October", "November", "December"
-        ].map((month, index) => (
-          <option key={index} value={month}>{month}</option>
-        ))}
-      </select>
-    </div>
+                {/* Month */}
+                <div className="flex flex-col w-1/3">
+                  <label htmlFor="birth-month" className="text-sm font-medium">Month</label>
+                  <select id="birth-month" className="border-2 rounded-md p-2">
+                    {[ 
+                      "January", "February", "March", "April", "May", "June", 
+                      "July", "August", "September", "October", "November", "December"
+                    ].map((month, index) => (
+                      <option key={index} value={month}>{month}</option>
+                    ))}
+                  </select>
+                </div>
 
-    {/* Year */}
-    <div className="flex flex-col w-1/3">
-      <label htmlFor="birth-year" className="text-sm font-medium">Year</label>
-      <select id="birth-year" className="border-2 rounded-md p-2">
-        {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-          <option key={year} value={year}>{year}</option>
-        ))}
-      </select>
-    </div>
-  </div>
+                {/* Year */}
+                <div className="flex flex-col w-1/3">
+                  <label htmlFor="birth-year" className="text-sm font-medium">Year</label>
+                  <select id="birth-year" className="border-2 rounded-md p-2">
+                    {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-  {/* Gender Section: Separate Male, Female, Prefer Not to Say with Radio Buttons */}
-  <div className="flex space-x-4">
-    {/* Male */}
-    <div className="flex items-center space-x-2">
-      <input
-        type="radio"
-        id="male"
-        name="gender"
-        className="h-5 w-5"
-      />
-      <label htmlFor="male" className="text-sm font-medium">Male</label>
-    </div>
+              {/* Gender Section */}
+              <div className="flex space-x-4">
+                {/* Male */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="male"
+                    name="gender"
+                    className="h-5 w-5"
+                  />
+                  <label htmlFor="male" className="text-sm font-medium">Male</label>
+                </div>
 
-    {/* Female */}
-    <div className="flex items-center space-x-2">
-      <input
-        type="radio"
-        id="female"
-        name="gender"
-        className="h-5 w-5"
-      />
-      <label htmlFor="female" className="text-sm font-medium">Female</label>
-    </div>
+                {/* Female */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="female"
+                    name="gender"
+                    className="h-5 w-5"
+                  />
+                  <label htmlFor="female" className="text-sm font-medium">Female</label>
+                </div>
 
-    {/* Prefer Not to Say */}
-    <div className="flex items-center space-x-2">
-      <input
-        type="radio"
-        id="prefer-not-to-say"
-        name="gender"
-        className="h-5 w-5"
-      />
-      <label htmlFor="prefer-not-to-say" className="text-sm font-medium">Prefer Not to Say</label>
-    </div>
-  </div>
+                {/* Prefer Not to Say */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="prefer-not-to-say"
+                    name="gender"
+                    className="h-5 w-5"
+                  />
+                  <label htmlFor="prefer-not-to-say" className="text-sm font-medium">Prefer Not to Say</label>
+                </div>
+              </div>
 
-  {/* Buttons */}
-  <div className="flex justify-center space-x-4">
-    <button
-      onClick={() => setShowPopup(false)}
-      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-    >
-      Cancel
-    </button>
-    <button
-      type="submit"
-      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    >
-      Register
-    </button>
-  </div>
-</form>
-
-
-
-
-
+              {/* Buttons */}
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                >
+                  {isEditing ? "Save" : "Register"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
