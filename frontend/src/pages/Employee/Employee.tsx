@@ -2,6 +2,13 @@ import React, { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
+import ArchiveEmployee from './archive-employee';
+
+
+
+
+
+
 
 interface Visit {
   visitDate: string;
@@ -22,8 +29,8 @@ const Employee: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
   const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
-  const [showPopup, setShowPopup] = useState<boolean>(false); // State for popup visibility
-  const [isEditing, setIsEditing] = useState<boolean>(false); // Track if in edit mode
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const rowsPerPage = 5;
 
@@ -76,13 +83,13 @@ const Employee: React.FC = () => {
   };
 
   const handleImageClickAdd = () => {
-    setIsEditing(false); // Not in edit mode, it's an add operation
-    setShowPopup(true); // Show the popup for registration
+    setIsEditing(false);
+    setShowPopup(true);
   };
 
   const handleImageClickEdit = () => {
-    setIsEditing(true); // Set to edit mode
-    setShowPopup(true); // Show the popup for editing patient details
+    setIsEditing(true);
+    setShowPopup(true);
   };
 
   const timeEntries = [
@@ -90,7 +97,6 @@ const Employee: React.FC = () => {
       logIn: "24/05/2024 11:53AM",
       logOut: "24/05/2024 5:00PM",
     },
-    // More entries...
   ];
 
   return (
@@ -149,17 +155,17 @@ const Employee: React.FC = () => {
                     src="/adds.png"
                     alt="Add Employee"
                     className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickAdd} // Show popup on click
+                    onClick={handleImageClickAdd}
                   />
                   <img
                     src="/edits.png"
                     alt="Edit Patient"
                     className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickEdit} // Calls handleImageClickEdit when clicked
+                    onClick={handleImageClickEdit}
                   />
+                  <ArchiveEmployee employeeId={id || ''} employeeName={patient.name} />
                 </div>
 
-                {/* Employee Tracker */}
                 {showEmployeeTracker && (
                   <div className="mt-6">
                     <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
@@ -195,7 +201,6 @@ const Employee: React.FC = () => {
                   </div>
                 )}
 
-                {/* Time Log */}
                 {showTimeLog && (
                   <div className="mt-6">
                     <div className="rounded-md border">
@@ -230,7 +235,6 @@ const Employee: React.FC = () => {
             <h2 className="text-2xl font-bold text-center mb-6">
               {isEditing ? "Edit Employee Account" : "Create Employee Account"}
             </h2>
-            {/* Employee Registration Form */}
             <form className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col">
@@ -251,7 +255,6 @@ const Employee: React.FC = () => {
                 </div>
               </div>
 
-              {/* Email and Password */}
               <div className="flex flex-col">
                 <label htmlFor="email" className="text-sm font-medium">Email Address</label>
                 <input
@@ -282,9 +285,7 @@ const Employee: React.FC = () => {
                 />
               </div>
 
-              {/* Birthday Section */}
               <div className="flex space-x-4">
-                {/* Day */}
                 <div className="flex flex-col w-1/3">
                   <label htmlFor="birth-day" className="text-sm font-medium">Day</label>
                   <select id="birth-day" className="border-2 rounded-md p-2">
@@ -294,7 +295,6 @@ const Employee: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Month */}
                 <div className="flex flex-col w-1/3">
                   <label htmlFor="birth-month" className="text-sm font-medium">Month</label>
                   <select id="birth-month" className="border-2 rounded-md p-2">
@@ -307,7 +307,6 @@ const Employee: React.FC = () => {
                   </select>
                 </div>
 
-                {/* Year */}
                 <div className="flex flex-col w-1/3">
                   <label htmlFor="birth-year" className="text-sm font-medium">Year</label>
                   <select id="birth-year" className="border-2 rounded-md p-2">
@@ -318,9 +317,7 @@ const Employee: React.FC = () => {
                 </div>
               </div>
 
-              {/* Gender Section */}
               <div className="flex space-x-4">
-                {/* Male */}
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
@@ -331,7 +328,6 @@ const Employee: React.FC = () => {
                   <label htmlFor="male" className="text-sm font-medium">Male</label>
                 </div>
 
-                {/* Female */}
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
@@ -342,7 +338,6 @@ const Employee: React.FC = () => {
                   <label htmlFor="female" className="text-sm font-medium">Female</label>
                 </div>
 
-                {/* Prefer Not to Say */}
                 <div className="flex items-center space-x-2">
                   <input
                     type="radio"
@@ -354,7 +349,6 @@ const Employee: React.FC = () => {
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={() => setShowPopup(false)}
@@ -378,3 +372,4 @@ const Employee: React.FC = () => {
 };
 
 export default Employee;
+
