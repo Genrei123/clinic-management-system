@@ -3,19 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import ArchiveEmployee from './archive-employee';
-
-
-
-
-
-
+import { Camera, Upload, UserCheck, Calendar, Clock, Plus, Edit } from 'lucide-react';
 
 interface Visit {
   visitDate: string;
   reason: string;
 }
 
-interface Patient {
+interface Employee {
   id: string;
   name: string;
   birthdate: string;
@@ -25,16 +20,14 @@ interface Patient {
 const Employee: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patientImage, setPatientImage] = useState<string | null>(null);
+  const [employeeImage, setEmployeeImage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
   const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const rowsPerPage = 5;
-
-  const patient: Patient = {
+  const [employee, setEmployee] = useState<Employee>({
     id: id || "",
     name: "Cristobal, Genrey O.",
     birthdate: "24/05/2024",
@@ -46,14 +39,9 @@ const Employee: React.FC = () => {
       { visitDate: "2024-10-30", reason: "Initial Consultation" },
       { visitDate: "2024-10-20", reason: "Routine Checkup" },
     ],
-  };
+  });
 
-  const totalPages = Math.ceil(patient.visitHistory.length / rowsPerPage);
-
-  const paginatedVisits = patient.visitHistory.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
+  const rowsPerPage = 5;
 
   const handleImageUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +50,7 @@ const Employee: React.FC = () => {
         const reader = new FileReader();
         reader.onload = (event) => {
           const result = event.target?.result as string;
-          setPatientImage(result);
+          setEmployeeImage(result);
         };
         reader.readAsDataURL(file);
       }
@@ -100,72 +88,100 @@ const Employee: React.FC = () => {
   ];
 
   return (
-    <div className="flex">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar />
-      <div className="ml-128 w-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="bg-blue-600 text-white p-4">
-              <h2 className="text-2xl font-bold">{patient.name}'s Employee Details</h2>
-            </div>
-            <div className="p-6 grid md:grid-cols-2 gap-6">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-96 h-96 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
-                  {patientImage ? (
-                    <img
-                      src={patientImage}
-                      alt="Patient"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <p className="text-gray-500">No Image Uploaded</p>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="patient-image-upload"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-                <label
-                  htmlFor="patient-image-upload"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
-                >
-                  Upload Image
-                </label>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+          <div className="container mx-auto px-6 py-8">
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                <h2 className="text-3xl font-bold">{employee.name}'s Profile</h2>
+                <p className="mt-2 text-blue-100">Employee ID: {employee.id}</p>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex space-x-4 mb-6">
-                  <button
-                    onClick={handleEmployeeTrackerClick}
-                    className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Tracker
-                  </button>
-                  <button
-                    onClick={handleCheckInClick}
-                    className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Check-ins
-                  </button>
-                  <img
-                    src="/adds.png"
-                    alt="Add Employee"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickAdd}
-                  />
-                  <img
-                    src="/edits.png"
-                    alt="Edit Patient"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickEdit}
-                  />
-                  <ArchiveEmployee employeeId={id || ''} employeeName={patient.name} />
+              <div className="p-6 grid md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="relative group">
+                    <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                      {employeeImage ? (
+                        <img
+                          src={employeeImage}
+                          alt="Employee"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Camera className="w-16 h-16 text-gray-400" />
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="employee-image-upload"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                    <label
+                      htmlFor="employee-image-upload"
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                    >
+                      <Upload className="w-8 h-8 mr-2" />
+                      Upload Image
+                    </label>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg shadow">
+                    <p className="flex items-center text-gray-700">
+                      <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
+                      <span className="font-semibold mr-2">Employee ID:</span> {employee.id}
+                    </p>
+                    <p className="flex items-center text-gray-700">
+                      <Calendar className="w-5 h-5 mr-2 text-blue-500" />
+                      <span className="font-semibold mr-2">Birthdate:</span> {employee.birthdate}
+                    </p>
+                  </div>
                 </div>
 
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-4 rounded-lg shadow">
+                    <div className="flex space-x-2 mt-4">
+                      <button
+                        onClick={handleEmployeeTrackerClick}
+                        className="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <UserCheck className="w-5 h-5 mr-2" />
+                        Employee Tracker
+                      </button>
+                      <button
+                        onClick={handleCheckInClick}
+                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Clock className="w-5 h-5 mr-2" />
+                        Employee Check-ins
+                      </button>
+                    </div>
+                    <div className="flex space-x-2 mt-2">
+                      <button
+                        onClick={handleImageClickAdd}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Add Employee
+                      </button>
+                      <button
+                        onClick={handleImageClickEdit}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Edit className="w-5 h-5 mr-2" />
+                        Edit Employee
+                      </button>
+                      <ArchiveEmployee employeeId={id || ''} employeeName={employee.name} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-200">
                 {showEmployeeTracker && (
                   <div className="mt-6">
                     <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
@@ -203,6 +219,7 @@ const Employee: React.FC = () => {
 
                 {showTimeLog && (
                   <div className="mt-6">
+                    <h3 className="text-xl font-semibold mb-4">Employee Check-ins</h3>
                     <div className="rounded-md border">
                       <table className="min-w-full">
                         <thead>
@@ -226,7 +243,7 @@ const Employee: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
 
       {showPopup && (
