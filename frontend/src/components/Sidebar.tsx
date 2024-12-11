@@ -1,26 +1,18 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import {
-  Home,
-  User,
-  Package,
-  Users,
-  FileText,
-  ChevronDown,
-  LogOut,
-  Settings,
-  Menu,
-  X,
-} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext"; // Importing useAuth
+import { Home, User, Package, Users, FileText, ChevronDown, LogOut, Settings, Menu, X } from 'lucide-react';
 import logo from "../assets/logo.svg";
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { userRole } = useAuth();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
     navigate("/");
   };
 
@@ -35,11 +27,11 @@ const Sidebar: React.FC = () => {
   };
 
   const navItems = [
-    { path: "/home", label: "Home", icon: Home },
-    { path: "/patientrecords", label: "Patient", icon: User },
-    { path: "/inventory", label: "Inventory", icon: Package },
-    { path: "/employees", label: "Employees", icon: Users },
-    { path: "/reports", label: "Reports", icon: FileText },
+    { path: "/home", label: "Home", icon: Home, roles: ['admin', 'employee'] },
+    { path: "/patientrecords", label: "Patient", icon: User, roles: ['admin', 'employee'] },
+    { path: "/inventory", label: "Inventory", icon: Package, roles: ['admin'] },
+    { path: "/employees", label: "Employees", icon: Users, roles: ['admin'] },
+    { path: "/reports", label: "Reports", icon: FileText, roles: ['admin'] },
   ];
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -72,17 +64,19 @@ const Sidebar: React.FC = () => {
       {/* Navigation */}
       <nav className="flex-grow px-4 pb-4 space-y-1">
         {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`${getLinkClassName(item.path)} ${
-              isCollapsed ? "justify-center" : ""
-            }`}
-            title={isCollapsed ? item.label : undefined} // Tooltip for collapsed icons
-          >
-            <item.icon className="h-6 w-6 flex-shrink-0" />
-            {!isCollapsed && <span>{item.label}</span>}
-          </Link>
+          (item.roles.includes(userRole as 'admin' | 'employee') || !userRole) && (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`${getLinkClassName(item.path)} ${
+                isCollapsed ? "justify-center" : ""
+              }`}
+              title={isCollapsed ? item.label : undefined}
+            >
+              <item.icon className="h-6 w-6 flex-shrink-0" />
+              {!isCollapsed && <span>{item.label}</span>}
+            </Link>
+          )
         ))}
 
         {/* Account Section */}
@@ -164,3 +158,4 @@ const Sidebar: React.FC = () => {
 };
 
 export default Sidebar;
+
