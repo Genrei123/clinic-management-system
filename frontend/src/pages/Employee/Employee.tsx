@@ -1,9 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from 'axios';
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import ArchiveEmployee from './archive-employee';
 import { Camera, Upload, UserCheck, Calendar, Clock, Plus, Edit } from 'lucide-react';
+
 
 interface Visit {
   visitDate: string;
@@ -18,47 +20,102 @@ interface Employee {
 }
 
 const Employee: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();  // Ensure the 'id' is defined
+
   const navigate = useNavigate();
   const [employeeImage, setEmployeeImage] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
   const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const [employee, setEmployee] = useState<Employee>({
-    id: id || "",
-    name: "Cristobal, Genrey O.",
-    birthdate: "24/05/2024",
-    visitHistory: [
-      { visitDate: "2024-11-20", reason: "Routine Checkup" },
-      { visitDate: "2024-11-15", reason: "Follow-Up" },
-      { visitDate: "2024-11-10", reason: "Emergency Visit" },
-      { visitDate: "2024-11-05", reason: "Vaccination" },
-      { visitDate: "2024-10-30", reason: "Initial Consultation" },
-      { visitDate: "2024-10-20", reason: "Routine Checkup" },
-    ],
-  });
+  const fetchEmployee = async () => {
+    try {
+        const response = await axios.get(`/employees/${id}`);
+        console.log('Response data:', response.data);  // Log the full response to inspect the structure
+        setEmployee(response.data);  // Ensure response.data is valid
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            console.error("Axios Error:", error.response?.data);
+            setError(`Error: ${error.response?.data?.message || 'Unknown error'}`);
+        } else {
+            console.error("Unexpected Error:", error);
+            setError("Unexpected error occurred");
+        }
+    } finally {
+        setLoading(false);
+    }
+};
 
-  const rowsPerPage = 5;
+  
+  
+
+  useEffect(() => {
+    console.log("Employee ID from URL:", id); // Log to see the value of id
+    if (id) {
+      fetchEmployee();
+    } else {
+      setError("Invalid employee ID");
+      setLoading(false);
+    }
+  }, [id]);
+  
 
   const handleImageUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          setEmployeeImage(result);
-        };
-        reader.readAsDataURL(file);
+        const formData = new FormData();
+        formData.append('image', file);
+  
+        try {
+          await axios.post(`/employees/${id}/upload-image`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          fetchEmployee();
+          setEmployeeImage(URL.createObjectURL(file));
+        } catch (error) {
+          console.error("Error uploading image:", error);
+        }
       }
     },
-    []
+    [id]
   );
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handleUpdateEmployee = async (updatedData: Employee) => {
+    try {
+      const updatedEmployee = {
+        ...updatedData,
+        id: employee?.id, // Ensure that employee ID is passed
+        visitHistory: employee?.visitHistory || [], // Add visitHistory (empty array if not available)
+      };
+      await axios.put(`/employees/${id}`, updatedEmployee);
+      fetchEmployee();
+    } catch (error) {
+      console.error("Error updating employee:", error);
+    }
+  };
+  
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employee) return; // If no employee data is loaded, don't proceed
+  
+    const updatedData: Employee = {
+      id: employee.id, // Ensure that the id is included
+      name: (e.target as HTMLFormElement)['first-name'].value,
+      birthdate: `${(e.target as HTMLFormElement)['birth-year'].value}-${(e.target as HTMLFormElement)['birth-month'].value}-${(e.target as HTMLFormElement)['birth-day'].value}`,
+      visitHistory: employee.visitHistory || [], // Ensure visitHistory is included
+    };
+  
+    handleUpdateEmployee(updatedData);
+  };
+  
 
   const handleCheckInClick = () => {
     setShowTimeLog(true);
@@ -87,6 +144,15 @@ const Employee: React.FC = () => {
     },
   ];
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>; // Display the error message
+  }
+  
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -96,8 +162,14 @@ const Employee: React.FC = () => {
           <div className="container mx-auto px-6 py-8">
             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-                <h2 className="text-3xl font-bold">{employee.name}'s Profile</h2>
-                <p className="mt-2 text-blue-100">Employee ID: {employee.id}</p>
+                <h2 className="text-3xl font-bold">{employee?.name || "Unknown Employee"}'s Profile</h2>
+                <p className="mt-2 text-blue-100">Employee ID: {employee?.id}</p>
+
+                <div className="bg-gray-50 p-4 rounded-lg shadow">
+                  <p className="flex items-center text-gray-700">
+                    <span className="font-semibold mr-2">Birthdate:</span> {employee?.birthdate}
+                  </p>
+                </div>
               </div>
 
               <div className="p-6 grid md:grid-cols-2 gap-6">
@@ -133,11 +205,11 @@ const Employee: React.FC = () => {
                   <div className="bg-gray-50 p-4 rounded-lg shadow">
                     <p className="flex items-center text-gray-700">
                       <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Employee ID:</span> {employee.id}
+                      <span className="font-semibold mr-2">Employee ID:</span> {employee?.id}
                     </p>
                     <p className="flex items-center text-gray-700">
                       <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Birthdate:</span> {employee.birthdate}
+                      <span className="font-semibold mr-2">Birthdate:</span> {employee?.birthdate}
                     </p>
                   </div>
                 </div>
@@ -175,7 +247,8 @@ const Employee: React.FC = () => {
                         <Edit className="w-5 h-5 mr-2" />
                         Edit Employee
                       </button>
-                      <ArchiveEmployee employeeId={id || ''} employeeName={employee.name} />
+                      <ArchiveEmployee employeeId={id || ''} employeeName={employee!.name} />
+
                     </div>
                   </div>
                 </div>
@@ -252,15 +325,30 @@ const Employee: React.FC = () => {
             <h2 className="text-2xl font-bold text-center mb-6">
               {isEditing ? "Edit Employee Account" : "Create Employee Account"}
             </h2>
-            <form className="space-y-6">
+            <form
+              className="space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const updatedData: Employee = {
+                  name: (e.target as HTMLFormElement)['first-name'].value + ' ' + (e.target as HTMLFormElement)['last-name'].value,
+                  birthdate: `${(e.target as HTMLFormElement)['birth-year'].value}-${(e.target as HTMLFormElement)['birth-month'].value}-${(e.target as HTMLFormElement)['birth-day'].value}`,
+                  id: employee?.id || '', // Ensure id is passed
+                  visitHistory: employee?.visitHistory || [], // Empty array if no visitHistory
+                };
+                handleUpdateEmployee(updatedData);
+              }}
+              
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col">
                   <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
                   <input
-                    type="text"
-                    id="first-name"
-                    className="border-2 rounded-md p-2"
-                  />
+  type="text"
+  id="first-name"
+  className="border-2 rounded-md p-2"
+  defaultValue={employee?.name || ""}  // Fallback to an empty string if employee is not loaded
+/>
+
                 </div>
                 <div className="flex flex-col">
                   <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
@@ -268,6 +356,7 @@ const Employee: React.FC = () => {
                     type="text"
                     id="last-name"
                     className="border-2 rounded-md p-2"
+                    defaultValue={employee?.name}
                   />
                 </div>
               </div>
@@ -278,106 +367,53 @@ const Employee: React.FC = () => {
                   type="email"
                   id="email"
                   className="border-2 rounded-md p-2"
-                  placeholder="Enter your email"
+                  defaultValue={employee?.name} 
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="birth-year" className="text-sm font-medium">Birth Year</label>
+                <input
+                  type="text"
+                  id="birth-year"
+                  className="border-2 rounded-md p-2"
+                  defaultValue={employee?.birthdate?.split('-')[0]} 
                 />
               </div>
               
               <div className="flex flex-col">
-                <label htmlFor="password" className="text-sm font-medium">Password</label>
+                <label htmlFor="birth-month" className="text-sm font-medium">Birth Month</label>
                 <input
-                  type="password"
-                  id="password"
+                  type="text"
+                  id="birth-month"
                   className="border-2 rounded-md p-2"
-                  placeholder="Enter your password"
+                  defaultValue={employee?.birthdate?.split('-')[1]} 
                 />
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</label>
+                <label htmlFor="birth-day" className="text-sm font-medium">Birth Day</label>
                 <input
-                  type="password"
-                  id="confirm-password"
+                  type="text"
+                  id="birth-day"
                   className="border-2 rounded-md p-2"
-                  placeholder="Confirm your password"
+                  defaultValue={employee?.birthdate?.split('-')[2]} 
                 />
               </div>
 
-              <div className="flex space-x-4">
-                <div className="flex flex-col w-1/3">
-                  <label htmlFor="birth-day" className="text-sm font-medium">Day</label>
-                  <select id="birth-day" className="border-2 rounded-md p-2">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                      <option key={day} value={day}>{day}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col w-1/3">
-                  <label htmlFor="birth-month" className="text-sm font-medium">Month</label>
-                  <select id="birth-month" className="border-2 rounded-md p-2">
-                    {[ 
-                      "January", "February", "March", "April", "May", "June", 
-                      "July", "August", "September", "October", "November", "December"
-                    ].map((month, index) => (
-                      <option key={index} value={month}>{month}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex flex-col w-1/3">
-                  <label htmlFor="birth-year" className="text-sm font-medium">Year</label>
-                  <select id="birth-year" className="border-2 rounded-md p-2">
-                    {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex space-x-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="male"
-                    name="gender"
-                    className="h-5 w-5"
-                  />
-                  <label htmlFor="male" className="text-sm font-medium">Male</label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="female"
-                    name="gender"
-                    className="h-5 w-5"
-                  />
-                  <label htmlFor="female" className="text-sm font-medium">Female</label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="prefer-not-to-say"
-                    name="gender"
-                    className="h-5 w-5"
-                  />
-                  <label htmlFor="prefer-not-to-say" className="text-sm font-medium">Prefer Not to Say</label>
-                </div>
-              </div>
-
-              <div className="flex justify-center space-x-4">
+              <div className="mt-4 flex justify-between">
                 <button
+                  type="button"
                   onClick={() => setShowPopup(false)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
                 >
-                  {isEditing ? "Save" : "Register"}
+                  Save
                 </button>
               </div>
             </form>
@@ -389,4 +425,3 @@ const Employee: React.FC = () => {
 };
 
 export default Employee;
-
