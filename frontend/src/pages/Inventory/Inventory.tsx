@@ -16,7 +16,6 @@ import "./inventory.css";
 import axiosInstance from '../../config/axiosConfig'; // Adjust path as necessary
 
 
-
 interface InventoryItem {
   itemID: number;
   item_name: string; // Changed from 'name' to 'item_name'
@@ -241,12 +240,6 @@ const Inventory: React.FC = () => {
       }
     }
   };
-  
-  
-  
-  
-  
-  
 
 
   // Handle branch selection from dropdown
@@ -274,10 +267,6 @@ const Inventory: React.FC = () => {
   };
 
   
-  
-  
-  
-  
 
   const handleModalClose = () => {
     setIsModalOpen(false);
@@ -285,7 +274,6 @@ const Inventory: React.FC = () => {
   };
 
   
-
   // Add Item Modal functions
   const handleAddModalOpen = () => setIsAddModalOpen(true);
   const handleAddModalClose = () => {
@@ -316,12 +304,12 @@ const Inventory: React.FC = () => {
         ...updatedItems[index],
         [field]: value,
       };
-
+  
       // Update status color whenever the status changes
       if (field === "status") {
         updatedItems[index].statusColor = getStatusColor(updatedItems[index].status);
       }
-
+  
       return updatedItems;
     });
   };
@@ -342,8 +330,6 @@ const Inventory: React.FC = () => {
       },
     ]);
   };
-  
-
   
  // Assuming you're using a dropdown or some selection method for the branch name:
  const handleAddItemSubmit = async () => {
@@ -396,10 +382,6 @@ const Inventory: React.FC = () => {
   }
 };
 
-
-
-
-  
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -483,7 +465,7 @@ const Inventory: React.FC = () => {
   </Table>
 </TableContainer>
 
-          
+  
           <div className="mt-6 flex justify-between items-center">
             <Pagination
               count={totalPages}
@@ -557,12 +539,18 @@ const Inventory: React.FC = () => {
           {index === 0 && (
             <>
               <label className="block mb-2 font-semibold">Branch:</label>
-              <input
-                type="text"
+              <select
                 value={item.branchID}
                 onChange={(e) => handleAddItemChange(index, "branchID", e.target.value)}
                 className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-              />
+              >
+                <option value="">Select a branch</option>
+                {branches.map((branch) => (
+                  <option key={branch.branchID} value={branch.branchID}>
+                    {branch.branch_name}
+                  </option>
+                ))}
+              </select>
             </>
           )}
 
@@ -600,115 +588,115 @@ const Inventory: React.FC = () => {
 
         
 {/* Edit Item Modal */}
-<Modal
-  open={isModalOpen}
-  onClose={handleModalClose}
-  aria-labelledby="edit-item-modal"
-  aria-describedby="modal-to-edit-inventory-item"
->
-  <Box sx={{ ...modalStyle, maxHeight: '80vh', overflow: 'hidden' }}>
-    <h2 className="text-2xl font-bold mb-4">Edit Item</h2>
+    <Modal
+      open={isModalOpen}
+      onClose={handleModalClose}
+      aria-labelledby="edit-item-modal"
+      aria-describedby="modal-to-edit-inventory-item"
+    >
+      <Box sx={{ ...modalStyle, maxHeight: '80vh', overflow: 'hidden' }}>
+        <h2 className="text-2xl font-bold mb-4">Edit Item</h2>
 
-    {editingItem && (
-      <div className="overflow-y-auto max-h-[60vh] pr-4 mb-4">
-        <p className="mb-4">
-          Editing: <span className="font-semibold">{editingItem.item_name}</span>
-        </p>
+        {editingItem && (
+          <div className="overflow-y-auto max-h-[60vh] pr-4 mb-4">
+            <p className="mb-4">
+              Editing: <span className="font-semibold">{editingItem.item_name}</span>
+            </p>
 
-        {/* Editable fields */}
-        <label className="block mb-2 font-semibold">Item Name:</label>
-        <input
-          type="text"
-          value={editingItem.item_name}
-          onChange={(e) => handleEditChange("item_name", e.target.value)}
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        />
+            {/* Editable fields */}
+            <label className="block mb-2 font-semibold">Item Name:</label>
+            <input
+              type="text"
+              value={editingItem.item_name}
+              onChange={(e) => handleEditChange("item_name", e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            />
 
-        <label className="block mb-2 font-semibold">Item Quantity:</label>
-        <input
-          type="number"
-          value={editingItem.item_quantity}
-          onChange={(e) => handleEditChange("item_quantity", e.target.value)}
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        />
+            <label className="block mb-2 font-semibold">Item Quantity:</label>
+            <input
+              type="number"
+              value={editingItem.item_quantity}
+              onChange={(e) => handleEditChange("item_quantity", e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            />
 
-        <label className="block mb-2 font-semibold">Item Price:</label>
-        <input
-          type="number"
-          value={editingItem.item_price}
-          onChange={(e) => handleEditChange("item_price", e.target.value)}
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        />
+            <label className="block mb-2 font-semibold">Item Price:</label>
+            <input
+              type="number"
+              value={editingItem.item_price}
+              onChange={(e) => handleEditChange("item_price", e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            />
 
-        <label className="block mb-2 font-semibold">Manufacture Date:</label>
-        <input
-          type="date"
-          value={editingItem.manufacture_date}
-          onChange={(e) => handleEditChange("manufacture_date", e.target.value)}
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        />
+            <label className="block mb-2 font-semibold">Manufacture Date:</label>
+            <input
+              type="date"
+              value={editingItem.manufacture_date}
+              onChange={(e) => handleEditChange("manufacture_date", e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            />
 
-        <label className="block mb-2 font-semibold">Expiration Date:</label>
-        <input
-          type="date"
-          value={editingItem.exp_date}
-          onChange={(e) => handleEditChange("exp_date", e.target.value)}
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        />
+            <label className="block mb-2 font-semibold">Expiration Date:</label>
+            <input
+              type="date"
+              value={editingItem.exp_date}
+              onChange={(e) => handleEditChange("exp_date", e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            />
 
-        {/* Branch transfer */}
-        <label className="block mb-2 font-semibold">Transfer to Branch:</label>
-        <select
-          value={editingItem.branch.branchID}
-          onChange={(e) => handleEditChange("branch", e.target.value)} // Handle branch selection
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        >
-          <option value="" disabled>Select a Branch</option>
-          {branches.map((branch) => (
-            <option key={branch.branchID} value={branch.branchID}>
-              {branch.branch_name}
-            </option>
-          ))}
-        </select>
+            {/* Branch transfer */}
+            <label className="block mb-2 font-semibold">Transfer to Branch:</label>
+            <select
+              value={editingItem.branch.branchID}
+              onChange={(e) => handleEditChange("branch", e.target.value)} // Handle branch selection
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            >
+              <option value="" disabled>Select a Branch</option>
+              {branches.map((branch) => (
+                <option key={branch.branchID} value={branch.branchID}>
+                  {branch.branch_name}
+                </option>
+              ))}
+            </select>
 
-        {/* Status selection */}
-        <label className="block mb-2 font-semibold">Status:</label>
-        <select
-          value={editingItem.status}
-          onChange={(e) => handleEditChange("status", e.target.value)}
-          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-        >
-          <option value="In Stock">In Stock</option>
-          <option value="Out of Stock">Out of Stock</option>
-          <option value="Low Stock">Low Stock</option>
-          <option value="Expired">Expired</option>
-          <option value="Expiring">Expiring</option>
-        </select>
-      </div>
-    )}
+            {/* Status selection */}
+            <label className="block mb-2 font-semibold">Status:</label>
+            <select
+              value={editingItem.status}
+              onChange={(e) => handleEditChange("status", e.target.value)}
+              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+            >
+              <option value="In Stock">In Stock</option>
+              <option value="Out of Stock">Out of Stock</option>
+              <option value="Low Stock">Low Stock</option>
+              <option value="Expired">Expired</option>
+              <option value="Expiring">Expiring</option>
+            </select>
+          </div>
+        )}
 
-    {editingItem && (
-      <div className="flex justify-end mt-4 space-x-4">
-        <button
-          onClick={() => {
-            handleEditChange("reset", editingItem);
-            handleModalClose();
-          }}
-          className="bg-gray-300 text-black px-6 py-2 rounded-md shadow-sm hover:bg-gray-400"
-        >
-          Cancel Changes
-        </button>
+        {editingItem && (
+          <div className="flex justify-end mt-4 space-x-4">
+            <button
+              onClick={() => {
+                handleEditChange("reset", editingItem);
+                handleModalClose();
+              }}
+              className="bg-gray-300 text-black px-6 py-2 rounded-md shadow-sm hover:bg-gray-400"
+            >
+              Cancel Changes
+            </button>
 
-        <button
-          onClick={handleEditSubmit}
-          className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600"
-        >
-          Save Changes
-        </button>
-      </div>
-    )}
-  </Box>
-</Modal>
+            <button
+              onClick={handleEditSubmit}
+              className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600"
+            >
+              Save Changes
+            </button>
+          </div>
+        )}
+      </Box>
+    </Modal>
 
 
 
