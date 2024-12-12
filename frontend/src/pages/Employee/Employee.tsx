@@ -58,6 +58,7 @@ const Employee: React.FC = () => {
     if (id) {
       fetchEmployee();
     } else {
+      console.log("Invalid employee ID", id); // Log if the ID is invalid
       setError("Invalid employee ID");
       setLoading(false);
     }

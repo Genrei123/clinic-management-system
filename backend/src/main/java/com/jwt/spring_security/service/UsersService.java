@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 @Service
 public class UsersService {
@@ -22,31 +25,54 @@ public class UsersService {
     @Autowired
     private JWTService jwtService;
 
+    private BCryptPasswordEncoder passwordEncoder; // Injected BCryptPasswordEncoder
 
     public Users registerUser(Users user) {
+        // Validate and set role
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            throw new IllegalArgumentException("Role must be specified during registration");
+        }
+
+        // Ensure role is either ADMIN or EMPLOYEE
+        String role = user.getRole().toUpperCase();
+        if (!role.equals("ADMIN") && !role.equals("EMPLOYEE")) {
+            throw new IllegalArgumentException("Invalid role. Must be ADMIN or EMPLOYEE");
+        }
+
         // Encrypts Password
-        user.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(user.getPassword()));
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // Use injected encoder
 
         // Saves User
-        userRepo.save(user);
-        return user;
+        return userRepo.save(user);
     }
 
     public String verify(Users user) {
-        Authentication authentication =
-                authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        Authentication authentication = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+        );
 
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(user.getUsername());
+            // Fetch the authenticated user from the database to get the full user object
+            Users authenticatedUser = userRepo.findByUsername(user.getUsername());
+
+            // Extract roles from authorities with "ROLE_" prefix
+            String roles = authentication.getAuthorities().stream()
+                    .map(grantedAuthority -> "ROLE_" + grantedAuthority.getAuthority().toUpperCase())
+                    .collect(Collectors.joining(","));
+
+            // Generate the JWT token including roles
+            String token = jwtService.generateToken(user.getUsername(), roles);
+
+            // Return an object or modify response to include role
+            return token;
         } else {
-            return "User Not Authenticated";
+            throw new RuntimeException("User Not Authenticated");
         }
     }
 
     public Users findByUsername(String username) {
         return userRepo.findByUsername(username);
     }
-
 
     public Users updateUserByUsername(String username, Users userDetails) {
         Users existingUser = userRepo.findByUsername(username);
@@ -55,7 +81,7 @@ public class UsersService {
             existingUser.setUsername(userDetails.getUsername());
 
             if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-                String encryptedPassword = new BCryptPasswordEncoder().encode(userDetails.getPassword());
+                String encryptedPassword = passwordEncoder.encode(userDetails.getPassword()); // Use injected encoder
                 existingUser.setPassword(encryptedPassword);
             }
 
@@ -63,7 +89,6 @@ public class UsersService {
         }
         return null;
     }
-
 
     public boolean deleteUserByUsername(String username) {
         Users existingUser = userRepo.findByUsername(username);
