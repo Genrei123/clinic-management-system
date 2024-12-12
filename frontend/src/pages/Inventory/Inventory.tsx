@@ -14,6 +14,8 @@ import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import "./inventory.css";
 import axiosInstance from '../../config/axiosConfig'; // Adjust path as necessary
+import { validateAddItem, validateEditItem, validateDeleteItem, ValidationErrors } from './InventoryValidation';
+
 
 
 interface InventoryItem {
@@ -92,6 +94,7 @@ const Inventory: React.FC = () => {
   const [branches, setBranches] = useState<InventoryItem['branch'][]>([]);  // Use branch type from InventoryItem
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false); // Add Item modal state
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({}); // State for validation errors
   const [newItems, setNewItems] = useState<InventoryItem[]>([{
     itemID: 1,
     item_name: "",
@@ -161,22 +164,36 @@ const Inventory: React.FC = () => {
     );
   };
 
+  //DELETE
+
+
   const handleDelete = async () => {
     try {
-      // Send a DELETE request with the selected IDs to the backend
+      // Step 1: Confirm before deletion
+      const isConfirmed = validateDeleteItem(); // Ask for user confirmation
+      if (!isConfirmed) {
+        console.log('Deletion canceled by user.');
+        return;
+      }
+  
+      // Step 2: Proceed with the delete request
       await axiosInstance.delete('/deleteItems', {
-        data: selectedItems,  // Axios allows passing request body in DELETE method
+        data: selectedItems, // Pass selected items as the request body
       });
   
-      // Update the frontend state after deleting items
+      // Step 3: Update the frontend state after successful deletion
       setItems((prev) => prev.filter((item) => !selectedItems.includes(item.itemID)));
-  
-      // Clear selected items
       setSelectedItems([]);
+  
+      // Step 4: Notify the user of successful deletion
+      window.alert("Selected items have been successfully deleted.");
     } catch (error) {
       console.error('Error deleting items:', error);
+      window.alert("An error occurred while deleting items. Please try again.");
     }
   };
+  
+  
   
   // Edit Part
 
@@ -210,38 +227,46 @@ const Inventory: React.FC = () => {
   
   const handleEditSubmit = async () => {
     if (editingItem) {
+      console.log("Editing Item: ", editingItem); // Debugging step
+      const errors = validateEditItem(editingItem);
+  
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        console.log("Validation errors:", errors);
+        return;
+      }
+  
       try {
-        // Ensure branchID is included, even if not edited
         const updatedItem = {
           ...editingItem,
           branch: {
-            branchID: editingItem.branch.branchID,  // Ensure branchID is set here
-            branch_name: editingItem.branch.branch_name,  // Ensure branch_name is set here
+            branchID: editingItem.branch.branchID,
+            branch_name: editingItem.branch.branch_name,
           },
-          statusColor: getStatusColor(editingItem.status),  // Optional, for frontend display
+          statusColor: getStatusColor(editingItem.status),
         };
   
-        console.log('Updated Item (Before Sending Request):', updatedItem);  // Log the updated item
+        console.log('Updated Item:', updatedItem); // Log the updated item
   
-        // Send PUT request to update the item
         const response = await axiosInstance.put(`/updateItems/${updatedItem.itemID}`, updatedItem);
-        console.log('Response from Backend:', response);  // Log response
+        console.log('Response from Backend:', response);
   
         if (response.status === 200) {
           const updatedItemData = response.data;
   
-          // Update the local state with the updated item
           setItems((prevItems) =>
             prevItems.map((item) =>
               item.itemID === updatedItemData.itemID ? updatedItemData : item
             )
           );
   
-          // Close modal after saving
+          alert("Item successfully updated!");
           handleModalClose();
+        } else {
+          alert("Failed to update the item. Please try again.");
         }
       } catch (error) {
-        console.error('Error:', error);  // Log error if request fails
+        console.error('Error:', error);
         alert('Failed to update the item. Please try again.');
       }
     }
@@ -250,10 +275,6 @@ const Inventory: React.FC = () => {
   
   
   
-  
-  
-  
-
 
   // Handle branch selection from dropdown
   const handleEditChange = (field: keyof InventoryItem | "reset", value?: any) => {
@@ -284,17 +305,6 @@ const Inventory: React.FC = () => {
     // Update other fields without affecting branch
     setEditingItem((prevState) => prevState ? { ...prevState, [field]: value } : null);
   };
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
   
 
   const handleModalClose = () => {
@@ -360,56 +370,77 @@ const Inventory: React.FC = () => {
     ]);
   };
   
- // Assuming you're using a dropdown or some selection method for the branch name:
- const handleAddItemSubmit = async () => {
-  try {
-    if (newItems.length === 1) {
-      const formattedItem = {
-        item_name: newItems[0].item_name,
-        item_quantity: newItems[0].item_quantity,
-        item_price: newItems[0].item_price,
-        manufacture_date: newItems[0].manufacture_date,
-        exp_date: newItems[0].exp_date,
-        branch: {
-          branchID: newItems[0].branchID, // Ensure branchID is passed for the first item
-        },
-        status: newItems[0].status,
-      };
-
-      console.log("Formatted Item for submission:", formattedItem);
-
-      const response = await axiosInstance.post('/addItem', formattedItem);
-      const addedItem = response.data;
-      setItems((prev) => [...prev, addedItem]);
-    } else {
-      // Get the branchID from the first item
-      const branchID = newItems[0].branchID;
-
-      // Apply branchID from the first item to all items in newItems
-      const formattedItems = newItems.map((item) => ({
-        item_name: item.item_name,
-        item_quantity: item.item_quantity,
-        item_price: item.item_price,
-        manufacture_date: item.manufacture_date,
-        exp_date: item.exp_date,
-        branch: {
-          branchID: branchID, // Apply the branchID from the first item to all others
-        },
-        status: item.status,
-      }));
-
-      console.log("Formatted Items for submission:", formattedItems);
-
-      const response = await axiosInstance.post('/addItems', formattedItems);
-      const addedItems = response.data;
-      setItems((prev) => [...prev, ...addedItems]);
+  const handleAddItemSubmit = async () => {
+    // Step 1: Validate each item
+    let allErrors: ValidationErrors = {};
+  
+    // Validate each item in newItems array
+    for (const item of newItems) {
+      const itemErrors = validateAddItem(item);  // Assuming validateAddItem function is available
+      if (Object.keys(itemErrors).length > 0) {
+        allErrors = { ...allErrors, [item.itemID]: itemErrors }; // Accumulate errors by itemID
+      }
     }
+  
+    // Step 2: If there are validation errors, update the validationErrors state and stop the process
+    if (Object.keys(allErrors).length > 0) {
+      setValidationErrors(allErrors); // Update state with validation errors
+      console.log("Validation errors:", allErrors); // Optionally log errors or display them
+      return; // Stop further submission if there are validation errors
+    }
+  
+    try {
+      if (newItems.length === 1) {
+        const formattedItem = {
+          item_name: newItems[0].item_name,
+          item_quantity: newItems[0].item_quantity,
+          item_price: newItems[0].item_price,
+          manufacture_date: newItems[0].manufacture_date,
+          exp_date: newItems[0].exp_date,
+          branch: {
+            branchID: newItems[0].branchID, // Ensure branchID is passed for the first item
+          },
+          status: newItems[0].status,
+        };
+  
+        console.log("Formatted Item for submission:", formattedItem);
+  
+        const response = await axiosInstance.post('/addItem', formattedItem);
+        const addedItem = response.data;
+        setItems((prev) => [...prev, addedItem]);
+      } else {
+        // Get the branchID from the first item
+        const branchID = newItems[0].branchID;
+  
+        // Apply branchID from the first item to all items in newItems
+        const formattedItems = newItems.map((item) => ({
+          item_name: item.item_name,
+          item_quantity: item.item_quantity,
+          item_price: item.item_price,
+          manufacture_date: item.manufacture_date,
+          exp_date: item.exp_date,
+          branch: {
+            branchID: branchID, // Apply the branchID from the first item to all others
+          },
+          status: item.status,
+        }));
+  
+        console.log("Formatted Items for submission:", formattedItems);
+  
+        const response = await axiosInstance.post('/addItems', formattedItems);
+        const addedItems = response.data;
+        setItems((prev) => [...prev, ...addedItems]);
+      }
+  
+      handleAddModalClose(); // Close the modal after adding items
+      alert("Items successfully added!"); // Show confirmation after successful submission
+    } catch (e) {
+      console.error('Error adding items:', e);
+      alert('Failed to add items. Please try again.');
+    }
+  };
+  
 
-    handleAddModalClose(); // Close the modal after adding items
-  } catch (e) {
-    // Handle silently without logging errors
-  }
-};
 
 
   return (
@@ -582,19 +613,6 @@ const Inventory: React.FC = () => {
               </select>
             </>
           )}
-
-          <label className="block mb-2 font-semibold">Status:</label>
-          <select
-            value={item.status}
-            onChange={(e) => handleAddItemChange(index, "status", e.target.value)}
-            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-          >
-            <option value="In Stock">In Stock</option>
-            <option value="Out of Stock">Out of Stock</option>
-            <option value="Low Stock">Low Stock</option>
-            <option value="Expired">Expired</option>
-            <option value="Expiring">Expiring</option>
-          </select>
         </div>
       ))}
     </div>
@@ -617,121 +635,125 @@ const Inventory: React.FC = () => {
 
         
 {/* Edit Item Modal */}
-    <Modal
-      open={isModalOpen}
-      onClose={handleModalClose}
-      aria-labelledby="edit-item-modal"
-      aria-describedby="modal-to-edit-inventory-item"
-    >
-      <Box sx={{ ...modalStyle, maxHeight: '80vh', overflow: 'hidden' }}>
-        <h2 className="text-2xl font-bold mb-4">Edit Item</h2>
-
-        {editingItem && (
-          <div className="overflow-y-auto max-h-[60vh] pr-4 mb-4">
-            <p className="mb-4">
-              Editing: <span className="font-semibold">{editingItem.item_name}</span>
-            </p>
-
-            {/* Editable fields */}
-            <label className="block mb-2 font-semibold">Item Name:</label>
-            <input
-              type="text"
-              value={editingItem.item_name}
-              onChange={(e) => handleEditChange("item_name", e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            />
-
-            <label className="block mb-2 font-semibold">Item Quantity:</label>
-            <input
-              type="number"
-              value={editingItem.item_quantity}
-              onChange={(e) => handleEditChange("item_quantity", e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            />
-
-            <label className="block mb-2 font-semibold">Item Price:</label>
-            <input
-              type="number"
-              value={editingItem.item_price}
-              onChange={(e) => handleEditChange("item_price", e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            />
-
-            <label className="block mb-2 font-semibold">Manufacture Date:</label>
-            <input
-              type="date"
-              value={editingItem.manufacture_date}
-              onChange={(e) => handleEditChange("manufacture_date", e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            />
-
-            <label className="block mb-2 font-semibold">Expiration Date:</label>
-            <input
-              type="date"
-              value={editingItem.exp_date}
-              onChange={(e) => handleEditChange("exp_date", e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            />
-
-            {/* Branch transfer */}
-            <label className="block mb-2 font-semibold">Transfer to Branch:</label>
-            <select
-  value={editingItem?.branch?.branchID || ""} // Ensures the branchID is selected
-  onChange={(e) => handleEditChange("branch", e.target.value)} // Handle branch selection
-  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+<Modal
+  open={isModalOpen}
+  onClose={handleModalClose}
+  aria-labelledby="edit-item-modal"
+  aria-describedby="modal-to-edit-inventory-item"
 >
-  <option value="" disabled>Select a Branch</option>
-  {branches.map((branch) => (
-    <option key={branch.branchID} value={branch.branchID}>
-      {branch.branch_name}
-    </option>
-  ))}
-</select>
+  <Box sx={{ ...modalStyle, maxHeight: '80vh', overflow: 'hidden' }}>
+    <h2 className="text-2xl font-bold mb-4">Edit Item</h2>
 
+    {editingItem && (
+      <div className="overflow-y-auto max-h-[60vh] pr-4 mb-4">
+        <p className="mb-4">
+          Editing: <span className="font-semibold">{editingItem.item_name}</span>
+        </p>
 
-
-
-            {/* Status selection */}
-            <label className="block mb-2 font-semibold">Status:</label>
-            <select
-              value={editingItem.status}
-              onChange={(e) => handleEditChange("status", e.target.value)}
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            >
-              <option value="In Stock">In Stock</option>
-              <option value="Out of Stock">Out of Stock</option>
-              <option value="Low Stock">Low Stock</option>
-              <option value="Expired">Expired</option>
-              <option value="Expiring">Expiring</option>
-            </select>
-          </div>
+        {/* Item Name */}
+        <label className="block mb-2 font-semibold">Item Name:</label>
+        <input
+          type="text"
+          value={editingItem.item_name}
+          onChange={(e) => handleEditChange("item_name", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+        />
+        {validationErrors.item_name && (
+          <p className="text-red-500 text-sm">{validationErrors.item_name}</p>
         )}
 
-        {editingItem && (
-          <div className="flex justify-end mt-4 space-x-4">
-            <button
-              onClick={() => {
-                handleEditChange("reset", editingItem);
-                handleModalClose();
-              }}
-              className="bg-gray-300 text-black px-6 py-2 rounded-md shadow-sm hover:bg-gray-400"
-            >
-              Cancel Changes
-            </button>
-
-            <button
-              onClick={handleEditSubmit}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600"
-            >
-              Save Changes
-            </button>
-          </div>
+        {/* Item Quantity */}
+        <label className="block mb-2 font-semibold">Item Quantity:</label>
+        <input
+          type="number"
+          value={editingItem.item_quantity}
+          onChange={(e) => handleEditChange("item_quantity", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+        />
+        {validationErrors.item_quantity && (
+          <p className="text-red-500 text-sm">{validationErrors.item_quantity}</p>
         )}
-      </Box>
-    </Modal>
 
+        {/* Item Price */}
+        <label className="block mb-2 font-semibold">Item Price:</label>
+        <input
+          type="number"
+          value={editingItem.item_price}
+          onChange={(e) => handleEditChange("item_price", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+        />
+        {validationErrors.item_price && (
+          <p className="text-red-500 text-sm">{validationErrors.item_price}</p>
+        )}
 
+        {/* Manufacture Date */}
+        <label className="block mb-2 font-semibold">Manufacture Date:</label>
+        <input
+          type="date"
+          value={editingItem.manufacture_date}
+          onChange={(e) => handleEditChange("manufacture_date", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+        />
+        {validationErrors.manufacture_date && (
+          <p className="text-red-500 text-sm">{validationErrors.manufacture_date}</p>
+        )}
 
+        {/* Expiration Date */}
+        <label className="block mb-2 font-semibold">Expiration Date:</label>
+        <input
+          type="date"
+          value={editingItem.exp_date}
+          onChange={(e) => handleEditChange("exp_date", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+        />
+        {validationErrors.exp_date && (
+          <p className="text-red-500 text-sm">{validationErrors.exp_date}</p>
+        )}
+
+        {/* Branch transfer */}
+        <label className="block mb-2 font-semibold">Transfer to Branch:</label>
+        <select
+          value={editingItem?.branch?.branchID || ""}
+          onChange={(e) => handleEditChange("branch", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+        >
+          <option value="" disabled>Select a Branch</option>
+          {branches.map((branch) => (
+            <option key={branch.branchID} value={branch.branchID}>
+              {branch.branch_name}
+            </option>
+          ))}
+        </select>
+        {validationErrors.branch && (
+          <p className="text-red-500 text-sm">{validationErrors.branch}</p>
+        )}
+
+        {/* Status selection */}
+      </div>
+    )}
+
+    {editingItem && (
+      <div className="flex justify-end mt-4 space-x-4">
+        <button
+          onClick={() => {
+            handleEditChange("reset", editingItem);
+            handleModalClose();
+          }}
+          className="bg-gray-300 text-black px-6 py-2 rounded-md shadow-sm hover:bg-gray-400"
+        >
+          Cancel Changes
+        </button>
+
+        <button
+          onClick={handleEditSubmit}
+          className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600"
+        >
+          Save Changes
+        </button>
+      </div>
+    )}
+  </Box>
+</Modal>
 
     </div>
   );
