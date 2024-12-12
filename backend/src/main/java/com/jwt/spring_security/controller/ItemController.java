@@ -59,22 +59,22 @@ public class ItemController {
             return ResponseEntity.badRequest().body(Collections.emptyList()); // 400 Bad Request
         }
 
-        // Get the branch name from the first item (assuming all items are for the same branch)
-        Branch branchName = items.get(0).getBranch();  // assuming you're sending branchName in the request
-
-        // Find the branch by name
-        Branch branch = branchRepo.findByBranchName(String.valueOf(branchName));
-        if (branch == null) {
-            return ResponseEntity.badRequest().build(); // 400 Bad Request if branch does not exist
+        // Validate each item's branchID
+        for (Item item : items) {
+            Branch branch = branchRepo.findByBranchID(item.getBranch().getBranchID());
+            if (branch == null) {
+                return ResponseEntity.badRequest().body(Collections.emptyList()); // 400 Bad Request if any branchID is invalid
+            }
+            item.setBranch(branch); // Set the valid branch for each item
         }
 
-        // Set the branch object for each item
-        items.forEach(item -> item.setBranch(branch));
-
-        // Save the items
+        // Save all items
         List<Item> savedItems = itemRepo.saveAll(items);
+
+        // Return the saved items
         return ResponseEntity.ok(savedItems); // 200 OK
     }
+
 
 
 

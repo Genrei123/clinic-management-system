@@ -117,7 +117,7 @@ const Inventory: React.FC = () => {
           item_price: item.item_price,         
           manufacture_date: item.manufacture_date,  
           exp_date: item.exp_date,  
-          branch: item.branch?.branch_name,          
+          branch: {branch_name: item.branch.branch_name},          
           status: item.status || 'In Stock', 
         }));
         
@@ -306,15 +306,14 @@ const Inventory: React.FC = () => {
  const handleAddItemSubmit = async () => {
   try {
     if (newItems.length === 1) {
-      // Ensure you're passing branchID along with branchName
       const formattedItem = {
         item_name: newItems[0].item_name,
         item_quantity: newItems[0].item_quantity,
         item_price: newItems[0].item_price,
         manufacture_date: newItems[0].manufacture_date,
         exp_date: newItems[0].exp_date,
-        branch: { 
-          branchID: newItems[0].branchID, // Ensure branchID is passed
+        branch: {
+          branchID: newItems[0].branchID, // Ensure branchID is passed for the first item
         },
         status: newItems[0].status,
       };
@@ -325,6 +324,10 @@ const Inventory: React.FC = () => {
       const addedItem = response.data;
       setItems((prev) => [...prev, addedItem]);
     } else {
+      // Get the branchID from the first item
+      const branchID = newItems[0].branchID;
+
+      // Apply branchID from the first item to all items in newItems
       const formattedItems = newItems.map((item) => ({
         item_name: item.item_name,
         item_quantity: item.item_quantity,
@@ -332,7 +335,7 @@ const Inventory: React.FC = () => {
         manufacture_date: item.manufacture_date,
         exp_date: item.exp_date,
         branch: {
-          branchID: item.branchID, // Ensure branchID is passed for each item
+          branchID: branchID, // Apply the branchID from the first item to all others
         },
         status: item.status,
       }));
@@ -345,10 +348,12 @@ const Inventory: React.FC = () => {
     }
 
     handleAddModalClose(); // Close the modal after adding items
-  } catch (error) {
-    console.error('Error adding items:', error);
+  } catch (e) {
+    // Handle silently without logging errors
   }
 };
+
+
 
 
   
@@ -458,90 +463,98 @@ const Inventory: React.FC = () => {
 
       {/* Add Item Modal */}
       <Modal
-        open={isAddModalOpen}
-        onClose={handleAddModalClose}
-        aria-labelledby="add-item-modal"
-        aria-describedby="modal-to-add-inventory-item"
+  open={isAddModalOpen}
+  onClose={handleAddModalClose}
+  aria-labelledby="add-item-modal"
+  aria-describedby="modal-to-add-inventory-item"
+>
+  <Box sx={modalStyle}>
+    <h2 className="text-2xl font-bold mb-4">Add New Items</h2>
+    <div className="overflow-y-auto max-h-[60vh]">
+      {newItems.map((item, index) => (
+        <div key={index}>
+          <h3 className="text-xl font-semibold mb-4">Item {index + 1}</h3>
+          <label className="block mb-2 font-semibold">Name:</label>
+          <input
+            type="text"
+            value={item.item_name}
+            onChange={(e) => handleAddItemChange(index, "item_name", e.target.value)}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+          />
+          <label className="block mb-2 font-semibold">Quantity:</label>
+          <input
+            type="number"
+            value={item.item_quantity}
+            onChange={(e) => handleAddItemChange(index, "item_quantity", Number(e.target.value))}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+          />
+          <label className="block mb-2 font-semibold">Price:</label>
+          <input
+            type="number"
+            value={item.item_price}
+            onChange={(e) => handleAddItemChange(index, "item_price", Number(e.target.value))}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+          />
+          <label className="block mb-2 font-semibold">Manufactured Date:</label>
+          <input
+            type="date"
+            value={item.manufacture_date}
+            onChange={(e) => handleAddItemChange(index, "manufacture_date", e.target.value)}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+          />
+          <label className="block mb-2 font-semibold">Expiration Date:</label>
+          <input
+            type="date"
+            value={item.exp_date}
+            onChange={(e) => handleAddItemChange(index, "exp_date", e.target.value)}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+          />
+          
+          {/* Conditional rendering for branch input */}
+          {index === 0 && (
+            <>
+              <label className="block mb-2 font-semibold">Branch:</label>
+              <input
+                type="text"
+                value={item.branchID}
+                onChange={(e) => handleAddItemChange(index, "branchID", e.target.value)}
+                className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+              />
+            </>
+          )}
+
+          <label className="block mb-2 font-semibold">Status:</label>
+          <select
+            value={item.status}
+            onChange={(e) => handleAddItemChange(index, "status", e.target.value)}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+          >
+            <option value="In Stock">In Stock</option>
+            <option value="Out of Stock">Out of Stock</option>
+            <option value="Low Stock">Low Stock</option>
+            <option value="Expired">Expired</option>
+            <option value="Expiring">Expiring</option>
+          </select>
+        </div>
+      ))}
+    </div>
+    <div className="flex justify-between items-center mt-4">
+      <button
+        onClick={handleAddMoreItem}
+        className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
       >
-        <Box sx={modalStyle}>
-          <h2 className="text-2xl font-bold mb-4">Add New Items</h2>
-          <div className="overflow-y-auto max-h-[60vh]">
-            {newItems.map((item, index) => (
-              <div key={index}>
-                <h3 className="text-xl font-semibold mb-4">Item {index + 1}</h3>
-                <label className="block mb-2 font-semibold">Name:</label>
-                <input
-                  type="text"
-                  value={item.item_name}
-                  onChange={(e) => handleAddItemChange(index, "item_name", e.target.value)}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                />
-                <label className="block mb-2 font-semibold">Quantity:</label>
-                <input
-                  type="number"
-                  value={item.item_quantity}
-                  onChange={(e) => handleAddItemChange(index, "item_quantity", Number(e.target.value))}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                />
-                <label className="block mb-2 font-semibold">Price:</label>
-                <input
-                  type="number"
-                  value={item.item_price}
-                  onChange={(e) => handleAddItemChange(index, "item_price", Number(e.target.value))}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                />
-                <label className="block mb-2 font-semibold">Manufactured Date:</label>
-                <input
-                  type="date"
-                  value={item.manufacture_date}
-                  onChange={(e) => handleAddItemChange(index, "manufacture_date", e.target.value)}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                />
-                <label className="block mb-2 font-semibold">Expiration Date:</label>
-                <input
-                  type="date"
-                  value={item.exp_date}
-                  onChange={(e) => handleAddItemChange(index, "exp_date", e.target.value)}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                />
-                <label className="block mb-2 font-semibold">Branch:</label>
-                <input
-                  type="text"
-                  value={item.branchID}
-                  onChange={(e) => handleAddItemChange(index, "branchID", e.target.value)}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                />
-                <label className="block mb-2 font-semibold">Status:</label>
-                <select
-                  value={item.status}
-                  onChange={(e) => handleAddItemChange(index, "status", e.target.value)}
-                  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-                >
-                  <option value="In Stock">In Stock</option>
-                  <option value="Out of Stock">Out of Stock</option>
-                  <option value="Low Stock">Low Stock</option>
-                  <option value="Expired">Expired</option>
-                  <option value="Expiring">Expiring</option>
-                </select>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={handleAddMoreItem}
-              className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-            >
-              Add Another Item
-            </button>
-            <button
-              onClick={handleAddItemSubmit}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
-            >
-              Add Items
-            </button>
-          </div>
-        </Box>
-      </Modal>
+        Add Another Item
+      </button>
+      <button
+        onClick={handleAddItemSubmit}
+        className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600"
+      >
+        Add Items
+      </button>
+    </div>
+  </Box>
+</Modal>
+
         
 {/* Edit Item Modal */}
 <Modal
