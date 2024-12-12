@@ -85,18 +85,29 @@ public class ItemController {
         if (existingItem == null) {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
-        // Update properties
+
+        // Fetch the branch using the branchID
+        Branch branch = branchRepo.findByBranchID(itemDetails.getBranch().getBranchID());
+        if (branch == null) {
+            return ResponseEntity.badRequest().body(null); // 400 Bad Request if branch is not found
+        }
+
+        // Set the branch to the existing item
+        existingItem.setBranch(branch);
+
+        // Update the properties of the item
         existingItem.setItemName(itemDetails.getItemName());
         existingItem.setItemQuantity(itemDetails.getItemQuantity());
         existingItem.setItemPrice(itemDetails.getItemPrice());
         existingItem.setManufactureDate(itemDetails.getManufactureDate());
         existingItem.setExpDate(itemDetails.getExpDate());
         existingItem.setStatus(itemDetails.getStatus());
-        existingItem.setBranch(itemDetails.getBranch());
 
+        // Save and return the updated item
         Item updatedItem = itemRepo.save(existingItem);
         return ResponseEntity.ok(updatedItem); // 200 OK
     }
+
 
     @DeleteMapping("/deleteItems")
     public ResponseEntity<?> deleteItems(@RequestBody List<Long> ids) {
