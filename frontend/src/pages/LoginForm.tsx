@@ -88,7 +88,7 @@ const LoginForm: React.FC = () => {
           if (role === 'owner') {
             navigate('/home');
           } else {
-            navigate('/dashboard');
+            navigate('/home');
           }
         } else {
           const errorData = await response.json();

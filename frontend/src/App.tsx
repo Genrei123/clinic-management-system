@@ -42,31 +42,31 @@ const App: React.FC = () => {
           <Route
             path="/employees"
             element={
-              <ProtectedRoute allowedRoles={["owner", "admin"]} element={<Employee />} />
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<Employee />} />
             }
           />
           <Route
             path="/employee/:id"
             element={
-              <ProtectedRoute allowedRoles={["owner", "admin"]} element={<EmployeeDetails />} />
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<EmployeeDetails />} />
             }
           />
           <Route
             path="/patientrecords"
             element={
-              <ProtectedRoute allowedRoles={["owner", "admin"]} element={<PatientRecords />} />
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<PatientRecords />} />
             }
           />
           <Route
             path="/patient/:id"
             element={
-              <ProtectedRoute allowedRoles={["owner", "admin"]} element={<Patient />} />
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<Patient />} />
             }
           />
           <Route
             path="/generate-pdf"
             element={
-              <ProtectedRoute allowedRoles={["owner", "admin"]} element={<GeneratePDF />} />
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<GeneratePDF />} />
             }
           />
           <Route path="/account/details" element={<AccountDetails />} />

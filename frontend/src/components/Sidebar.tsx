@@ -41,7 +41,7 @@ const Sidebar: React.FC = () => {
     { path: "/home", label: "Home", icon: Home, roles: ["owner", "employee"] },
     { path: "/patientrecords", label: "Patient", icon: User, roles: ["owner", "employee"] },
     { path: "/inventory", label: "Inventory", icon: Package, roles: ["owner"] },
-    { path: "/employees", label: "Employees", icon: Users, roles: ["owner"] },
+    { path: "/employees", label: "Employees", icon: Users, roles: ["owner", "employee"] },
     { path: "/reports", label: "Reports", icon: FileText, roles: ["owner"] },
   ];
 
