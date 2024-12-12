@@ -197,29 +197,35 @@ const Inventory: React.FC = () => {
   const handleEdit = (id: number) => {
     const itemToEdit = items.find((item) => item.itemID === id);
     if (itemToEdit) {
-      setEditingItem(itemToEdit);
+      // Initialize branch if not already set
+      const itemWithBranch = {
+        ...itemToEdit,
+        branch: itemToEdit.branch || { branchID: 0, branch_name: "No branch" }
+      };
+      setEditingItem(itemWithBranch);
       setIsModalOpen(true);
     }
   };
   
+  
   const handleEditSubmit = async () => {
     if (editingItem) {
       try {
-        // Ensure you're sending the branch with both branchID and branch_name
+        // Ensure branchID is included, even if not edited
         const updatedItem = {
           ...editingItem,
           branch: {
-            branchID: editingItem.branch.branchID, // Send branchID
-            branch_name: editingItem.branch.branch_name, // Send branch_name
+            branchID: editingItem.branch.branchID,  // Ensure branchID is set here
+            branch_name: editingItem.branch.branch_name,  // Ensure branch_name is set here
           },
-          statusColor: getStatusColor(editingItem.status), // Optional, for frontend display purposes
+          statusColor: getStatusColor(editingItem.status),  // Optional, for frontend display
         };
   
-        console.log('Updated Item (Before Sending Request):', updatedItem); // Log the request
+        console.log('Updated Item (Before Sending Request):', updatedItem);  // Log the updated item
   
         // Send PUT request to update the item
         const response = await axiosInstance.put(`/updateItems/${updatedItem.itemID}`, updatedItem);
-        console.log('Response from Backend:', response); // Log the response
+        console.log('Response from Backend:', response);  // Log response
   
         if (response.status === 200) {
           const updatedItemData = response.data;
@@ -231,40 +237,63 @@ const Inventory: React.FC = () => {
             )
           );
   
-          // Close the modal after saving the changes
-          handleModalClose(); 
+          // Close modal after saving
+          handleModalClose();
         }
       } catch (error) {
-        console.error('Error:', error); // Log error details if the request fails
+        console.error('Error:', error);  // Log error if request fails
         alert('Failed to update the item. Please try again.');
       }
     }
   };
+  
+  
+  
+  
+  
+  
+  
 
 
   // Handle branch selection from dropdown
   const handleEditChange = (field: keyof InventoryItem | "reset", value?: any) => {
     if (field === "reset" && value) {
-      setEditingItem(value as InventoryItem);
+      // Reset fields but keep previous branch if not changed
+      setEditingItem((prevState) => prevState ? {
+        ...value,
+        branch: prevState.branch || value.branch,  // Retain previous branch if not edited
+      } : null);
       return;
     }
-
+  
     if (field === "branch" && value) {
+      // Find selected branch based on branchID
       const selectedBranch = branches.find((branch) => branch.branchID === parseInt(value));
       if (selectedBranch) {
         setEditingItem((prevState) => prevState ? {
           ...prevState,
           branch: {
-            branchID: selectedBranch.branchID,
-            branch_name: selectedBranch.branch_name
+            branchID: selectedBranch.branchID,  // Ensure branchID is correctly updated
+            branch_name: selectedBranch.branch_name, // Update branch_name
           }
         } : null);
       }
       return;
     }
-
+  
+    // Update other fields without affecting branch
     setEditingItem((prevState) => prevState ? { ...prevState, [field]: value } : null);
   };
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
   
 
@@ -647,17 +676,20 @@ const Inventory: React.FC = () => {
             {/* Branch transfer */}
             <label className="block mb-2 font-semibold">Transfer to Branch:</label>
             <select
-              value={editingItem.branch.branchID}
-              onChange={(e) => handleEditChange("branch", e.target.value)} // Handle branch selection
-              className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
-            >
-              <option value="" disabled>Select a Branch</option>
-              {branches.map((branch) => (
-                <option key={branch.branchID} value={branch.branchID}>
-                  {branch.branch_name}
-                </option>
-              ))}
-            </select>
+  value={editingItem?.branch?.branchID || ""} // Ensures the branchID is selected
+  onChange={(e) => handleEditChange("branch", e.target.value)} // Handle branch selection
+  className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
+>
+  <option value="" disabled>Select a Branch</option>
+  {branches.map((branch) => (
+    <option key={branch.branchID} value={branch.branchID}>
+      {branch.branch_name}
+    </option>
+  ))}
+</select>
+
+
+
 
             {/* Status selection */}
             <label className="block mb-2 font-semibold">Status:</label>
