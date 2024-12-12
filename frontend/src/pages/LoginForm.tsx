@@ -9,39 +9,100 @@ import ForgotPassword from './ForgotPassword';
 
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
-  const { setUserRole } = useAuth();
+  const { login } = useAuth(); // Use login function from context
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [openForgotPassword, setOpenForgotPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  
+  
+  
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  
     let isValid = true;
+  
     if (!email) {
       setEmailError("Please enter your email.");
       isValid = false;
     } else {
       setEmailError('');
     }
-
+  
     if (password.length < 6) {
       setPasswordError("Password must be at least 6 characters long.");
       isValid = false;
     } else {
       setPasswordError('');
     }
-
+  
     if (isValid) {
-      const role = email.includes('admin') ? 'admin' : 'employee';
-      setUserRole(role);
-      localStorage.setItem("token", "dummy_token");
-      localStorage.setItem("userRole", role);
-      navigate("/home");
+      try {
+        const response = await fetch('http://localhost:8080/login', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: email, password }),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+          const { username, token, role } = data; // Backend should return 'role' and 'token' properties.
+  
+          console.log("Login successful:", data);  // Log the response to check if role and token are correct
+  
+          login(token, role);
+          localStorage.setItem("token", token);
+          localStorage.setItem("userRole", role);
+          localStorage.setItem("username", username);
+
+  
+          // Now send the token with the Authorization header in a subsequent request
+          const tokenFromLocalStorage = localStorage.getItem('token');
+          
+          const patientResponse = await fetch('http://localhost:8080/getPatient', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${tokenFromLocalStorage}`,  // Add the token in the header
+            },
+          });
+
+          if (patientResponse.ok) {
+            // Handle successful response for /getPatient request
+            const patientData = await patientResponse.json();
+            console.log('Patient data:', patientData);
+          } else {
+            console.log('Failed to fetch patient data');
+          }
+  
+          // Redirect after saving to local storage
+          console.log("Role: ", role);
+          console.log("Token: ", token);
+
+          if (role === 'owner') {
+            navigate('/home');
+          } else {
+            navigate('/home');
+          }
+        } else {
+          const errorData = await response.json();
+          setPasswordError(errorData.message || "Login failed");
+        }
+      } catch (error) {
+        console.log(error);
+        setPasswordError("An error occurred. Please try again.");
+      }
     }
-  };
+};
+
+  
+  
 
   return (
     <section className="login-page">

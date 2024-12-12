@@ -13,6 +13,7 @@ import AccountSecurity from "./pages/AccountSecurity";
 import LandingPage from "./pages/Landing Page/LandingPage";
 import GeneratePDF from "./pages/Patient/GeneratedPDF";
 import EmployeeDetails from "./pages/Employee/EmployeeDetails";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
   return (
@@ -22,14 +23,52 @@ const App: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/home" element={<HomePage />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/employees" element={<Employee />} />
-          <Route path="/employee/:id" element={<EmployeeDetails />} />
-          <Route path="/patientrecords" element={<PatientRecords />} />
-          <Route path="/patient/:id" element={<Patient />} />
-          <Route path="/patient/:id/visits/:index" element={<Patient />} />
-          <Route path="/generate-pdf" element={<GeneratePDF />} />
-          <Route path="/reports" element={<Report />} />
+          
+          {/* Owner-only routes */}
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute allowedRoles={["owner"]} element={<Inventory />} />
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute allowedRoles={["owner"]} element={<Report />} />
+            }
+          />
+
+          {/* Shared routes */}
+          <Route
+            path="/employees"
+            element={
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<Employee />} />
+            }
+          />
+          <Route
+            path="/employee/:id"
+            element={
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<EmployeeDetails />} />
+            }
+          />
+          <Route
+            path="/patientrecords"
+            element={
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<PatientRecords />} />
+            }
+          />
+          <Route
+            path="/patient/:id"
+            element={
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<Patient />} />
+            }
+          />
+          <Route
+            path="/generate-pdf"
+            element={
+              <ProtectedRoute allowedRoles={["owner", "employee"]} element={<GeneratePDF />} />
+            }
+          />
           <Route path="/account/details" element={<AccountDetails />} />
           <Route path="/account/security" element={<AccountSecurity />} />
         </Routes>
@@ -39,4 +78,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
