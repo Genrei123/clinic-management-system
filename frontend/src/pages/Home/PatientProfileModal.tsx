@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Patient from "../../types/Patient";
 import { searchPatients, addPatient } from "../../services/patientService";
 import { addPatientLog } from "../../services/visitService";
-import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
+import { AlertCircle, CheckCircle, X, Search, UserPlus } from 'lucide-react';
 import { createEmptyPatient } from "../../utils/Patient";
 
 interface PatientProfileModalProps {
@@ -21,7 +21,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     { id: number; lastName: string; givenName: string }[]
   >([]);
   const [formData, setFormData] = useState<Patient>(createEmptyPatient());
-
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     null
   );
@@ -264,7 +263,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   { label: "Birthday", name: "birthday", type: "date" },
                   { label: "Religion", name: "religion" },
                   { label: "Occupation", name: "occupation" },
-                  { label: "Philhealth ID", name: "philhealthID" },
                 ].map(({ label, name, type = "text" }) => (
                   <div key={name}>
                     <label htmlFor={name} className="block text-sm font-medium">
@@ -281,7 +279,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </div>
                 ))}
 
-                {/* Spouse Fields */}
                 <h3 className="col-span-2 font-bold mt-4">Spouse Details</h3>
                 {[
                   { label: "Spouse Name", name: "spouse.spouseName" },
@@ -320,7 +317,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </div>
                 ))}
 
-                {/* Pregnancy Fields */}
                 <h3 className="col-span-2 font-bold mt-4">Pregnancy Details</h3>
                 {[
                   "gravida",
@@ -348,7 +344,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </div>
                 ))}
 
-                {/* Medical History Fields */}
                 <h3 className="col-span-2 font-bold mt-4">Medical History</h3>
                 {[
                   "smoking",

@@ -24,7 +24,7 @@ public class PatientService {
         return patientRepo.findById(patientId).orElse(null);
     }
 
-    public void addPatient(PatientDTO patientDTO) {
+    public Long addPatient(PatientDTO patientDTO) {
         // Map Patient fields
         Patient patient = new Patient();
         patient.setPatientID(patientDTO.getPatientID());
@@ -113,6 +113,9 @@ public class PatientService {
         }
 
         // Save the patient entity (cascades will handle related entities)
-        patientRepo.save(patient);
+        Patient savedPatient = patientRepo.save(patient);
+
+        // Return the clientID of the saved patient
+        return savedPatient.getClientID();
     }
 }
