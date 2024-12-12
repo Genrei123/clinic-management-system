@@ -1,6 +1,9 @@
 package com.jwt.spring_security.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -22,12 +25,12 @@ public class Item {
     private Double itemPrice;
 
     @JsonProperty("manufacture_date")
-    @Temporal(TemporalType.DATE)
-    private Date manufactureDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate manufactureDate;
 
     @JsonProperty("exp_date")
-    @Temporal(TemporalType.DATE)
-    private Date expDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate expDate;
 
     private String status;
 
@@ -67,19 +70,19 @@ public class Item {
         this.itemPrice = itemPrice;
     }
 
-    public Date getManufactureDate() {
+    public LocalDate getManufactureDate() {
         return manufactureDate;
     }
 
-    public void setManufactureDate(Date manufactureDate) {
+    public void setManufactureDate(LocalDate manufactureDate) {
         this.manufactureDate = manufactureDate;
     }
 
-    public Date getExpDate() {
+    public LocalDate getExpDate() {
         return expDate;
     }
 
-    public void setExpDate(Date expDate) {
+    public void setExpDate(LocalDate expDate) {
         this.expDate = expDate;
     }
 

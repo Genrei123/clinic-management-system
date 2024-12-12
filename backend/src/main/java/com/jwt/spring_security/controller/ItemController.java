@@ -37,13 +37,18 @@ public class ItemController {
     }
 
     @PostMapping("/addItem")
-    public ResponseEntity<Item> addItems(@RequestBody Item item) {
+    public ResponseEntity<Item> addItem(@RequestBody Item item) {
+        // If the frontend is sending just the branchID, use findByBranchID
         Branch branchExists = branchRepo.findByBranchID(item.getBranch().getBranchID());
+
         if (branchExists == null) {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
+
+        // Set the branch to the item
         item.setBranch(branchExists);
         Item savedItem = itemRepo.save(item);
+
         return ResponseEntity.ok(savedItem); // 200 OK
     }
 
@@ -53,15 +58,24 @@ public class ItemController {
         if (items.isEmpty()) {
             return ResponseEntity.badRequest().body(Collections.emptyList()); // 400 Bad Request
         }
-        Long branchId = items.get(0).getBranch().getBranchID();
-        Branch branch = branchRepo.findByBranchID(branchId);
+
+        // Get the branch name from the first item (assuming all items are for the same branch)
+        Branch branchName = items.get(0).getBranch();  // assuming you're sending branchName in the request
+
+        // Find the branch by name
+        Branch branch = branchRepo.findByBranchName(String.valueOf(branchName));
         if (branch == null) {
-            return ResponseEntity.badRequest().build(); // 400 Bad Request
+            return ResponseEntity.badRequest().build(); // 400 Bad Request if branch does not exist
         }
+
+        // Set the branch object for each item
         items.forEach(item -> item.setBranch(branch));
+
+        // Save the items
         List<Item> savedItems = itemRepo.saveAll(items);
         return ResponseEntity.ok(savedItems); // 200 OK
     }
+
 
 
 
@@ -84,11 +98,10 @@ public class ItemController {
         return ResponseEntity.ok(updatedItem); // 200 OK
     }
 
-
     @DeleteMapping("/deleteItems")
-    public ResponseEntity<String> deleteItems(@RequestBody List<Long> itemIDs) {
-        return itemService.deleteByItemIDs(itemIDs);
+    public ResponseEntity<?> deleteItems(@RequestBody List<Long> ids) {
+        itemService.deleteByItemIDs(ids);
+        return ResponseEntity.ok().body("Items deleted successfully");
     }
-
 
 }

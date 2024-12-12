@@ -24,7 +24,8 @@ interface InventoryItem {
   manufacture_date: string; // Changed from 'manufacturedDate' to 'manufacture_date'
   exp_date: string; // Changed from 'expirationDate' to 'exp_date'
   status: string;
-  branch: string;
+  branch: {branch_name: string}; // Changed from 'branch' to 'branch_name'
+  branchID: number; // Add this line for branchID
   statusColor?: string; // Optional, for frontend display purposes
 }
 
@@ -97,7 +98,8 @@ const Inventory: React.FC = () => {
     item_price: 0,
     manufacture_date: "",
     exp_date: "",
-    branch: "",
+    branch: {branch_name: ""},  // Default value for branch
+    branchID: 0,
     status: "In Stock",  // Default value for status
   }]);
 
@@ -113,8 +115,8 @@ const Inventory: React.FC = () => {
           item_name: item.item_name,           
           item_quantity: item.item_quantity,   
           item_price: item.item_price,         
-          manufacture_date: new Date(item.manufacture_date).toLocaleDateString(),  
-          exp_date: new Date(item.exp_date).toLocaleDateString(),  
+          manufacture_date: item.manufacture_date,  
+          exp_date: item.exp_date,  
           branch: item.branch?.branch_name,          
           status: item.status || 'In Stock', 
         }));
@@ -175,6 +177,7 @@ const Inventory: React.FC = () => {
     }
   };
   
+  // Edit Part
 
   const handleEdit = (id: number) => {
     const itemToEdit = items.find((item) => item.itemID === id);
@@ -186,30 +189,50 @@ const Inventory: React.FC = () => {
   
   const handleEditSubmit = async () => {
     if (editingItem) {
-      const updatedItem = {
-        ...editingItem,
-        statusColor: getStatusColor(editingItem.status),
-      };
-  
       try {
-        await axiosInstance.put(`/inventory/${updatedItem.itemID}`, updatedItem); // Update the item in the database
-        setItems((prevItems) =>
-          prevItems.map((item) => (item.itemID === updatedItem.itemID ? updatedItem : item))
-        );
-        handleModalClose(); // Close the modal
+        // Prepare the updated item with BranchName instead of BranchID
+        const updatedItem = {
+          ...editingItem,
+          branch: editingItem.branch, // Send Branch name directly
+          statusColor: getStatusColor(editingItem.status),
+        };
+  
+        // Send PUT request to the backend
+        const response = await axiosInstance.put(`/updateItems/${updatedItem.itemID}`, updatedItem);
+  
+        if (response.status === 200) {
+          const updatedItemData = response.data;
+  
+          // Update local state with the updated item
+          setItems((prevItems) =>
+            prevItems.map((item) =>
+              item.itemID === updatedItemData.itemID ? updatedItemData : item
+            )
+          );
+  
+          handleModalClose(); // Close the modal after updating
+        }
       } catch (error) {
-        console.error('Error updating item:', error);
+        console.error('Failed to update the item:', error);
+        alert('Failed to update the item. Please try again.');
       }
     }
   };
   
-  
 
-  const handleEditChange = (field: keyof InventoryItem, value: string | number) => {
-    setEditingItem((prev) =>
-      prev ? { ...prev, [field]: value } : null
-    );
+
+  const handleEditChange = (field: keyof InventoryItem | "reset", value?: any) => {
+    if (field === "reset" && value) {
+      // Reset to the provided original state
+      setEditingItem(value as InventoryItem);
+      return;
+    }
+  
+    setEditingItem((prevState) => prevState ? { ...prevState, [field]: value } : null);
   };
+  
+  
+  
   
   
 
@@ -232,7 +255,8 @@ const Inventory: React.FC = () => {
         item_price: 0,
         manufacture_date: "",
         exp_date: "",
-        branch: "",
+        branch: {branch_name: ""},  // Default value for branch
+        branchID: 0,
         status: "In Stock",  // Default value for status
       },
     ]);
@@ -269,53 +293,64 @@ const Inventory: React.FC = () => {
         item_price: 0,
         manufacture_date: "",
         exp_date: "",
-        branch: "",  // matching the property name with the database field
+        branchID: 0,
+        branch: {branch_name : ""},  // matching the property name with the database field
         status: "In Stock",  // Default value for status
       },
     ]);
   };
   
 
-  const handleAddItemSubmit = async () => {
-    try {
-      // If there's only one item, use the addItem endpoint
-      if (newItems.length === 1) {
-        const formattedItem = {
-          item_name: newItems[0].item_name,
-          item_quantity: newItems[0].item_quantity,
-          item_price: newItems[0].item_price,
-          manufacture_date: newItems[0].manufacture_date,
-          exp_date: newItems[0].exp_date,
-          branch: newItems[0].branch,
-          status: newItems[0].status,
-        };
   
-        const response = await axiosInstance.post('/addItem', formattedItem);
-        const addedItem = response.data;
-        setItems((prev) => [...prev, addedItem]);
-      }
-      // If there are multiple items, use the addItems endpoint
-      else {
-        const formattedItems = newItems.map((item) => ({
-          item_name: item.item_name,
-          item_quantity: item.item_quantity,
-          item_price: item.item_price,
-          manufacture_date: item.manufacture_date,
-          exp_date: item.exp_date,
-          branch: item.branch,
-          status: item.status,
-        }));
-  
-        const response = await axiosInstance.post('/addItems', formattedItems);
-        const addedItems = response.data;
-        setItems((prev) => [...prev, ...addedItems]);
-      }
-  
-      handleAddModalClose(); // Close the modal after adding items
-    } catch (error) {
-      console.error('Error adding items:', error);
+ // Assuming you're using a dropdown or some selection method for the branch name:
+ const handleAddItemSubmit = async () => {
+  try {
+    if (newItems.length === 1) {
+      // Ensure you're passing branchID along with branchName
+      const formattedItem = {
+        item_name: newItems[0].item_name,
+        item_quantity: newItems[0].item_quantity,
+        item_price: newItems[0].item_price,
+        manufacture_date: newItems[0].manufacture_date,
+        exp_date: newItems[0].exp_date,
+        branch: { 
+          branchID: newItems[0].branchID, // Ensure branchID is passed
+        },
+        status: newItems[0].status,
+      };
+
+      console.log("Formatted Item for submission:", formattedItem);
+
+      const response = await axiosInstance.post('/addItem', formattedItem);
+      const addedItem = response.data;
+      setItems((prev) => [...prev, addedItem]);
+    } else {
+      const formattedItems = newItems.map((item) => ({
+        item_name: item.item_name,
+        item_quantity: item.item_quantity,
+        item_price: item.item_price,
+        manufacture_date: item.manufacture_date,
+        exp_date: item.exp_date,
+        branch: {
+          branchID: item.branchID, // Ensure branchID is passed for each item
+        },
+        status: item.status,
+      }));
+
+      console.log("Formatted Items for submission:", formattedItems);
+
+      const response = await axiosInstance.post('/addItems', formattedItems);
+      const addedItems = response.data;
+      setItems((prev) => [...prev, ...addedItems]);
     }
-  };
+
+    handleAddModalClose(); // Close the modal after adding items
+  } catch (error) {
+    console.error('Error adding items:', error);
+  }
+};
+
+
   
 
   return (
@@ -389,7 +424,7 @@ const Inventory: React.FC = () => {
           <StyledTableCell align="right">{item.manufacture_date}</StyledTableCell>
           <StyledTableCell align="right">{item.exp_date}</StyledTableCell>
 
-          <StyledTableCell align="right">{item.branch}</StyledTableCell>
+          <StyledTableCell align="right">{item.branch.branch_name}</StyledTableCell>
 
           <StyledTableCell align="right" style={{ color: getStatusColor(item.status) }}>
           {item.status}
@@ -472,8 +507,8 @@ const Inventory: React.FC = () => {
                 <label className="block mb-2 font-semibold">Branch:</label>
                 <input
                   type="text"
-                  value={item.branch}
-                  onChange={(e) => handleAddItemChange(index, "branch", e.target.value)}
+                  value={item.branchID}
+                  onChange={(e) => handleAddItemChange(index, "branchID", e.target.value)}
                   className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
                 />
                 <label className="block mb-2 font-semibold">Status:</label>
@@ -517,11 +552,14 @@ const Inventory: React.FC = () => {
 >
   <Box sx={{ ...modalStyle, maxHeight: '80vh', overflow: 'hidden' }}>
     <h2 className="text-2xl font-bold mb-4">Edit Item</h2>
+
+    {/* Scrollable content */}
     {editingItem && (
-      <div className="overflow-y-auto max-h-[60vh] pr-4">
+      <div className="overflow-y-auto max-h-[60vh] pr-4 mb-4">
         <p className="mb-4">
           Editing: <span className="font-semibold">{editingItem.item_name}</span>
         </p>
+
         <label className="block mb-2 font-semibold">Name:</label>
         <input
           type="text"
@@ -560,8 +598,8 @@ const Inventory: React.FC = () => {
         <label className="block mb-2 font-semibold">Branch:</label>
         <input
           type="text"
-          value={editingItem.branch}
-          onChange={(e) => handleEditChange("branch", e.target.value)}
+          value={editingItem.branchID}
+          onChange={(e) => handleEditChange("branchID", e.target.value)}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         />
         <label className="block mb-2 font-semibold">Status:</label>
@@ -576,14 +614,28 @@ const Inventory: React.FC = () => {
           <option value="Expired">Expired</option>
           <option value="Expiring">Expiring</option>
         </select>
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={handleEditSubmit}
-            className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600"
-          >
-            Save Changes
-          </button>
-        </div>
+      </div>
+    )}
+
+    {/* Fixed Buttons outside of the scrollable area */}
+    {editingItem && (
+      <div className="flex justify-end mt-4 space-x-4">
+        <button
+          onClick={() => {
+            handleEditChange("reset", editingItem);
+            handleModalClose();
+          }}
+          className="bg-gray-300 text-black px-6 py-2 rounded-md shadow-sm hover:bg-gray-400"
+        >
+          Cancel Changes
+        </button>
+
+        <button
+          onClick={handleEditSubmit}
+          className="bg-blue-500 text-white px-6 py-2 rounded-md shadow-sm hover:bg-blue-600"
+        >
+          Save Changes
+        </button>
       </div>
     )}
   </Box>
