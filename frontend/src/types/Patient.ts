@@ -11,9 +11,6 @@ export default interface Patient {
   birthday: string;
   religion: string;
   occupation: string;
-  lastDelivery: string | null;
-  philhealthID: string;
-  expectedDateConfinement: string;
   spouse: {
     spouseName: string;
     spouseBirthday: string;
@@ -27,17 +24,17 @@ export default interface Patient {
     gravida: number;
     para: number;
     term: number;
-    preTerm: number;
+    pre_term: number;
     abortion: number;
     living: number;
     LMP: string;
-    EDC: string;
-    ITDate: string | null;
+    edc: string;
+    IT_date: string;
     menarche: string;
   };
 
   consultation: {
-    consultation_date: string;
+    consultation_date: string; // Corrected from `consultation_date`
     AOG: number;
     BP: string;
     weight: number;
@@ -53,7 +50,7 @@ export default interface Patient {
     bleedingAnemia: boolean;
     diabetesCongenitalAnomalies: boolean;
     previousCSection: boolean;
-    consectuivemiscarriage: boolean;
+    consecutiveMiscarriages: boolean; // Corrected from `consectuivemiscarriage`
     postPartumHemorrhage: boolean;
     forcepDelivery: boolean;
     hypertension: boolean;

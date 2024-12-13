@@ -5,6 +5,7 @@ import { addPatientLog } from "../../services/visitService";
 import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
 import { createEmptyPatient } from "../../utils/Patient";
 import { getPatientById } from "../../services/patientService";
+import ConfirmationModal from "./ConfirmationModal";
 
 interface PatientProfileModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     null
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [visitPurpose, setVisitPurpose] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -64,7 +66,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
         "An error occurred while fetching patient data. Please try again."
       );
     }
-  }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -85,11 +87,10 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     }
   };
 
-  const handleCreatePatient = async (e: React.FormEvent) => {
+  const handleCreatePatient = (e: React.FormEvent) => {
     e.preventDefault();
     const errors: { [key: string]: string } = {};
-
-    const requiredFields: (keyof Patient)[] = [
+    const requiredFields: (keyof typeof formData)[] = [
       "patientID",
       "lastName",
       "givenName",
@@ -97,6 +98,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
       "sex",
       "address",
     ];
+
     requiredFields.forEach((field) => {
       if (!formData[field]) {
         errors[field] = `${
@@ -107,17 +109,18 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-
-      // Check for empty required fields
-      const list_errors = Object.keys(errors).map((field) => `\n- ${field}`);
-
       setErrorMessage(
-        "Please check the following required fields: " + list_errors
+        "Please check the following required fields: " +
+          Object.keys(errors).map((field) => `\n- ${field}`)
       );
-
       return;
     }
 
+    // Open confirmation modal
+    setIsModalOpen(true);
+  };
+
+  const handleSubmitConfirmed = async () => {
     try {
       const newPatient = await addPatient(formData);
       await addPatientLog(Number(newPatient), visitPurpose);
@@ -134,6 +137,8 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
       setErrorMessage(
         "An error occurred while creating the patient profile. Please try again."
       );
+    } finally {
+      setIsModalOpen(false); // Close modal after submission
     }
   };
 
@@ -166,8 +171,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
       loadPatientData(selectedPatientId);
     }
   }, [searchTerm, formData, visitPurpose, selectedPatientId]);
-
-
 
   if (!isOpen) return null;
 
@@ -238,12 +241,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
           </button>
         </div>
         <div className="w-2/3 pl-6 overflow-y-auto">
-          {successMessage && (
-            <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 rounded flex items-center">
-              <CheckCircle size={24} className="mr-3" />
-              {successMessage}
-            </div>
-          )}
           {step === "visit" && (
             <div>
               <h2 className="text-3xl font-bold mb-6 text-gray-800">
@@ -257,10 +254,8 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   {patients.find((p) => p.id === selectedPatientId)?.lastName},{" "}
                   {patients.find((p) => p.id === selectedPatientId)?.givenName}
                 </span>
-
               </div>
 
-              
               <textarea
                 placeholder="Enter purpose of visit"
                 value={visitPurpose}
@@ -284,32 +279,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                 onSubmit={handleCreatePatient}
                 className="grid grid-cols-2 gap-4"
               >
-                {[
-                  { label: "Patient ID", name: "patientID" },
-                  { label: "Last Name", name: "lastName" },
-                  { label: "Given Name", name: "givenName" },
-                  { label: "Middle Initial", name: "middleInitial" },
-                  { label: "Address", name: "address" },
-                  { label: "Religion", name: "religion" },
-                  { label: "Occupation", name: "occupation" },
-                  { label: "Age", name: "age", type: "number" },
-                ].map(({ label, name, type = "text" }) => (
-                  <div key={name}>
-                    <label htmlFor={name} className="block text-sm font-medium">
-                      {label}
-                    </label>
-
-                    <input
-                      id={name}
-                      name={name}
-                      type={type}
-                      value={(formData as any)[name] || ""}
-                      onChange={handleInputChange}
-                      className="w-full border rounded-lg p-2"
-                    />
-                  </div>
-                ))}
-
                 {/* Birthday input */}
                 <div>
                   <label
@@ -340,6 +309,32 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                     className="w-full border rounded-lg p-2"
                   />
                 </div>
+
+                {[
+                  { label: "Patient ID", name: "patientID" },
+                  { label: "Last Name", name: "lastName" },
+                  { label: "Given Name", name: "givenName" },
+                  { label: "Middle Initial", name: "middleInitial" },
+                  { label: "Address", name: "address" },
+                  { label: "Religion", name: "religion" },
+                  { label: "Occupation", name: "occupation" },
+                  { label: "Age", name: "age", type: "number" },
+                ].map(({ label, name, type = "text" }) => (
+                  <div key={name}>
+                    <label htmlFor={name} className="block text-sm font-medium">
+                      {label}
+                    </label>
+
+                    <input
+                      id={name}
+                      name={name}
+                      type={type}
+                      value={(formData as any)[name] || ""}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg p-2"
+                    />
+                  </div>
+                ))}
 
                 {/* Sex input */}
                 <div>
@@ -404,7 +399,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   "GRAVIDA",
                   "PARA",
                   "TERM",
-                  "PRETERM",
+                  "PRE_TERM",
                   "ABORTION",
                   "LIVING",
                 ].map((field) => (
@@ -420,6 +415,70 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                       name={`pregnancy.${field}`}
                       type="number"
                       value={(formData.pregnancy as any)[field] || ""}
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg p-2"
+                    />
+                  </div>
+                ))}
+
+                {[
+                  { label: "LMP", name: "pregnancy.LMP", type: "date" },
+                  { label: "EDC", name: "pregnancy.EDC", type: "date" },
+                  { label: "IT_date", name: "pregnancy.IT_date", type: "date" },
+                  {
+                    label: "Menarche",
+                    name: "pregnancy.menarche",
+                    type: "date",
+                  },
+                ].map(({ label, name, type = "text" }) => (
+                  <div key={name}>
+                    <label htmlFor={name} className="block text-sm font-medium">
+                      {label}
+                    </label>
+                    <input
+                      id={name}
+                      name={name}
+                      type={type}
+                      value={
+                        (formData.pregnancy as any)[name.split(".")[1]] || ""
+                      }
+                      onChange={handleInputChange}
+                      className="w-full border rounded-lg p-2"
+                    />
+                  </div>
+                ))}
+
+                <h3 className="col-span-2 font-bold mt-4">
+                  Consultation Details
+                </h3>
+                {[
+                  {
+                    label: "Consultation Date",
+                    name: "consultation.consultation_date",
+                    type: "date",
+                  },
+                  { label: "AOG", name: "consultation.AOG", type: "number" },
+                  { label: "BP", name: "consultation.BP", type: "number" },
+                  {
+                    label: "Weight",
+                    name: "consultation.weight",
+                    type: "number",
+                  },
+                  { label: "FH", name: "consultation.FH", type: "number" },
+                  { label: "FHT", name: "consultation.FHT", type: "number" },
+                  { label: "Remarks", name: "consultation.remarks" },
+                ].map(({ label, name, type = "text" }) => (
+                  <div key={name}>
+                    <label htmlFor={name} className="block text-sm font-medium">
+                      {label}
+                    </label>
+                    <input
+                      id={name}
+                      name={name}
+                      type={type}
+                      value={
+                        (formData.consultation as any)[name.split(".")[1]] || ""
+                      }
                       onChange={handleInputChange}
                       className="w-full border rounded-lg p-2"
                     />
@@ -499,8 +558,22 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </button>
                 </div>
               </form>
+
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 rounded flex items-center">
+                  <CheckCircle size={24} className="mr-3" />
+                  {successMessage}
+                </div>
+              )}
             </div>
           )}
+          {/* Use the Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={isModalOpen}
+            data={formData}
+            onClose={() => setIsModalOpen(false)}
+            onConfirm={handleSubmitConfirmed}
+          />
         </div>
       </div>
     </div>

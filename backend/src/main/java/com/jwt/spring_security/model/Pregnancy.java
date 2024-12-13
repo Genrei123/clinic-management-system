@@ -16,12 +16,12 @@ public class Pregnancy {
     @JsonBackReference
     private Patient patient;
 
-    private int gravida;
-    private int para;
-    private int term;
-    private int pre_term;
-    private int abortion;
-    private int living;
+    private Integer gravida;
+    private Integer para;
+    private Integer term;
+    private Integer pre_term;
+    private Integer abortion;
+    private Integer living;
     private Date LMP;
     private Date EDC;
     private Date IT_date;
@@ -47,7 +47,7 @@ public class Pregnancy {
         return gravida;
     }
 
-    public void setGravida(int gravida) {
+    public void setGravida(Integer gravida) {
         this.gravida = gravida;
     }
 
@@ -55,7 +55,7 @@ public class Pregnancy {
         return para;
     }
 
-    public void setPara(int para) {
+    public void setPara(Integer para) {
         this.para = para;
     }
 
@@ -63,7 +63,7 @@ public class Pregnancy {
         return term;
     }
 
-    public void setTerm(int term) {
+    public void setTerm(Integer term) {
         this.term = term;
     }
 
@@ -71,7 +71,7 @@ public class Pregnancy {
         return pre_term;
     }
 
-    public void setPre_term(int pre_term) {
+    public void setPre_term(Integer pre_term) {
         this.pre_term = pre_term;
     }
 
@@ -79,7 +79,7 @@ public class Pregnancy {
         return abortion;
     }
 
-    public void setAbortion(int abortion) {
+    public void setAbortion(Integer abortion) {
         this.abortion = abortion;
     }
 
@@ -87,7 +87,7 @@ public class Pregnancy {
         return living;
     }
 
-    public void setLiving(int living) {
+    public void setLiving(Integer living) {
         this.living = living;
     }
 

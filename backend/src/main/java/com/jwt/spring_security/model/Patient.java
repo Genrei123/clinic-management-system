@@ -29,12 +29,7 @@ public class Patient {
     private String religion;
     private String occupation;
 
-    @Temporal(TemporalType.DATE)
-    private Date lastDelivery;
-
     private String philhealthID;
-
-    private Date expectedDateConfinement;
 
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -54,13 +49,7 @@ public class Patient {
 
     // Getters and setters
 
-    public Date getExpectedDateConfinement() {
-        return expectedDateConfinement;
-    }
 
-    public void setExpectedDateConfinement(Date expectedDateConfinement) {
-        this.expectedDateConfinement = expectedDateConfinement;
-    }
 
     public MedicalHistory getMedicalHistory() {
         return medicalHistory;
@@ -196,14 +185,6 @@ public class Patient {
 
     public void setOccupation(String occupation) {
         this.occupation = occupation;
-    }
-
-    public Date getLastDelivery() {
-        return lastDelivery;
-    }
-
-    public void setLastDelivery(Date lastDelivery) {
-        this.lastDelivery = lastDelivery;
     }
 
     public String getPhilhealthID() {

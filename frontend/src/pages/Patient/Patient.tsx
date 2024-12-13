@@ -17,6 +17,8 @@ import {
 import { getPatientById } from "../../services/patientService";
 import useModal from "../Home/useModal";
 import RenderServicesModal from "./RenderServicesModal";
+import PatientDetailsModal from "./PatientDetailsModal";
+
 
 interface Visit {
   visitDate: string;
@@ -32,17 +34,20 @@ interface File {
 interface Patient {
   id: string;
   name: string;
-  expectedDateConfinement: string;
+  expectedDateConfinement?: string;
   visitHistory: Visit[];
   files: File[];
 }
 
 const Patient: React.FC = () => {
   const { isModalOpen, openModal, closeModal } = useModal();
+  const { isModalOpen: isPatientModalOpen, openModal: openPatientModal, closeModal: closePatientModal } = useModal();
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patientImage, setPatientImage] = useState<string | null>(null);
   const [selectedForm, setSelectedForm] = useState<string>("");
+  const [patientInfo, setPatientInfo] = useState<any>();
   const [patient, setPatient] = useState<Patient>({
     id: "",
     name: "",
@@ -56,6 +61,9 @@ const Patient: React.FC = () => {
     const fetchPatientData = async () => {
       try {
         const patientInfo = await getPatientById(Number(id));
+        console.log("Patient Info:", patientInfo);
+
+        setPatientInfo(patientInfo);
 
         setPatient({
           id: patientInfo?.patientID || "",
@@ -64,15 +72,15 @@ const Patient: React.FC = () => {
                 patientInfo.middleInitial || ""
               } ${patientInfo.lastName || ""}`.trim()
             : "",
-          expectedDateConfinement: patientInfo?.expectedDateConfinement
-            ? new Date(patientInfo.expectedDateConfinement)
+          expectedDateConfinement: patientInfo.pregnancy?.edc
+            ? new Date(patientInfo.pregnancy.edc)
                 .toISOString()
                 .split("T")[0]
             : "",
           visitHistory: patientInfo?.consultation
             ? [
                 {
-                  visitDate: patientInfo.consultation.consultation_date || "",
+                  visitDate: new Date(patientInfo.consultation.consultation_date || "").toLocaleDateString(),
                   reason: patientInfo.consultation.remarks || "Checkup",
                 },
               ]
@@ -246,6 +254,14 @@ const Patient: React.FC = () => {
                         <UserCheck className="w-5 h-5 mr-2" />
                         Render Services
                       </button>
+
+                      <button
+                        onClick={openPatientModal}
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                        >
+                        <UserCheck className="w-5 h-5 mr-2" />
+                        Patient Details
+                        </button>
                     </div>
                   </div>
                 </div>
@@ -266,9 +282,7 @@ const Patient: React.FC = () => {
                           Reason
                         </th>
 
-                        <th className="border border-gray-200 p-2 text-left">
-                          Delete
-                        </th>
+                        
                       </tr>
                     </thead>
                     <tbody>
@@ -287,14 +301,7 @@ const Patient: React.FC = () => {
                             </div>
                           </td>
 
-                          <td className="border border-gray-200 p-2">
-                            <button
-                              onClick={() => handleDeleteLogs()}
-                              className="text-red-500 hover:text-red-700 transition duration-200"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </td>
+                          
                         </tr>
                       ))}
                     </tbody>
@@ -306,6 +313,7 @@ const Patient: React.FC = () => {
         </main>
       </div>
       <RenderServicesModal isOpen={isModalOpen} onClose={closeModal} patient={patient} />
+      <PatientDetailsModal isOpen={isPatientModalOpen} onClose={closePatientModal} data={patientInfo} />
     </div>
   );
 };
