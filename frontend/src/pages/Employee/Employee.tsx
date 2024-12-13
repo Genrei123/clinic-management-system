@@ -1,68 +1,155 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
+import ArchiveEmployee from "./archive-employee";
+import {
+  Camera,
+  Upload,
+  UserCheck,
+  Calendar,
+  Clock,
+  Plus,
+  Edit,
+} from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+
 
 interface Visit {
   visitDate: string;
   reason: string;
 }
 
-interface Patient {
+interface Employee {
   id: string;
   name: string;
   birthdate: string;
   visitHistory: Visit[];
 }
+interface JwtPayload {
+  sub: string; // User ID
+  role: string; // User role
+}
 
 const Employee: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patientImage, setPatientImage] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [employeeImage, setEmployeeImage] = useState<string | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
-  const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
-  const [showPopup, setShowPopup] = useState<boolean>(false); // State for popup visibility
+  const [showEmployeeTracker, setShowEmployeeTracker] =
+    useState<boolean>(false);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  
+  const token = localStorage.getItem("token"); // Get the token from local storage
+  let decoded: JwtPayload | null = null;
 
-  const rowsPerPage = 5;
+  if (token) {
+    decoded = jwtDecode<JwtPayload>(token); // Decode the JWT token
+  }
 
-  const patient: Patient = {
-    id: id || "",
-    name: "Cristobal, Genrey O.",
-    birthdate: "24/05/2024",
-    visitHistory: [
-      { visitDate: "2024-11-20", reason: "Routine Checkup" },
-      { visitDate: "2024-11-15", reason: "Follow-Up" },
-      { visitDate: "2024-11-10", reason: "Emergency Visit" },
-      { visitDate: "2024-11-05", reason: "Vaccination" },
-      { visitDate: "2024-10-30", reason: "Initial Consultation" },
-      { visitDate: "2024-10-20", reason: "Routine Checkup" },
-    ],
+  const isOwner = decoded?.role === "ROLE_OWNER"; // Check if the user is an admin
+
+  const fetchEmployee = async (token: string) => {
+    try {
+      if (decoded?.role === "ROLE_OWNER" || decoded?.role === "ROLE_EMPLOYEE") {
+        const response = await axios.get(`/employees/${decoded.sub}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setEmployee(response.data);
+
+        if (decoded.role === "ROLE_OWNER") {
+          console.log("Role: OWNER - Display admin-specific data or actions.");
+        } else if (decoded.role === "ROLE_EMPLOYEE") {
+          console.log("Role: EMPLOYEE - Display employee-specific data or actions.");
+        }
+      } else {
+        setError("You do not have the necessary permissions to view this data.");
+        console.error("Invalid role:", decoded?.role);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios Error:", error.response?.data);
+        setError(`Error: ${error.response?.data?.message || "Unknown error"}`);
+      } else {
+        console.error("Unexpected Error:", error);
+        setError("Unexpected error occurred");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const totalPages = Math.ceil(patient.visitHistory.length / rowsPerPage);
-
-  const paginatedVisits = patient.visitHistory.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You are not logged in.");
+      setLoading(false);
+      return;
+    }
+  
+    fetchEmployee(token); // Ensure `token` is used consistently
+  }, [id]);
 
   const handleImageUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          setPatientImage(result);
-        };
-        reader.readAsDataURL(file);
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+          await axios.post(`/employees/${id}/upload-image`, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          fetchEmployee(localStorage.getItem("token") || "");
+          setEmployeeImage(URL.createObjectURL(file));
+        } catch (error) {
+          console.error("Error uploading image:", error);
+        }
       }
     },
-    []
+    [id]
   );
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handleUpdateEmployee = async (updatedData: Employee) => {
+    try {
+      const updatedEmployee = {
+        ...updatedData,
+        id: employee?.id,
+        visitHistory: employee?.visitHistory || [],
+      };
+      await axios.put(`/employees/${id}`, updatedEmployee);
+      fetchEmployee(localStorage.getItem("token") || "");
+    } catch (error) {
+      console.error("Error updating employee:", error);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!employee) return;
+
+    const updatedData: Employee = {
+      id: employee.id,
+      name: (e.target as HTMLFormElement)["first-name"].value,
+      birthdate: `${(e.target as HTMLFormElement)["birth-year"].value}-${
+        (e.target as HTMLFormElement)["birth-month"].value
+      }-${(e.target as HTMLFormElement)["birth-day"].value}`,
+      visitHistory: employee.visitHistory || [],
+    };
+
+    handleUpdateEmployee(updatedData);
+  };
 
   const handleCheckInClick = () => {
     setShowTimeLog(true);
@@ -75,11 +162,13 @@ const Employee: React.FC = () => {
   };
 
   const handleImageClickAdd = () => {
-    setShowPopup(true); // Show the popup for registration
+    setIsEditing(false);
+    setShowPopup(true);
   };
 
   const handleImageClickEdit = () => {
-    navigate("/new-page"); // Redirect to a new page (adjust path as necessary)
+    setIsEditing(true);
+    setShowPopup(true);
   };
 
   const timeEntries = [
@@ -87,289 +176,329 @@ const Employee: React.FC = () => {
       logIn: "24/05/2024 11:53AM",
       logOut: "24/05/2024 5:00PM",
     },
-    // More entries...
   ];
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  
+
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="ml-128 w-full">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="bg-blue-600 text-white p-4">
-              <h2 className="text-2xl font-bold">{patient.name}'s Employee Details</h2>
+  <div className="flex h-screen bg-gray-100">
+    <Sidebar />
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Navbar />
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+        <div className="container mx-auto px-6 py-8">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <h2 className="text-3xl font-bold">
+                {employee?.name || "Unknown Employee"}'s Profile
+              </h2>
+              <p className="mt-2 text-blue-100">
+                Employee ID: {employee?.id}
+              </p>
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow">
+                <p className="flex items-center text-gray-700">
+                  <span className="font-semibold mr-2">Birthdate:</span>{" "}
+                  {employee?.birthdate}
+                </p>
+              </div>
             </div>
+
             <div className="p-6 grid md:grid-cols-2 gap-6">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-96 h-96 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
-                  {patientImage ? (
-                    <img
-                      src={patientImage}
-                      alt="Patient"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <p className="text-gray-500">No Image Uploaded</p>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="patient-image-upload"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-                <label
-                  htmlFor="patient-image-upload"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
-                >
-                  Upload Image
-                </label>
-              </div>
-
               <div className="space-y-6">
-                <div className="flex space-x-4 mb-6">
-                  <button
-                    onClick={handleEmployeeTrackerClick} 
-                    className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Check-ins
-                  </button>
-                  <button
-                    onClick={handleCheckInClick} 
-                    className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Tracker
-                  </button>
-                  <img
-                    src="/adds.png"
-                    alt="Employee Check-ins"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickAdd} // Show popup on click
+                <div className="relative group">
+                  <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                    {employeeImage ? (
+                      <img
+                        src={employeeImage}
+                        alt="Employee"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Camera className="w-16 h-16 text-gray-400" />
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="employee-image-upload"
+                    className="hidden"
+                    onChange={handleImageUpload}
                   />
-                  <img
-                    src="/edits.png"
-                    alt="Employee Tracker"
-                    className="w-5 h-5 cursor-pointer"
-                    onClick={handleImageClickEdit} // Redirect on click
-                  />
+                  <label
+                    htmlFor="employee-image-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                  >
+                    <Upload className="w-8 h-8 mr-2" />
+                    Upload Image
+                  </label>
                 </div>
 
-                {/* Time Log */}
-                {showTimeLog && (
-                  <div className="mt-6">
-                    <div className="rounded-md border">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="w-[200px] font-medium">Log-in</th>
-                            <th className="w-[200px] font-medium">Log-out</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {timeEntries.map((entry, index) => (
-                            <tr key={index}>
-                              <td className="font-mono">{entry.logIn}</td>
-                              <td className="font-mono">{entry.logOut}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* Employee Tracker */}
-                {showEmployeeTracker && (
-                  <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
-                    <div className="rounded-md border">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="w-[150px] font-medium">Date of Edit</th>
-                            <th className="w-[150px] font-medium">File Record</th>
-                            <th className="w-[200px] font-medium">Patient</th>
-                            <th className="w-[100px] font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[1, 2, 3, 4].map((record, index) => (
-                            <tr key={index}>
-                              <td>24/05/2024</td>
-                              <td>CSF</td>
-                              <td>Genrey O. Cristobal</td>
-                              <td>
-                                <button 
-                                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                                  onClick={() => navigate(`/patient/${record}`)}
-                                >
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+                <div className="bg-gray-50 p-4 rounded-lg shadow">
+                  <p className="flex items-center text-gray-700">
+                    <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
+                    <span className="font-semibold mr-2">
+                      Employee ID:
+                    </span>{" "}
+                    {employee?.id}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Calendar className="w-5 h-5 mr-2 text-blue-500" />
+                    <span className="font-semibold mr-2">
+                      Birthdate:
+                    </span>{" "}
+                    {employee?.birthdate}
+                  </p>
+                </div>
               </div>
+</div>
+              <div className="space-y-6">
+  <div className="bg-gray-50 p-4 rounded-lg shadow">
+    <div className="flex space-x-2 mt-4">
+      
+      <button
+        onClick={handleCheckInClick}
+        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+      >
+        <Clock className="w-5 h-5 mr-2" />
+        Employee Check-ins
+      </button>
+    </div>
+
+    {/* Conditionally render buttons based on the state */}
+    {isOwner && ( // Only render these buttons if the user is the owner/admin
+  <div className="flex space-x-2 mt-2">
+    <button
+      onClick={handleImageClickAdd}
+      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+    >
+      <Plus className="w-5 h-5 mr-2" />
+      Add Employee
+    </button>
+    <button
+      onClick={handleImageClickEdit}
+      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+    >
+      <Edit className="w-5 h-5 mr-2" />
+      Edit Employee
+    </button>
+    <button
+        onClick={handleEmployeeTrackerClick}
+        className="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+      >
+        <UserCheck className="w-5 h-5 mr-2" />
+        Employee Tracker
+      </button>
+    <ArchiveEmployee
+      employeeId={id || ""}
+      employeeName={employee!.name}
+    />
+  </div>
+)}
+
+  </div>
+</div>
+
+              
+
+            <div className="p-6 border-t border-gray-200">
+              {showEmployeeTracker && (
+                <div className="mt-6">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Employee Tracker
+                  </h3>
+                  <div className="rounded-md border">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="w-[150px] font-medium">
+                            Date of Edit
+                          </th>
+                          <th className="w-[150px] font-medium">
+                            File Record
+                          </th>
+                          <th className="w-[200px] font-medium">Patient</th>
+                          <th className="w-[100px] font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[1, 2, 3, 4].map((record, index) => (
+                          <tr key={index}>
+                            <td>24/05/2024</td>
+                            <td>CSF</td>
+                            <td>Genrey O. Cristobal</td>
+                            <td>
+                              <button
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                                onClick={() => navigate(`/patient/${record}`)}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {showTimeLog && (
+                <div className="mt-6">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Employee Check-ins
+                  </h3>
+                  <div className="rounded-md border">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="w-[200px] font-medium">Log-in</th>
+                          <th className="w-[200px] font-medium">Log-out</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {timeEntries.map((entry, index) => (
+                          <tr key={index}>
+                            <td className="font-mono">{entry.logIn}</td>
+                            <td className="font-mono">{entry.logOut}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </main>
+    </div>
+  
+);
 
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">CREATE EMPLOYEE ACCOUNT</h2>
-           {/* Employee Registration Form */}
-<form className="space-y-6">
-  <div className="grid grid-cols-2 gap-4">
-    <div className="flex flex-col">
-      <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
-      <input
-        type="text"
-        id="first-name"
-        className="border-2 rounded-md p-2"
-      />
-    </div>
-    <div className="flex flex-col">
-      <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
-      <input
-        type="text"
-        id="last-name"
-        className="border-2 rounded-md p-2"
-      />
-    </div>
-  </div>
+            <h2 className="text-2xl font-bold text-center mb-6">
+              {isEditing ? "Edit Employee Account" : "Create Employee Account"}
+            </h2>
+            <form
+              className="space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const updatedData: Employee = {
+                  name:
+                    (e.target as HTMLFormElement)["first-name"].value +
+                    " " +
+                    (e.target as HTMLFormElement)["last-name"].value,
+                  birthdate: `${
+                    (e.target as HTMLFormElement)["birth-year"].value
+                  }-${(e.target as HTMLFormElement)["birth-month"].value}-${
+                    (e.target as HTMLFormElement)["birth-day"].value
+                  }`,
+                  id: employee?.id || "", // Ensure id is passed
+                  visitHistory: employee?.visitHistory || [], // Empty array if no visitHistory
+                };
+                handleUpdateEmployee(updatedData);
+              }}
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label htmlFor="first-name" className="text-sm font-medium">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    id="first-name"
+                    className="border-2 rounded-md p-2"
+                    defaultValue={employee?.name || ""} // Fallback to an empty string if employee is not loaded
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="last-name" className="text-sm font-medium">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    id="last-name"
+                    className="border-2 rounded-md p-2"
+                    defaultValue={employee?.name}
+                  />
+                </div>
+              </div>
 
-  {/* Email and Password */}
-  <div className="flex flex-col">
-    <label htmlFor="email" className="text-sm font-medium">Email Address</label>
-    <input
-      type="email"
-      id="email"
-      className="border-2 rounded-md p-2"
-      placeholder="Enter your email"
-    />
-  </div>
-  
-  <div className="flex flex-col">
-    <label htmlFor="password" className="text-sm font-medium">Password</label>
-    <input
-      type="password"
-      id="password"
-      className="border-2 rounded-md p-2"
-      placeholder="Enter your password"
-    />
-  </div>
+              <div className="flex flex-col">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  className="border-2 rounded-md p-2"
+                  defaultValue={employee?.name}
+                />
+              </div>
 
-  <div className="flex flex-col">
-    <label htmlFor="confirm-password" className="text-sm font-medium">Confirm Password</label>
-    <input
-      type="password"
-      id="confirm-password"
-      className="border-2 rounded-md p-2"
-      placeholder="Confirm your password"
-    />
-  </div>
+              <div className="flex flex-col">
+                <label htmlFor="birth-year" className="text-sm font-medium">
+                  Birth Year
+                </label>
+                <input
+                  type="text"
+                  id="birth-year"
+                  className="border-2 rounded-md p-2"
+                  defaultValue={employee?.birthdate?.split("-")[0]}
+                />
+              </div>
 
-  {/* Birthday Section: Separate Day, Month, and Year */}
-  <div className="flex space-x-4">
-    {/* Day */}
-    <div className="flex flex-col w-1/3">
-      <label htmlFor="birth-day" className="text-sm font-medium">Day</label>
-      <select id="birth-day" className="border-2 rounded-md p-2">
-        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-          <option key={day} value={day}>{day}</option>
-        ))}
-      </select>
-    </div>
+              <div className="flex flex-col">
+                <label htmlFor="birth-month" className="text-sm font-medium">
+                  Birth Month
+                </label>
+                <input
+                  type="text"
+                  id="birth-month"
+                  className="border-2 rounded-md p-2"
+                  defaultValue={employee?.birthdate?.split("-")[1]}
+                />
+              </div>
 
-    {/* Month */}
-    <div className="flex flex-col w-1/3">
-      <label htmlFor="birth-month" className="text-sm font-medium">Month</label>
-      <select id="birth-month" className="border-2 rounded-md p-2">
-        {[
-          "January", "February", "March", "April", "May", "June", 
-          "July", "August", "September", "October", "November", "December"
-        ].map((month, index) => (
-          <option key={index} value={month}>{month}</option>
-        ))}
-      </select>
-    </div>
+              <div className="flex flex-col">
+                <label htmlFor="birth-day" className="text-sm font-medium">
+                  Birth Day
+                </label>
+                <input
+                  type="text"
+                  id="birth-day"
+                  className="border-2 rounded-md p-2"
+                  defaultValue={employee?.birthdate?.split("-")[2]}
+                />
+              </div>
 
-    {/* Year */}
-    <div className="flex flex-col w-1/3">
-      <label htmlFor="birth-year" className="text-sm font-medium">Year</label>
-      <select id="birth-year" className="border-2 rounded-md p-2">
-        {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-          <option key={year} value={year}>{year}</option>
-        ))}
-      </select>
-    </div>
-  </div>
-
-  {/* Gender Section: Separate Male, Female, Prefer Not to Say with Radio Buttons */}
-  <div className="flex space-x-4">
-    {/* Male */}
-    <div className="flex items-center space-x-2">
-      <input
-        type="radio"
-        id="male"
-        name="gender"
-        className="h-5 w-5"
-      />
-      <label htmlFor="male" className="text-sm font-medium">Male</label>
-    </div>
-
-    {/* Female */}
-    <div className="flex items-center space-x-2">
-      <input
-        type="radio"
-        id="female"
-        name="gender"
-        className="h-5 w-5"
-      />
-      <label htmlFor="female" className="text-sm font-medium">Female</label>
-    </div>
-
-    {/* Prefer Not to Say */}
-    <div className="flex items-center space-x-2">
-      <input
-        type="radio"
-        id="prefer-not-to-say"
-        name="gender"
-        className="h-5 w-5"
-      />
-      <label htmlFor="prefer-not-to-say" className="text-sm font-medium">Prefer Not to Say</label>
-    </div>
-  </div>
-
-  {/* Buttons */}
-  <div className="flex justify-center space-x-4">
-    <button
-      onClick={() => setShowPopup(false)}
-      className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-    >
-      Cancel
-    </button>
-    <button
-      type="submit"
-      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-    >
-      Register
-    </button>
-  </div>
-</form>
-
-
-
-
-
+              <div className="mt-4 flex justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowPopup(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
