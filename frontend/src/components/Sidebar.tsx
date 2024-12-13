@@ -1,21 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; // Importing useAuth
-import {
-  Home,
-  User,
-  Package,
-  Users,
-  FileText,
-  ChevronDown,
-  LogOut,
-  Settings,
-  Menu,
-  X,
-} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Home, User, Package, Users, FileText, ChevronDown, LogOut, Settings, Menu, X } from 'lucide-react';
 import logo from "../assets/logo.svg";
 
-const Sidebar: React.FC = () => {
+function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -169,6 +158,7 @@ const Sidebar: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Sidebar;
+

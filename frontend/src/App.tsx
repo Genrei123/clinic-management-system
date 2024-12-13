@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from './contexts/AuthContext';
 import LoginForm from "./pages/LoginForm";
@@ -16,7 +15,7 @@ import GeneratePDF from "./pages/Patient/GeneratedPDF";
 import EmployeeDetails from "./pages/Employee/EmployeeDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-const App: React.FC = () => {
+function App() {
   return (
     <AuthProvider>
       <Router>
@@ -72,10 +71,12 @@ const App: React.FC = () => {
           />
           <Route path="/account/details" element={<AccountDetails />} />
           <Route path="/account/security" element={<AccountSecurity />} />
+          <Route path="/account/branch" element={<AccountBranch />} />
         </Routes>
       </Router>
     </AuthProvider>
   );
-};
+}
 
 export default App;
+
