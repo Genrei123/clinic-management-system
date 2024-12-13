@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Trash } from "lucide-react";
+import axiosInstance from "../../config/axiosConfig";
+import inventoryService from "../../services/inventoryService";
+
 
 interface RenderService {
   serviceName: string;
@@ -27,11 +30,6 @@ const mockServices = [
   { serviceName: "ECG", price: 80, description: "Heart monitoring and analysis." },
 ];
 
-const mockMedicines = [
-  { serviceName: "Paracetamol", price: 10, description: "Pain relief." },
-  { serviceName: "Antibiotic", price: 25, description: "Infection treatment." },
-  { serviceName: "Vitamin C", price: 15, description: "Immune booster." },
-];
 
 const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   isOpen,
@@ -44,6 +42,32 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   const [medicineSearch, setMedicineSearch] = useState("");
   const [serviceSuggestions, setServiceSuggestions] = useState<RenderService[]>([]);
   const [medicineSuggestions, setMedicineSuggestions] = useState<RenderService[]>([]);
+  const [medicines, setMedicines] = useState<RenderService[]>([]);
+
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        const medicineData = await inventoryService.getItems();
+        console.log("Raw API response:", medicineData); // Ensure `itemID` is present in the response
+  
+        const formattedMedicineData = medicineData.map((item) => ({
+          itemID: item.itemID, // Ensure `itemID` is mapped correctly
+          serviceName: item.item_name,
+          price: item.item_price,
+          quantity: item.item_quantity ?? 0, // Map `item_quantity` explicitly and default to 0 if null
+          description: `Quantity: ${item.item_quantity ?? 0}, Exp: ${item.exp_date}`, // Retain for display purposes
+        }));
+  
+        console.log("Formatted Medicines:", formattedMedicineData); // Debug formatted data
+        setMedicines(formattedMedicineData);
+      } catch (error) {
+        console.error("Error fetching medicines:", error);
+      }
+    };
+    fetchMedicines();
+  }, []);
+  
+
 
   // Simulate fetching suggestions
   const fetchServiceSuggestions = (query: string) => {
@@ -54,7 +78,7 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   };
 
   const fetchMedicineSuggestions = (query: string) => {
-    const results = mockMedicines.filter((medicine) =>
+    const results = medicines.filter((medicine) =>
       medicine.serviceName.toLowerCase().includes(query.toLowerCase())
     );
     setMedicineSuggestions(results);
@@ -115,12 +139,54 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
     }
   };
 
-  const handleSubmit = () => {
-    alert("Services rendered successfully!");
-    setSelectedServices([]);
-    onClose();
+  const handleSubmit = async () => {
+    try {
+      // Prepare purchase payload
+      const purchases = selectedMedicines.map((selectedMedicine) => {
+        const originalMedicine = medicines.find(
+          (medicine) => medicine.serviceName === selectedMedicine.serviceName
+        );
+  
+        if (!originalMedicine) {
+          throw new Error(`Medicine not found: ${selectedMedicine.serviceName}`);
+        }
+  
+        // Check stock availability
+        if (selectedMedicine.quantity > originalMedicine.quantity) {
+          throw new Error(
+            `Not enough stock for ${selectedMedicine.serviceName}. Available: ${originalMedicine.quantity}, Requested: ${selectedMedicine.quantity}`
+          );
+        }
+  
+        return {
+          itemID: originalMedicine.itemID, // Backend requires the `itemID`
+          itemQuantity: selectedMedicine.quantity, // Quantity purchased
+        };
+      });
+  
+      console.log("Purchase Payload:", purchases); // Debug the payload
+  
+      // Send purchase data to backend
+      const response = await axiosInstance.post("/purchaseItems", purchases);
+      alert(response.data); // Inform the staff about success
+  
+      // Refresh medicines list
+      const updatedMedicines = await inventoryService.getItems();
+      setMedicines(updatedMedicines);
+  
+      // Clear the cart and close the modal
+      setSelectedMedicines([]);
+      setSelectedServices([]);
+      onClose();
+    } catch (error: any) {
+      console.error("Error submitting purchase:", error);
+      alert(`Error: ${error.message}`);
+    }
   };
-
+  
+  
+  
+  
   if (!isOpen) return null;
 
   return (

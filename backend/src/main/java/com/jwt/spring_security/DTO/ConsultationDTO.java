@@ -1,9 +1,14 @@
 package com.jwt.spring_security.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Date;
+
 public class ConsultationDTO {
-    private String consultationDate;
+    @JsonProperty("consultationDate")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private Date consultationDate;
     @JsonProperty("AOG")
     private Integer AOG; // Nullable
     @JsonProperty("BP")
@@ -15,11 +20,11 @@ public class ConsultationDTO {
     private Float FHT; // Nullable
     private String remarks; // Nullable
 
-    public String getConsultationDate() {
+    public Date getConsultationDate() {
         return consultationDate;
     }
 
-    public void setConsultationDate(String consultationDate) {
+    public void setConsultationDate(Date consultationDate) {
         this.consultationDate = consultationDate;
     }
 

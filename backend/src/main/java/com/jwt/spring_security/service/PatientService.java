@@ -38,7 +38,6 @@ public class PatientService {
         patient.setBirthday(patientDTO.getBirthday());
         patient.setReligion(patientDTO.getReligion());
         patient.setOccupation(patientDTO.getOccupation());
-        patient.setLastDelivery(patientDTO.getLastDelivery());
         patient.setPhilhealthID(patientDTO.getPhilhealthID());
 
         // Map Spouse if provided

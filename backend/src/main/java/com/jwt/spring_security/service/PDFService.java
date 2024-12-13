@@ -39,7 +39,6 @@ public class PDFService {
         fieldValues.put("Birthday", patient.getBirthday().toString());  // Assuming DateTime format
         fieldValues.put("Religion", patient.getReligion());
         fieldValues.put("Occupation", patient.getOccupation());
-        fieldValues.put("DateOfLastDelivery", patient.getLastDelivery() != null ? patient.getLastDelivery().toString() : "");  // Handle nulls
 
         if (patient.getSpouse() != null) {
             fieldValues.put("NameOfSpouse", patient.getSpouse().getSpouse_name());

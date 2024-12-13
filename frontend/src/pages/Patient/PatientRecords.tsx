@@ -21,6 +21,7 @@ const PatientRecords: React.FC = () => {
       setLoading(true);
       try {
         const data = await getPatients();
+        console.log(data);
         setPatients(data);
       } catch (error) {
         console.error("Error fetching patients:", error);
@@ -120,7 +121,7 @@ const PatientRecords: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">{patient.address}</td>
                             <td className="px-6 py-4 whitespace-nowrap">{patient.sex}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{new Date(patient.expectedDateConfinement).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{new Date(patient.pregnancy.edc).toLocaleDateString()}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <button
                                 onClick={() => handleViewClick(patient.clientID)}
