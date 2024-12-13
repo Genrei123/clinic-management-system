@@ -1,11 +1,13 @@
 import axios from "axios";
 
+const storedToken = localStorage.getItem("token");
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080", // Replace with your backend's base URL
+  baseURL: "http://localhost:8080",
   headers: {
     "Content-Type": "application/json",
+    Authorization: `Bearer ${storedToken}`,
   },
-  timeout: 10000, // Optional: Set timeout
 });
 
 export default axiosInstance;
