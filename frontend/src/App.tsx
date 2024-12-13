@@ -39,6 +39,13 @@ const App: React.FC = () => {
             }
           />
 
+          <Route
+            path="account/branch"
+            element={
+              <ProtectedRoute allowedRoles={["owner"]} element={<AccountBranch />} />
+            }
+          />
+
           {/* Shared routes */}
           <Route
             path="/employees"
