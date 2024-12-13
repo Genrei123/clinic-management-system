@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Patient from "../../types/Patient";
+import { addPatient } from "../../services/patientService";
 import { addPatientLog } from "../../services/visitService";
 import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
 import { createEmptyPatient } from "../../utils/Patient";
@@ -76,7 +77,13 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   const handleSubmitConfirmed = async () => {
     try {
       const newPatient = await addPatient(formData);
-      await addPatientLog(Number(newPatient), visitPurpose);
+
+      console.log(newPatient);
+      
+      await addPatientLog(
+        Number(newPatient),
+        "Initial Check-up"
+      );
       setSuccessMessage(
         `Patient profile for ${newPatient.lastName} was successfully created and visit logged.`
       );
@@ -96,7 +103,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
 
   useEffect(() => {
     setErrorMessage("");
-
   }, [formData, visitPurpose]);
 
   if (!isOpen) return null;
@@ -383,6 +389,13 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                 </div>
               )}
 
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 rounded flex items-center">
+                  <CheckCircle size={24} className="mr-3" />
+                  {successMessage}
+                </div>
+              )}
+
               <div className="col-span-2">
                 <button
                   type="submit"
@@ -392,13 +405,6 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                 </button>
               </div>
             </form>
-
-            {successMessage && (
-              <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 rounded flex items-center">
-                <CheckCircle size={24} className="mr-3" />
-                {successMessage}
-              </div>
-            )}
           </div>
 
           {/* Use the Confirmation Modal */}

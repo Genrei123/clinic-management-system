@@ -10,8 +10,8 @@ import java.util.List;
 @Repository
 public interface reportRepo extends JpaRepository<Report, Long> {
 
-    @Query("SELECT YEAR(p.expectedDateConfinement) AS year, MONTH(p.expectedDateConfinement) AS month, COUNT(p) AS totalPatients " +
-            "FROM Patient p GROUP BY YEAR(p.expectedDateConfinement), MONTH(p.expectedDateConfinement)")
+    @Query("SELECT YEAR(p.pregnancy.EDC) AS year, MONTH(p.pregnancy.EDC) AS month, COUNT(p) AS totalPatients " +
+            "FROM Patient p GROUP BY YEAR(p.pregnancy.EDC), MONTH(p.pregnancy.EDC)")
     List<Object[]> aggregatePatientCheckIns();
 
 

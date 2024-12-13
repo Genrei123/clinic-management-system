@@ -8,6 +8,7 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import Patient from "../../types/Patient";
 import { createEmptyPatient } from "../../utils/Patient";
+import { getPatientLogs } from "../../services/visitService";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -45,6 +46,8 @@ const Home: React.FC = () => {
             Authorization: `Bearer ${storedToken}`,
           },
         });
+
+        console.log(response.data);
   
         setPatients(response.data);
       } catch (error) {
@@ -53,6 +56,20 @@ const Home: React.FC = () => {
         setLoading(false);
       }
     };
+
+    const fetchPatientLogs = async () => { 
+      try {
+        patients.forEach(async (patient) => {
+          const logs = await getPatientLogs(patient.clientID);
+          console.log("tesT: " + logs);
+        });
+        
+      } catch (error) {
+        console.error("Error fetching patient logs:", error);
+      }
+    }
+
+    fetchPatientLogs();
   
     fetchPatients();
   }, [navigate]);

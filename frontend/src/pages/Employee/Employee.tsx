@@ -189,204 +189,179 @@ const Employee: React.FC = () => {
   
 
   return (
-  <div className="flex h-screen bg-gray-100">
-    <Sidebar />
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <Navbar />
-      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-        <div className="container mx-auto px-6 py-8">
-          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-              <h2 className="text-3xl font-bold">
-                {employee?.name || "Unknown Employee"}'s Profile
-              </h2>
-              <p className="mt-2 text-blue-100">
-                Employee ID: {employee?.id}
-              </p>
-
-              <div className="bg-gray-50 p-4 rounded-lg shadow">
-                <p className="flex items-center text-gray-700">
-                  <span className="font-semibold mr-2">Birthdate:</span>{" "}
-                  {employee?.birthdate}
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+          <div className="container mx-auto px-6 py-8">
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                <h2 className="text-3xl font-bold">
+                  {employee?.name || "Unknown Employee"}'s Profile
+                </h2>
+                <p className="mt-2 text-blue-100">
+                  Employee ID: {employee?.id}
                 </p>
               </div>
-            </div>
 
-            <div className="p-6 grid md:grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <div className="relative group">
-                  <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
-                    {employeeImage ? (
-                      <img
-                        src={employeeImage}
-                        alt="Employee"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Camera className="w-16 h-16 text-gray-400" />
-                    )}
+              <div className="p-6 grid md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="relative group">
+                    <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                      {employeeImage ? (
+                        <img
+                          src={employeeImage}
+                          alt="Employee"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Camera className="w-16 h-16 text-gray-400" />
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="employee-image-upload"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                    <label
+                      htmlFor="employee-image-upload"
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                    >
+                      <Upload className="w-8 h-8 mr-2" />
+                      Upload Image
+                    </label>
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    id="employee-image-upload"
-                    className="hidden"
-                    onChange={handleImageUpload}
-                  />
-                  <label
-                    htmlFor="employee-image-upload"
-                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-                  >
-                    <Upload className="w-8 h-8 mr-2" />
-                    Upload Image
-                  </label>
+
+                  <div className="bg-gray-50 p-4 rounded-lg shadow">
+                    <p className="flex items-center text-gray-700 mb-2">
+                      <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
+                      <span className="font-semibold mr-2">Employee ID:</span>
+                      {employee?.id}
+                    </p>
+                    <p className="flex items-center text-gray-700">
+                      <Calendar className="w-5 h-5 mr-2 text-blue-500" />
+                      <span className="font-semibold mr-2">Birthdate:</span>
+                      {employee?.birthdate}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg shadow">
-                  <p className="flex items-center text-gray-700">
-                    <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
-                    <span className="font-semibold mr-2">
-                      Employee ID:
-                    </span>{" "}
-                    {employee?.id}
-                  </p>
-                  <p className="flex items-center text-gray-700">
-                    <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                    <span className="font-semibold mr-2">
-                      Birthdate:
-                    </span>{" "}
-                    {employee?.birthdate}
-                  </p>
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-4 rounded-lg shadow">
+                    <div className="grid grid-cols-1 gap-4">
+                      <button
+                        onClick={handleCheckInClick}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Clock className="w-5 h-5 mr-2" />
+                        Employee Check-ins
+                      </button>
+
+                      {isOwner && (
+                        <>
+                          <button
+                            onClick={handleImageClickAdd}
+                            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                          >
+                            <Plus className="w-5 h-5 mr-2" />
+                            Add Employee
+                          </button>
+                          <button
+                            onClick={handleImageClickEdit}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                          >
+                            <Edit className="w-5 h-5 mr-2" />
+                            Edit Employee
+                          </button>
+                          <button
+                            onClick={handleEmployeeTrackerClick}
+                            className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                          >
+                            <UserCheck className="w-5 h-5 mr-2" />
+                            Employee Tracker
+                          </button>
+                          <ArchiveEmployee
+                            employeeId={employee?.id || ""}
+                            employeeName={employee?.name || ""}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-</div>
-              <div className="space-y-6">
-  <div className="bg-gray-50 p-4 rounded-lg shadow">
-    <div className="flex space-x-2 mt-4">
-      
-      <button
-        onClick={handleCheckInClick}
-        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-      >
-        <Clock className="w-5 h-5 mr-2" />
-        Employee Check-ins
-      </button>
-    </div>
 
-    {/* Conditionally render buttons based on the state */}
-    {isOwner && ( // Only render these buttons if the user is the owner/admin
-  <div className="flex space-x-2 mt-2">
-    <button
-      onClick={handleImageClickAdd}
-      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-    >
-      <Plus className="w-5 h-5 mr-2" />
-      Add Employee
-    </button>
-    <button
-      onClick={handleImageClickEdit}
-      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-    >
-      <Edit className="w-5 h-5 mr-2" />
-      Edit Employee
-    </button>
-    <button
-        onClick={handleEmployeeTrackerClick}
-        className="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-      >
-        <UserCheck className="w-5 h-5 mr-2" />
-        Employee Tracker
-      </button>
-    <ArchiveEmployee
-      employeeId={id || ""}
-      employeeName={employee!.name}
-    />
-  </div>
-)}
-
-  </div>
-</div>
-
-              
-
-            <div className="p-6 border-t border-gray-200">
-              {showEmployeeTracker && (
-                <div className="mt-6">
-                  <h3 className="text-xl font-semibold mb-4">
-                    Employee Tracker
-                  </h3>
-                  <div className="rounded-md border">
-                    <table className="min-w-full">
-                      <thead>
-                        <tr>
-                          <th className="w-[150px] font-medium">
-                            Date of Edit
-                          </th>
-                          <th className="w-[150px] font-medium">
-                            File Record
-                          </th>
-                          <th className="w-[200px] font-medium">Patient</th>
-                          <th className="w-[100px] font-medium">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[1, 2, 3, 4].map((record, index) => (
-                          <tr key={index}>
-                            <td>24/05/2024</td>
-                            <td>CSF</td>
-                            <td>Genrey O. Cristobal</td>
-                            <td>
-                              <button
-                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-                                onClick={() => navigate(`/patient/${record}`)}
-                              >
-                                View
-                              </button>
-                            </td>
+              <div className="p-6 border-t border-gray-200">
+                {showEmployeeTracker && (
+                  <div className="mt-6">
+                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-gray-300">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="py-2 px-4 border-b text-left">Date of Edit</th>
+                            <th className="py-2 px-4 border-b text-left">File Record</th>
+                            <th className="py-2 px-4 border-b text-left">Patient</th>
+                            <th className="py-2 px-4 border-b text-left">Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {[1, 2, 3, 4].map((record, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                              <td className="py-2 px-4 border-b">24/05/2024</td>
+                              <td className="py-2 px-4 border-b">CSF</td>
+                              <td className="py-2 px-4 border-b">Genrey O. Cristobal</td>
+                              <td className="py-2 px-4 border-b">
+                                <button
+                                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
+                                  onClick={() => navigate(`/patient/${record}`)}
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {showTimeLog && (
-                <div className="mt-6">
-                  <h3 className="text-xl font-semibold mb-4">
-                    Employee Check-ins
-                  </h3>
-                  <div className="rounded-md border">
-                    <table className="min-w-full">
-                      <thead>
-                        <tr>
-                          <th className="w-[200px] font-medium">Log-in</th>
-                          <th className="w-[200px] font-medium">Log-out</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {timeEntries.map((entry, index) => (
-                          <tr key={index}>
-                            <td className="font-mono">{entry.logIn}</td>
-                            <td className="font-mono">{entry.logOut}</td>
+                {showTimeLog && (
+                  <div className="mt-6">
+                    <h3 className="text-xl font-semibold mb-4">Employee Check-ins</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-gray-300">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="py-2 px-4 border-b text-left">Log-in</th>
+                            <th className="py-2 px-4 border-b text-left">Log-out</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {timeEntries.map((entry, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                              <td className="py-2 px-4 border-b font-mono">{entry.logIn}</td>
+                              <td className="py-2 px-4 border-b font-mono">{entry.logOut}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
-  
-);
+        </main>
+      </div>
 
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-center mb-6">
               {isEditing ? "Edit Employee Account" : "Create Employee Account"}
             </h2>
@@ -394,106 +369,100 @@ const Employee: React.FC = () => {
               className="space-y-6"
               onSubmit={(e) => {
                 e.preventDefault();
+                const form = e.target as HTMLFormElement;
                 const updatedData: Employee = {
-                  name:
-                    (e.target as HTMLFormElement)["first-name"].value +
-                    " " +
-                    (e.target as HTMLFormElement)["last-name"].value,
-                  birthdate: `${
-                    (e.target as HTMLFormElement)["birth-year"].value
-                  }-${(e.target as HTMLFormElement)["birth-month"].value}-${
-                    (e.target as HTMLFormElement)["birth-day"].value
-                  }`,
-                  id: employee?.id || "", // Ensure id is passed
-                  visitHistory: employee?.visitHistory || [], // Empty array if no visitHistory
+                  name: `${form['first-name'].value} ${form['last-name'].value}`,
+                  birthdate: `${form['birth-year'].value}-${form['birth-month'].value}-${form['birth-day'].value}`,
+                  id: employee?.id || "",
+                  visitHistory: employee?.visitHistory || [],
                 };
                 handleUpdateEmployee(updatedData);
               }}
             >
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col">
-                  <label htmlFor="first-name" className="text-sm font-medium">
+                  <label htmlFor="first-name" className="text-sm font-medium mb-1">
                     First Name
                   </label>
                   <input
                     type="text"
                     id="first-name"
                     className="border-2 rounded-md p-2"
-                    defaultValue={employee?.name || ""} // Fallback to an empty string if employee is not loaded
+                    defaultValue={employee?.name?.split(' ')[0] || ""}
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="last-name" className="text-sm font-medium">
+                  <label htmlFor="last-name" className="text-sm font-medium mb-1">
                     Last Name
                   </label>
                   <input
                     type="text"
                     id="last-name"
                     className="border-2 rounded-md p-2"
-                    defaultValue={employee?.name}
+                    defaultValue={employee?.name?.split(' ')[1] || ""}
                   />
                 </div>
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="email" className="text-sm font-medium">
+                <label htmlFor="email" className="text-sm font-medium mb-1">
                   Email Address
                 </label>
                 <input
                   type="email"
                   id="email"
                   className="border-2 rounded-md p-2"
-                  defaultValue={employee?.name}
+                  defaultValue={employee?.email || ""}
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label htmlFor="birth-year" className="text-sm font-medium">
-                  Birth Year
-                </label>
-                <input
-                  type="text"
-                  id="birth-year"
-                  className="border-2 rounded-md p-2"
-                  defaultValue={employee?.birthdate?.split("-")[0]}
-                />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex flex-col">
+                  <label htmlFor="birth-year" className="text-sm font-medium mb-1">
+                    Birth Year
+                  </label>
+                  <input
+                    type="text"
+                    id="birth-year"
+                    className="border-2 rounded-md p-2"
+                    defaultValue={employee?.birthdate?.split('-')[0] || ""}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="birth-month" className="text-sm font-medium mb-1">
+                    Birth Month
+                  </label>
+                  <input
+                    type="text"
+                    id="birth-month"
+                    className="border-2 rounded-md p-2"
+                    defaultValue={employee?.birthdate?.split('-')[1] || ""}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="birth-day" className="text-sm font-medium mb-1">
+                    Birth Day
+                  </label>
+                  <input
+                    type="text"
+                    id="birth-day"
+                    className="border-2 rounded-md p-2"
+                    defaultValue={employee?.birthdate?.split('-')[2] || ""}
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col">
-                <label htmlFor="birth-month" className="text-sm font-medium">
-                  Birth Month
-                </label>
-                <input
-                  type="text"
-                  id="birth-month"
-                  className="border-2 rounded-md p-2"
-                  defaultValue={employee?.birthdate?.split("-")[1]}
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label htmlFor="birth-day" className="text-sm font-medium">
-                  Birth Day
-                </label>
-                <input
-                  type="text"
-                  id="birth-day"
-                  className="border-2 rounded-md p-2"
-                  defaultValue={employee?.birthdate?.split("-")[2]}
-                />
-              </div>
-
-              <div className="mt-4 flex justify-between">
+              <div className="flex justify-between pt-4">
                 <button
                   type="button"
                   onClick={() => setShowPopup(false)}
-                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
+                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
                 >
                   Save
                 </button>

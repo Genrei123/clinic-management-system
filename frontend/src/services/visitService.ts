@@ -8,3 +8,11 @@ return axiosInstance.post(`/addPatientLog`, null, {
     }
 });
 };
+
+export const getPatientLogs = async (patientId: number) => {
+return axiosInstance.get(`/getPatientLogs`, {
+    params: {
+        patientId: patientId
+    }
+});
+};

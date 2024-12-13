@@ -38,7 +38,7 @@ public class  SecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/register").permitAll()
-                        .requestMatchers("/purchaseItems", "/searchPatients", "/deletePatient/{id}", "/generateqr", "/scanqr", "/addPatientLog", "/generatepdf/{patientId}", "/api/upload-profile-picture", "/addPatient", "/getPatient","/getPatient/{id}", "/home", "/getPatient", "/employees/me", "/items").hasAnyAuthority("ROLE_EMPLOYEE", "ROLE_OWNER") // Using hasAuthority instead of hasRole
+                        .requestMatchers("/getPatientLogs", "/purchaseItems", "/searchPatients", "/deletePatient/{id}", "/generateqr", "/scanqr", "/addPatientLog", "/generatepdf/{patientId}", "/api/upload-profile-picture", "/addPatient", "/getPatient","/getPatient/{id}", "/home", "/getPatient", "/employees/me", "/items").hasAnyAuthority("ROLE_EMPLOYEE", "ROLE_OWNER") // Using hasAuthority instead of hasRole
                         .requestMatchers("/addBranch", "/branches", "/deleteBranch/", "/readBranch/", "/items", "/items/", "/addItems", "/deleteItems/{id}", "/addItem", "/addItems", "/updateItems/{id}", "/items","/inventory", "/employees", "/reports", "/branches", "/readBranch/", "/deleteBranch/", "/addBranch", "/addItems").hasAuthority("ROLE_OWNER") // Using hasAuthority instead of hasRole
                         .anyRequest().authenticated()
                 )
