@@ -37,7 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/login", "/register", "addEmployee", "/readEmployee/{employeeID}", "/employees").permitAll()
                         .requestMatchers("/home", "/getPatient").hasAnyAuthority("employee", "owner") // Using hasAuthority instead of hasRole
                         .requestMatchers("/inventory", "/employees", "/reports").hasAuthority("owner") // Using hasAuthority instead of hasRole
                         .anyRequest().authenticated()

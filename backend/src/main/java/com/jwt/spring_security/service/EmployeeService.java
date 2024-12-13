@@ -27,15 +27,15 @@ public class EmployeeService {
         return employeeRepo.findAll();
     }
 
-    public Employee findByEmployeeID(int employeeID) {
+    public Employee findByEmployeeID(Long employeeID) {
         return employeeRepo.findByEmployeeID(employeeID);
     }
 
-    public boolean existsByEmployeeID(int employeeID) {
+    public boolean existsByEmployeeID(Long employeeID) {
         return employeeRepo.findByEmployeeID(employeeID) != null;
     }
 
-    public boolean deleteByEmployeeID(int employeeID) {
+    public boolean deleteByEmployeeID(Long employeeID) {
         if (employeeRepo.existsById((long) employeeID)) {
             employeeRepo.deleteById((long) employeeID);
             return true;
@@ -43,7 +43,7 @@ public class EmployeeService {
         return false;
     }
 
-    public Employee updateEmployee(int employeeID, Employee employeeDetails) {
+    public Employee updateEmployee(Long employeeID, Employee employeeDetails) {
         Employee existingEmployee = employeeRepo.findByEmployeeID(employeeID);
         if (existingEmployee != null) {
             existingEmployee.setUsername(employeeDetails.getUsername());

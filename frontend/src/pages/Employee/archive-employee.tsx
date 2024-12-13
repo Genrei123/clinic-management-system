@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 
 interface ArchiveEmployeeProps {
-  employeeId: string;
-  employeeName: string;
+  employeeId?: number; // Change to number
+  employeeName?: string; // employeeName can be optional
+  onDelete: (employeeId: number) => void; // Update the onDelete function to accept number
 }
+
+
 
 function ArchiveEmployee({ employeeId, employeeName }: ArchiveEmployeeProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);

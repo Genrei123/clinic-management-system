@@ -6,14 +6,16 @@ import java.time.LocalDateTime;
 
 @Entity
 public class Employee extends Users {
-    private int employeeID;
+    private Long employeeID;
     private LocalDateTime loginTimeStamp;
+    private LocalDateTime birthdate;
 
-    public int getEmployeeID() {
+    public Long getEmployeeID() {
         return employeeID;
     }
 
-    public void setEmployeeID(int employeeID) {
+
+    public void setEmployeeID(Long employeeID) {
         this.employeeID = employeeID;
     }
 
@@ -24,6 +26,15 @@ public class Employee extends Users {
     public void setLoginTimeStamp(LocalDateTime loginTimeStamp) {
         this.loginTimeStamp = loginTimeStamp;
     }
+
+    public LocalDateTime getBirthdate(){
+        return birthdate;
+    }
+
+    public void setBirthdate(LocalDateTime birthdate){
+        this.birthdate = birthdate;
+    }
+
 
     @Override
     public String toString() {
