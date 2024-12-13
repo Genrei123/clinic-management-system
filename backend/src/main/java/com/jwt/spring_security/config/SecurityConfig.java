@@ -35,15 +35,21 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(customizer -> customizer.disable()).
-                authorizeHttpRequests(request -> request
-                        .requestMatchers("login", "register", "/updateItems/{id}", "/deleteItems/{id}", "/addItem", "/addItems", "/addPatient", "/getPatient","/getPatient/{id}", "/searchPatients", "/deletePatient/{id}", "/generateqr", "/scanqr", "/addPatientLog", "/generatepdf/{patientId}", "/api/upload-profile-picture").permitAll()
-                        .anyRequest().authenticated()).
-                httpBasic(Customizer.withDefaults()).
-                sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        return http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login", "/register").permitAll()
+                        .requestMatchers("/home", "/getPatient", "/employees/me").hasAnyAuthority("employee", "owner") // Using hasAuthority instead of hasRole
+                        .requestMatchers("/inventory", "/employees", "/reports").hasAuthority("owner") // Using hasAuthority instead of hasRole
+                        .anyRequest().authenticated()
+                )
+                .httpBasic(Customizer.withDefaults())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
+
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

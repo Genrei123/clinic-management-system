@@ -4,8 +4,12 @@ import com.jwt.spring_security.model.Users;
 import com.jwt.spring_security.response.UserResponse;
 import com.jwt.spring_security.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
 
 @RestController
 public class UsersController {
@@ -15,15 +19,29 @@ public class UsersController {
 
     @PostMapping("/register")
     public Users registerUser(@RequestBody Users user) {
+        // Validate role before registration
+        if (!"ADMIN".equalsIgnoreCase(user.getRole()) &&
+                !"EMPLOYEE".equalsIgnoreCase(user.getRole())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid role. Must be ADMIN or EMPLOYEE"
+            );
+        }
         return usersService.registerUser(user);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Users user) {
-        System.out.println("User: " + user);
         String token = usersService.verify(user);
-        UserResponse loginResponse = new UserResponse(user, token);
-        return ResponseEntity.ok(loginResponse);
+
+        // Extract the role from the authenticated user
+        Users authenticatedUser = usersService.findByUsername(user.getUsername());
+
+        return ResponseEntity.ok(new HashMap<String, String>() {{
+            put("token", token);
+            put("role", authenticatedUser.getRole().toLowerCase());
+            put("username", authenticatedUser.getUsername());
+        }});
     }
 
     @GetMapping("/read/{username}")

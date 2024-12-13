@@ -3,6 +3,7 @@ package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.util.Constants;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,20 +34,20 @@ public class JWTService {
         secretKey = Base64.getEncoder().encodeToString(sk.getEncoded());
     }
 
-    public String generateToken(String username) {
-
+    public String generateToken(String username, String roles) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("role", roles); // Add roles as a custom claim
+        claims.put("username", username);
+
         return Jwts.builder()
-                .claims()
-                .add(claims)
-                .subject(username)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .and()
-                // Generating key
-                .signWith(getKey())
+                .setClaims(claims) // Set claims
+                .setSubject(username) // Set subject as username
+                .setIssuedAt(new Date(System.currentTimeMillis())) // Set issued time
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Set expiration (10 hours in this case)
+                .signWith(getKey(), SignatureAlgorithm.HS256) // Sign with the secret key
                 .compact();
     }
+
 
     private SecretKey getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);

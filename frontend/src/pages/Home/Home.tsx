@@ -18,13 +18,34 @@ const Home: React.FC = () => {
   >(null);
   const [patients, setPatients] = useState<any[]>([]); // State for patients
   const [loading, setLoading] = useState<boolean>(true); // State for loading
+  const [token, setToken] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Fetch patients from the backend
   useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedRole = localStorage.getItem("userRole");
+    const storedName = localStorage.getItem("username");
+  
+    if (storedToken) {
+      setToken(storedName);
+    }
+  
+    if (!storedToken || !storedRole) {
+      // If no token or role, redirect to login
+      navigate("/login");
+      return;
+    }
+  
     const fetchPatients = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/getPatient");
-        console.log(response.data); // Check the structure of the response
+        const response = await axios.get("http://localhost:8080/getPatient", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${storedToken}`,
+          },
+        });
+  
         setPatients(response.data);
       } catch (error) {
         console.error("Error fetching patients:", error);
@@ -32,9 +53,10 @@ const Home: React.FC = () => {
         setLoading(false);
       }
     };
-
+  
     fetchPatients();
-  }, []);
+  }, [navigate]);
+  
 
   const toggleFullscreen = (table: "services" | "patients") => {
     setFullscreenTable(fullscreenTable === table ? null : table);
@@ -155,7 +177,7 @@ const Home: React.FC = () => {
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-6 py-8">
             <h1 className="text-3xl font-semibold text-gray-800 mb-6">
-              Dashboard
+              Welcome, {token} !
             </h1>
             <div className="flex justify-end space-x-4 mb-8">
               <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
