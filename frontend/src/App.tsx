@@ -10,6 +10,7 @@ import PatientRecords from "./pages/Patient/PatientRecords";
 import Patient from "./pages/Patient/Patient";
 import AccountDetails from "./pages/AccountDetails";
 import AccountSecurity from "./pages/AccountSecurity";
+import AccountBranch from "./pages/AccountBranch";
 import LandingPage from "./pages/Landing Page/LandingPage";
 import GeneratePDF from "./pages/Patient/GeneratedPDF";
 import EmployeeDetails from "./pages/Employee/EmployeeDetails";

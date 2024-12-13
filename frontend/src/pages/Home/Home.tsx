@@ -6,13 +6,13 @@ import PatientProfileModal from "./PatientProfileModal";
 import useModal from "./useModal";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-
-
+import Patient from "../../types/Patient";
+import { createEmptyPatient } from "../../utils/Patient";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { isModalOpen, openModal, closeModal } = useModal();
-  const [formData, setFormData] = useState({ name: "", age: "" });
+  const [formData, setFormData] = useState<Patient>(createEmptyPatient());
   const [fullscreenTable, setFullscreenTable] = useState<
     "services" | "patients" | null
   >(null);
@@ -201,9 +201,6 @@ const Home: React.FC = () => {
         isOpen={isModalOpen}
         onClose={closeModal}
         formData={formData}
-        onInputChange={() => {}}
-        onNewPatientSubmit={() => {}}
-        onVisitSubmit={() => {}}
       />
     </div>
   );

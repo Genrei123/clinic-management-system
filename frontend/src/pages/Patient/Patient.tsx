@@ -15,6 +15,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { getPatientById } from "../../services/patientService";
+import useModal from "../Home/useModal";
+import RenderServicesModal from "./RenderServicesModal";
 
 interface Visit {
   visitDate: string;
@@ -36,6 +38,7 @@ interface Patient {
 }
 
 const Patient: React.FC = () => {
+  const { isModalOpen, openModal, closeModal } = useModal();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patientImage, setPatientImage] = useState<string | null>(null);
@@ -47,6 +50,7 @@ const Patient: React.FC = () => {
     visitHistory: [],
     files: [],
   });
+  const [step, setStep] = useState<"create">();
 
   useEffect(() => {
     const fetchPatientData = async () => {
@@ -133,7 +137,7 @@ const Patient: React.FC = () => {
     navigate(`/generate-pdf?form=${selectedForm}&patientId=${patient.id}`);
   }, [selectedForm, navigate, patient.id]);
 
-  const handleDeleteLogs = () => { 
+  const handleDeleteLogs = () => {
     console.log("Deleting logs (placeholder).");
   };
 
@@ -236,10 +240,11 @@ const Patient: React.FC = () => {
                         Upload Other Files
                       </button>
                       <button
-                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                        onClick={openModal}
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
                       >
                         <UserCheck className="w-5 h-5 mr-2" />
-                        Log Checkup
+                        Render Services
                       </button>
                     </div>
                   </div>
@@ -300,6 +305,7 @@ const Patient: React.FC = () => {
           </div>
         </main>
       </div>
+      <RenderServicesModal isOpen={isModalOpen} onClose={closeModal} patient={patient} />
     </div>
   );
 };

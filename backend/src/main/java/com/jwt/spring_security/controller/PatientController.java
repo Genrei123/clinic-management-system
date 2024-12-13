@@ -53,9 +53,9 @@ public class PatientController {
     }
 
     @PostMapping("/addPatient")
-    public ResponseEntity<String> addPatient(@RequestBody PatientDTO patientDTO) {
-        patientService.addPatient(patientDTO);
-        return ResponseEntity.ok("Patient successfully added!");
+    public ResponseEntity<Long> addPatient(@RequestBody PatientDTO patientDTO) {
+        Long clientID = patientService.addPatient(patientDTO);
+        return ResponseEntity.ok(clientID);
     }
 
     @GetMapping("/getPatient")
@@ -109,4 +109,3 @@ public class PatientController {
         return ResponseEntity.ok("Patient with ID " + id + " deleted successfully.");
     }
 }
-
