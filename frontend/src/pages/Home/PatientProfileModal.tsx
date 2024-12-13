@@ -3,6 +3,8 @@ import Patient from "../../types/Patient";
 import { searchPatients, addPatient } from "../../services/patientService";
 import { addPatientLog } from "../../services/visitService";
 import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
+import { createEmptyPatient } from "../../utils/Patient";
+import { getPatientById } from "../../services/patientService";
 
 interface PatientProfileModalProps {
   isOpen: boolean;
@@ -19,63 +21,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   const [patients, setPatients] = useState<
     { id: number; lastName: string; givenName: string }[]
   >([]);
-  const [formData, setFormData] = useState<Patient>({
-    patientID: "",
-    imagePath: "",
-    lastName: "",
-    givenName: "",
-    middleInitial: "",
-    sex: "",
-    address: "",
-    age: 0,
-    birthday: "",
-    religion: "",
-    occupation: "",
-    lastDelivery: null,
-    philhealthID: "",
-    spouse: {
-      spouseName: "",
-      spouseBirthday: "",
-      spouseReligion: "",
-      spouseOccupation: "",
-      spouseContactNumber: "",
-      spouseAge: 0,
-    },
-    pregnancy: {
-      gravida: 0,
-      para: 0,
-      term: 0,
-      preTerm: 0,
-      abortion: 0,
-      living: 0,
-      LMP: "",
-      EDC: "",
-      ITDate: null,
-      menarche: "",
-    },
-    consultation: {
-      consultationDate: "",
-      AOG: 0,
-      BP: "",
-      weight: 0,
-      FH: 0,
-      FHT: 0,
-      remarks: "",
-    },
-    medicalHistory: {
-      smoking: false,
-      allergies: "",
-      drugIntake: false,
-      bleedingAnemia: false,
-      diabetesCongenitalAnomalies: false,
-      previousCSection: false,
-      consectuivemiscarriage: false,
-      postPartumHemorrhage: false,
-      forcepDelivery: false,
-      hypertension: false,
-    }
-  });
-
+  const [formData, setFormData] = useState<Patient>(createEmptyPatient());
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     null
   );
@@ -83,11 +29,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
-
-  useEffect(() => {
-    setErrorMessage("");
-    setFieldErrors({});
-  }, [searchTerm, formData, visitPurpose]);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const handleSearch = async () => {
     try {
@@ -111,6 +53,18 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
       );
     }
   };
+
+  const loadPatientData = async (id: number) => {
+    try {
+      const patient = await getPatientById(id);
+      setFormData(patient);
+    } catch (error) {
+      console.error("Error fetching patient data:", error);
+      setErrorMessage(
+        "An error occurred while fetching patient data. Please try again."
+      );
+    }
+  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -153,13 +107,20 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      setErrorMessage("Please fill in all required fields.");
+
+      // Check for empty required fields
+      const list_errors = Object.keys(errors).map((field) => `\n- ${field}`);
+
+      setErrorMessage(
+        "Please check the following required fields: " + list_errors
+      );
+
       return;
     }
 
     try {
       const newPatient = await addPatient(formData);
-      await addPatientLog(newPatient.clientID, visitPurpose);
+      await addPatientLog(Number(newPatient), visitPurpose);
       setSuccessMessage(
         `Patient profile for ${newPatient.lastName} was successfully created and visit logged.`
       );
@@ -197,27 +158,16 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     }
   };
 
-  // Inside the component, initialize toggle states
-  const [showSpouse, setShowSpouse] = useState(false);
-  const [showPregnancy, setShowPregnancy] = useState(false);
-  const [showMedicalHistory, setShowMedicalHistory] = useState(false);
+  useEffect(() => {
+    setErrorMessage("");
+    setFieldErrors({});
 
-  // Handle toggle changes
-  const handleToggleChange = (section) => {
-    switch (section) {
-      case "spouse":
-        setShowSpouse(!showSpouse);
-        break;
-      case "pregnancy":
-        setShowPregnancy(!showPregnancy);
-        break;
-      case "medicalHistory":
-        setShowMedicalHistory(!showMedicalHistory);
-        break;
-      default:
-        break;
+    if (selectedPatientId) {
+      loadPatientData(selectedPatientId);
     }
-  };
+  }, [searchTerm, formData, visitPurpose, selectedPatientId]);
+
+
 
   if (!isOpen) return null;
 
@@ -294,17 +244,23 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
               {successMessage}
             </div>
           )}
-          {errorMessage && (
-            <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 rounded flex items-center">
-              <AlertCircle size={24} className="mr-3" />
-              {errorMessage}
-            </div>
-          )}
           {step === "visit" && (
             <div>
               <h2 className="text-3xl font-bold mb-6 text-gray-800">
                 Log Visit Purpose
               </h2>
+
+              {/* Patient details */}
+              <div className="flex items-center mb-4">
+                <h3 className="text-lg font-semibold mr-2">Patient:</h3>
+                <span className="text-gray-800">
+                  {patients.find((p) => p.id === selectedPatientId)?.lastName},{" "}
+                  {patients.find((p) => p.id === selectedPatientId)?.givenName}
+                </span>
+
+              </div>
+
+              
               <textarea
                 placeholder="Enter purpose of visit"
                 value={visitPurpose}
@@ -330,22 +286,19 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
               >
                 {[
                   { label: "Patient ID", name: "patientID" },
-                  { label: "Image Path", name: "imagePath" },
                   { label: "Last Name", name: "lastName" },
                   { label: "Given Name", name: "givenName" },
                   { label: "Middle Initial", name: "middleInitial" },
-                  { label: "Sex", name: "sex" },
                   { label: "Address", name: "address" },
-                  { label: "Age", name: "age", type: "number" },
-                  { label: "Birthday", name: "birthday", type: "date" },
                   { label: "Religion", name: "religion" },
                   { label: "Occupation", name: "occupation" },
-                  { label: "Philhealth ID", name: "philhealthID" },
+                  { label: "Age", name: "age", type: "number" },
                 ].map(({ label, name, type = "text" }) => (
                   <div key={name}>
                     <label htmlFor={name} className="block text-sm font-medium">
                       {label}
                     </label>
+
                     <input
                       id={name}
                       name={name}
@@ -357,7 +310,57 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </div>
                 ))}
 
-                {/* Spouse Fields */}
+                {/* Birthday input */}
+                <div>
+                  <label
+                    htmlFor="birthday"
+                    className="block text-sm font-medium"
+                  >
+                    Birthday
+                  </label>
+                  <input
+                    id="birthday"
+                    name="birthday"
+                    type="date"
+                    value={formData.birthday || ""}
+                    onChange={(e) => {
+                      handleInputChange(e); // Update the birthday field
+                      const birthday = new Date(e.target.value);
+                      const today = new Date();
+                      const age = today.getFullYear() - birthday.getFullYear();
+                      const isBirthdayPassed =
+                        today.getMonth() > birthday.getMonth() ||
+                        (today.getMonth() === birthday.getMonth() &&
+                          today.getDate() >= birthday.getDate());
+                      setFormData((prev) => ({
+                        ...prev,
+                        age: isBirthdayPassed ? age : age - 1, // Adjust age if the birthday hasn't occurred yet this year
+                      }));
+                    }}
+                    className="w-full border rounded-lg p-2"
+                  />
+                </div>
+
+                {/* Sex input */}
+                <div>
+                  <label htmlFor="sex" className="block text-sm font-medium">
+                    Sex
+                  </label>
+                  <select
+                    id="sex"
+                    name="sex"
+                    value={formData.sex || ""}
+                    onChange={handleInputChange}
+                    className="w-full border rounded-lg p-2 bg-white"
+                  >
+                    <option value="" disabled>
+                      Select...
+                    </option>
+                    <option value="M">M</option>
+                    <option value="F">F</option>
+                  </select>
+                </div>
+
                 <h3 className="col-span-2 font-bold mt-4">Spouse Details</h3>
                 {[
                   { label: "Spouse Name", name: "spouse.spouseName" },
@@ -396,15 +399,14 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </div>
                 ))}
 
-                {/* Pregnancy Fields */}
                 <h3 className="col-span-2 font-bold mt-4">Pregnancy Details</h3>
                 {[
-                  "gravida",
-                  "para",
-                  "term",
-                  "preTerm",
-                  "abortion",
-                  "living",
+                  "GRAVIDA",
+                  "PARA",
+                  "TERM",
+                  "PRETERM",
+                  "ABORTION",
+                  "LIVING",
                 ].map((field) => (
                   <div key={field}>
                     <label
@@ -424,36 +426,69 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                   </div>
                 ))}
 
-                {/* Medical History Fields */}
-                <h3 className = "col-span-2 font-bold mt-4">Medical History</h3>
+                <h3 className="col-span-2 font-bold mt-4">Medical History</h3>
+
                 {[
                   "smoking",
-                  "allergies",
                   "drugIntake",
-                  "bleeding Anemia",
+                  "bleedingAnemia",
                   "previousCSection",
                   "consectuivemiscarriage",
                   "postPartumHemorrhage",
                   "forcepDelivery",
                   "hypertension",
                 ].map((field) => (
-                  <div key={field}>
+                  <div key={field} className="mb-4">
                     <label
                       htmlFor={field}
-                      className="block text-sm font-medium"
+                      className="block text-sm font-medium mb-2"
                     >
-                      {field}
+                      {field.toUpperCase()}
                     </label>
                     <input
                       id={field}
                       name={`medicalHistory.${field}`}
-                      type="bool"
-                      value={(formData.medicalHistory as any)[field] || ""}
-                      onChange={handleInputChange}
-                      className="w-full border rounded-lg p-2"
+                      type="checkbox"
+                      checked={(formData.medicalHistory as any)[field] || false}
+                      onChange={(e) => {
+                        const { name, checked } = e.target;
+                        setFormData((prev) => ({
+                          ...prev,
+                          medicalHistory: {
+                            ...prev.medicalHistory,
+                            [field]: checked,
+                          },
+                        }));
+                      }}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-0"
                     />
                   </div>
                 ))}
+
+                <div>
+                  <label
+                    htmlFor="allergies"
+                    className="block text-sm font-medium mb-2"
+                  >
+                    Allergies (Specify)
+                  </label>
+
+                  <input
+                    id="allergies"
+                    name="medicalHistory.allergies"
+                    type="text"
+                    value={(formData.medicalHistory as any)["allergies"] || ""}
+                    onChange={handleInputChange}
+                    className="w-full border rounded-lg p-2"
+                    placeholder="Write allergies here"
+                  />
+                </div>
+                {errorMessage && (
+                  <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 rounded flex items-center">
+                    <AlertCircle size={24} className="mr-3" />
+                    {errorMessage}
+                  </div>
+                )}
 
                 <div className="col-span-2">
                   <button

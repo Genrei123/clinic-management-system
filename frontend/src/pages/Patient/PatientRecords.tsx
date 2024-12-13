@@ -4,7 +4,7 @@ import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import { ChevronLeft, ChevronRight, Users, Search, Filter, RefreshCw } from "lucide-react";
 import { getPatients } from "../../services/patientService"; // Adjust the path to your service file
-import { Patient } from "../../types/Patient";
+import Patient from "../../types/Patient";
 
 const PatientRecords: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -120,7 +120,7 @@ const PatientRecords: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">{patient.address}</td>
                             <td className="px-6 py-4 whitespace-nowrap">{patient.sex}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{patient.edc ? patient.edc.toDateString() : ''}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{new Date(patient.expectedDateConfinement).toLocaleDateString()}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <button
                                 onClick={() => handleViewClick(patient.clientID)}
