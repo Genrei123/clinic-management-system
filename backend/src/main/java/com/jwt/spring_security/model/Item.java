@@ -1,18 +1,38 @@
 package com.jwt.spring_security.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+
 
 @Entity
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long itemID;
+
+    @JsonProperty("item_name")
     private String itemName;
-    private String itemDescription;
+
+    @JsonProperty("item_quantity")
     private Long itemQuantity;
-    private Date expDate;
+
+    @JsonProperty("item_price")
+    private Double itemPrice;
+
+    @JsonProperty("manufacture_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate manufactureDate;
+
+    @JsonProperty("exp_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate expDate;
+
+    private String status;
 
     @ManyToOne
     @JoinColumn(name = "branchID", referencedColumnName = "branchID")
@@ -34,14 +54,6 @@ public class Item {
         this.itemName = itemName;
     }
 
-    public String getItemDescription() {
-        return itemDescription;
-    }
-
-    public void setItemDescription(String itemDescription) {
-        this.itemDescription = itemDescription;
-    }
-
     public Long getItemQuantity() {
         return itemQuantity;
     }
@@ -50,12 +62,36 @@ public class Item {
         this.itemQuantity = itemQuantity;
     }
 
-    public Date getExpDate() {
+    public Double getItemPrice() {
+        return itemPrice;
+    }
+
+    public void setItemPrice(Double itemPrice) {
+        this.itemPrice = itemPrice;
+    }
+
+    public LocalDate getManufactureDate() {
+        return manufactureDate;
+    }
+
+    public void setManufactureDate(LocalDate manufactureDate) {
+        this.manufactureDate = manufactureDate;
+    }
+
+    public LocalDate getExpDate() {
         return expDate;
     }
 
-    public void setExpDate(Date expDate) {
+    public void setExpDate(LocalDate expDate) {
         this.expDate = expDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Branch getBranch() {

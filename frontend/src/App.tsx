@@ -9,6 +9,7 @@ import PatientRecords from "./pages/Patient/PatientRecords";
 import Patient from "./pages/Patient/Patient";
 import AccountDetails from "./pages/AccountDetails";
 import AccountSecurity from "./pages/AccountSecurity";
+import AccountBranch from "./pages/AccountBranch";
 import LandingPage from "./pages/Landing Page/LandingPage";
 import GeneratePDF from "./pages/Patient/GeneratedPDF";
 
@@ -29,6 +30,7 @@ const App: React.FC = () => {
         <Route path="/reports" element={<Report />} />
         <Route path="/account/details" element={<AccountDetails />} />
         <Route path="/account/security" element={<AccountSecurity />} />
+        <Route path="/account/branch" element={<AccountBranch />} />
       </Routes>
     </Router>
   );
