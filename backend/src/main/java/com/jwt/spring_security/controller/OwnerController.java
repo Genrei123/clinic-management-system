@@ -79,9 +79,11 @@ public class OwnerController {
 
         // Update fields
         existingItem.setItemName(itemDetails.getItemName());
-        existingItem.setItemDescription(itemDetails.getItemDescription());
         existingItem.setItemQuantity(itemDetails.getItemQuantity());
+        existingItem.setItemPrice(itemDetails.getItemPrice());
+        existingItem.setManufactureDate(itemDetails.getManufactureDate());
         existingItem.setExpDate(itemDetails.getExpDate());
+        existingItem.setStatus(itemDetails.getStatus());
         existingItem.setBranch(itemDetails.getBranch());
 
         Item updatedItem = itemRepo.save(existingItem);
