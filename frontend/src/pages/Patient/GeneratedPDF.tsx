@@ -47,7 +47,9 @@ const GeneratePDF: React.FC = () => {
   const handleIframeLoad = () => setLoading(false);
 
   const fetchPatientData = async () => {
-    const response = await fetch(`http://localhost:8080/getPatient?patientId=${patientId}`);
+    const response = await fetch(
+      `http://localhost:8080/getPatient?patientId=${patientId}`
+    );
     if (!response.ok) {
       throw new Error("Failed to fetch patient data.");
     }
@@ -56,23 +58,30 @@ const GeneratePDF: React.FC = () => {
 
   const getPrefilledPDFFile = async () => {
     try {
-      const pdfBytes = await fetch(getPDFFile()).then((res) => res.arrayBuffer());
+      const pdfBytes = await fetch(getPDFFile()).then((res) =>
+        res.arrayBuffer()
+      );
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const form = pdfDoc.getForm();
 
-      const patientData = await fetchPatientData();
+      //const patientData = await fetchPatientData();
 
-      console.log("Patient Data:", patientData);
+      //console.log("Patient Data:", patientData);
 
       // Update form fields based on the data returned
-      form.getTextField("MI_Last_Name").setText(
-        `${patientData.givenName} ${patientData.lastName}`
-      );
-      form.getTextField("MI_birth_date_month").setText(patientData.address);
-      form.getTextField("Text-cO2Y8NkwuI").setText(patientData.philhealthID || "");
-      form.getTextField("MI_Patient_last_name").setText(patientData.age.toString());
-      form.getTextField("MI_Patient_first_name").setText(patientData.sex);
-      form.getTextField("Occupation").setText(patientData.occupation);
+
+      // List all form fields
+      console.log("Form Fields:", form.getFields());
+
+      
+
+      if (patientType === "Parent") {
+        form.getTextField("MI_last_name").setText("Cristobal");
+        form.getTextField("MI_first_name").setText("Genrey");
+      } else {
+        form.getTextField("MI_last_name").setText("");
+        form.getTextField("MC_printed_name_member_rep").setText("Jaden");
+      }
 
       const updatedPdfBytes = await pdfDoc.save();
       const blob = new Blob([updatedPdfBytes], { type: "application/pdf" });
@@ -104,7 +113,7 @@ const GeneratePDF: React.FC = () => {
   };
 
   const handleGoBack = () => {
-    navigate("/patientrecords");
+    navigate(-1);
   };
 
   return (
@@ -206,7 +215,6 @@ const GeneratePDF: React.FC = () => {
                       title="PDF Viewer"
                       width="100%"
                       height="100%"
-                      className="border-none"
                       onLoad={handleIframeLoad}
                     />
                   )}

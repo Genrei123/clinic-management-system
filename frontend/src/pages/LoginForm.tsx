@@ -1,79 +1,114 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import assetsLogin from '../assets/assetsLogin.png';
 import logo from '../assets/logo.svg';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, TextField, Typography, Stack, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, TextField, Typography, Stack } from '@mui/material';
 import './LoginForm.css';
 import ForgotPassword from './ForgotPassword';
-import { styled } from '@mui/material/styles';
-
-const Card = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignSelf: 'center',
-  width: '100%',
-  padding: theme.spacing(4),
-  gap: theme.spacing(2),
-  margin: 'auto',
-  boxShadow: 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
-  [theme.breakpoints.up('sm')]: {
-    width: '450px',
-  },
-}));
 
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
-  const loggedIn = localStorage.getItem("token");
-
-  // If already logged in, redirect to home
-  if (loggedIn) {
-    navigate("/home");
-  }
-
+  const { login } = useAuth(); // Use login function from context
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [openForgotPassword, setOpenForgotPassword] = useState(false);
-  const [openSignUp, setOpenSignUp] = useState(false); // State for handling the sign-up modal
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     let isValid = true;
+  
     if (!email) {
       setEmailError("Please enter your email.");
       isValid = false;
     } else {
       setEmailError('');
     }
-
+  
     if (password.length < 6) {
       setPasswordError("Password must be at least 6 characters long.");
       isValid = false;
     } else {
       setPasswordError('');
     }
-
+  
     if (isValid) {
-      navigate("/home");
-    }
-  };
+      try {
+        const response = await fetch('http://localhost:8080/login', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: email, password }),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+          const { username, token, role } = data; // Backend should return 'role' and 'token' properties.
+  
+          console.log("Login successful:", data);  // Log the response to check if role and token are correct
+  
+          login(token, role);
+          localStorage.setItem("token", token);
+          localStorage.setItem("userRole", role);
+          localStorage.setItem("username", username);
 
-  const handleSignUpOpen = () => setOpenSignUp(true);
-  const handleSignUpClose = () => setOpenSignUp(false);
+  
+          // Now send the token with the Authorization header in a subsequent request
+          const tokenFromLocalStorage = localStorage.getItem('token');
+          
+          const patientResponse = await fetch('http://localhost:8080/getPatient', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${tokenFromLocalStorage}`,  // Add the token in the header
+            },
+          });
+
+          if (patientResponse.ok) {
+            // Handle successful response for /getPatient request
+            const patientData = await patientResponse.json();
+            console.log('Patient data:', patientData);
+          } else {
+            console.log('Failed to fetch patient data');
+          }
+  
+          // Redirect after saving to local storage
+          console.log("Role: ", role);
+          console.log("Token: ", token);
+
+          if (role === 'owner') {
+            navigate('/home');
+          } else {
+            navigate('/home');
+          }
+        } else {
+          const errorData = await response.json();
+          setPasswordError(errorData.message || "Login failed");
+        }
+      } catch (error) {
+        console.log(error);
+        setPasswordError("An error occurred. Please try again.");
+      }
+    }
+};
+
+  
+  
 
   return (
     <section className="login-page">
       <div className="lg:grid lg:min-h-screen lg:grid-cols-12">
-        {/* Left Section - 70% of the Screen Width */}
         <section className="left-section lg:col-span-7 xl:col-span-8">
           <div className="flex items-center justify-center h-full">
             <img src={assetsLogin} alt="Login Illustration" className="login-image" />
           </div>
         </section>
 
-        {/* Right Section - 30% of the Screen Width */}
         <section className="right-section lg:col-span-5 xl:col-span-4 flex items-center justify-center">
           <Box
             sx={{
@@ -135,93 +170,14 @@ const LoginForm: React.FC = () => {
                 Sign in
               </Button>
             </Box>
-
-            <Typography sx={{ textAlign: 'center', mt: 2 }}>
-              Don’t have an account?{' '}
-              <a href="#" onClick={handleSignUpOpen} style={{ textDecoration: 'none', color: '#3f51b5' }}>
-                Sign up
-              </a>
-            </Typography>
           </Box>
         </section>
       </div>
 
-      {/* Forgot Password Dialog */}
       <ForgotPassword open={openForgotPassword} handleClose={() => setOpenForgotPassword(false)} />
-
-      {/* Sign Up Modal */}
-      <Dialog open={openSignUp} onClose={handleSignUpClose}>
-        <DialogTitle>Sign Up</DialogTitle>
-        <DialogContent>
-          
-            
-              
-              <Typography
-                component="h1"
-                variant="h4"
-                sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}
-              >
-                Sign up
-              </Typography>
-              <Box
-                component="form"
-                sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
-              >
-                <FormControl>
-                  <FormLabel htmlFor="name">Full name</FormLabel>
-                  <TextField
-                    autoComplete="name"
-                    name="name"
-                    required
-                    fullWidth
-                    id="name"
-                    placeholder="Jon Snow"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel htmlFor="email">Email</FormLabel>
-                  <TextField
-                    required
-                    fullWidth
-                    id="email"
-                    placeholder="your@email.com"
-                    name="email"
-                    autoComplete="email"
-                    variant="outlined"
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel htmlFor="password">Password</FormLabel>
-                  <TextField
-                    required
-                    fullWidth
-                    name="password"
-                    placeholder="••••••"
-                    type="password"
-                    id="password"
-                    autoComplete="new-password"
-                    variant="outlined"
-                  />
-                </FormControl>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                >
-                  Sign up
-                </Button>
-              </Box>
-            
-          
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSignUpClose} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
     </section>
   );
 };
 
 export default LoginForm;
+

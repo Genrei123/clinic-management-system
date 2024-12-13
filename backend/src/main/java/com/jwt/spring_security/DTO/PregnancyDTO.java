@@ -1,16 +1,29 @@
 package com.jwt.spring_security.DTO;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.antlr.v4.runtime.misc.NotNull;
+
 import java.util.Date;
 
 public class PregnancyDTO {
     private Integer gravida;
     private Integer para;
     private Integer term;
+    @JsonProperty("pre_term")
+    @NotNull// Ensure it’s not null
     private Integer preTerm; // Maps to `pre_term`
     private Integer abortion; // Nullable
     private Integer living; // Nullable
+
+    @JsonProperty("LMP")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date LMP; // Nullable
+    @JsonProperty("EDC")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date EDC; // Nullable
+    @JsonProperty("IT_date")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date ITDate; // Maps to `IT_date`
     private Date menarche; // Nullable
 

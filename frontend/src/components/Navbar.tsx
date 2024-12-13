@@ -5,13 +5,10 @@ import CalendarModal from "./modals/CalendarModal";
 import SettingsModal from "./modals/SettingsModal";
 import NotificationsModal from "./modals/NotificationsModal";
 import LogoutModal from "./modals/LogoutModal";
+import { searchPatients } from "../services/patientService";
+import Patient from "../types/Patient";
 
-interface Patient {
-  id: number;
-  name: string;
-  gender: string;
-  age: number;
-}
+// Removed local Patient interface as it is now imported from patientService
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -21,29 +18,36 @@ const Navbar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Sample patient data
-  const patients: Patient[] = [
-    { id: 1, name: "John Doe", gender: "Male", age: 30 },
-    { id: 2, name: "Jane Smith", gender: "Female", age: 25 },
-    { id: 3, name: "Alice Johnson", gender: "Female", age: 40 },
-    { id: 4, name: "Bob Brown", gender: "Male", age: 50 },
-  ];
+  const handleViewClick = (id: number) => {
+    navigate(`/patient/${id}`);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/");
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.trim() === "") {
       setFilteredPatients([]);
-    } else {
-      const results = patients.filter((patient) =>
-        patient.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredPatients(results);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await searchPatients(query);
+      setFilteredPatients(result);
+
+    } catch (err: any) {
+      console.error(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,16 +87,20 @@ const Navbar: React.FC = () => {
                 <ul className="divide-y divide-gray-200">
                   {filteredPatients.map((patient) => (
                     <li
-                      key={patient.id}
+                      key={patient.clientID}
                       className="py-3 flex justify-between items-center hover:bg-gray-50 transition duration-150 ease-in-out cursor-pointer"
                     >
                       <div>
-                        <span className="font-medium text-gray-800">{patient.name}</span>
+                        <span className="font-medium text-gray-800">{patient.lastName + " " + patient.givenName}</span>
                         <p className="text-sm text-gray-600">
-                          {patient.gender}, Age: {patient.age}
+                          {patient.sex}, Age: {patient.age}
                         </p>
                       </div>
-                      <span className="text-sm text-blue-600 font-medium">View</span>
+                      <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                        onClick={() => handleViewClick(patient.clientID)}
+                        >
+                          View
+                        </button>
                     </li>
                   ))}
                 </ul>

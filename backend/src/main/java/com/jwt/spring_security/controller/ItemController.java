@@ -37,13 +37,18 @@ public class ItemController {
     }
 
     @PostMapping("/addItem")
-    public ResponseEntity<Item> addItems(@RequestBody Item item) {
+    public ResponseEntity<Item> addItem(@RequestBody Item item) {
+        // If the frontend is sending just the branchID, use findByBranchID
         Branch branchExists = branchRepo.findByBranchID(item.getBranch().getBranchID());
+
         if (branchExists == null) {
             return ResponseEntity.badRequest().build(); // 400 Bad Request
         }
+
+        // Set the branch to the item
         item.setBranch(branchExists);
         Item savedItem = itemRepo.save(item);
+
         return ResponseEntity.ok(savedItem); // 200 OK
     }
 
@@ -53,15 +58,24 @@ public class ItemController {
         if (items.isEmpty()) {
             return ResponseEntity.badRequest().body(Collections.emptyList()); // 400 Bad Request
         }
-        Long branchId = items.get(0).getBranch().getBranchID();
-        Branch branch = branchRepo.findByBranchID(branchId);
-        if (branch == null) {
-            return ResponseEntity.badRequest().build(); // 400 Bad Request
+
+        // Validate each item's branchID
+        for (Item item : items) {
+            Branch branch = branchRepo.findByBranchID(item.getBranch().getBranchID());
+            if (branch == null) {
+                return ResponseEntity.badRequest().body(Collections.emptyList()); // 400 Bad Request if any branchID is invalid
+            }
+            item.setBranch(branch); // Set the valid branch for each item
         }
-        items.forEach(item -> item.setBranch(branch));
+
+        // Save all items
         List<Item> savedItems = itemRepo.saveAll(items);
+
+        // Return the saved items
         return ResponseEntity.ok(savedItems); // 200 OK
     }
+
+
 
 
 
@@ -71,20 +85,67 @@ public class ItemController {
         if (existingItem == null) {
             return ResponseEntity.notFound().build(); // 404 Not Found
         }
-        // Update properties
-        existingItem.setItemName(itemDetails.getItemName());
-        existingItem.setItemDescription(itemDetails.getItemDescription());
-        existingItem.setItemQuantity(itemDetails.getItemQuantity());
-        existingItem.setExpDate(itemDetails.getExpDate());
-        existingItem.setBranch(itemDetails.getBranch());
 
+        // Fetch the branch using the branchID
+        Branch branch = branchRepo.findByBranchID(itemDetails.getBranch().getBranchID());
+        if (branch == null) {
+            return ResponseEntity.badRequest().body(null); // 400 Bad Request if branch is not found
+        }
+
+        // Set the branch to the existing item
+        existingItem.setBranch(branch);
+
+        // Update the properties of the item
+        existingItem.setItemName(itemDetails.getItemName());
+        existingItem.setItemQuantity(itemDetails.getItemQuantity());
+        existingItem.setItemPrice(itemDetails.getItemPrice());
+        existingItem.setManufactureDate(itemDetails.getManufactureDate());
+        existingItem.setExpDate(itemDetails.getExpDate());
+        existingItem.setStatus(itemDetails.getStatus());
+
+        // Save and return the updated item
         Item updatedItem = itemRepo.save(existingItem);
         return ResponseEntity.ok(updatedItem); // 200 OK
     }
 
 
-    @DeleteMapping("/deleteItems/{id}")
-    public boolean deleteItems(@PathVariable Long id) {
-        return itemService.deleteByItemID(id);
+    @DeleteMapping("/deleteItems")
+    public ResponseEntity<?> deleteItems(@RequestBody List<Long> ids) {
+        itemService.deleteByItemIDs(ids);
+        return ResponseEntity.ok().body("Items deleted successfully");
     }
+
+    @PostMapping("/purchaseItems")
+    public ResponseEntity<?> purchaseItems(@RequestBody List<Item> purchasedItems) {
+        try {
+            for (Item purchasedItem : purchasedItems) {
+                // Fetch the existing item by ID
+                Item existingItem = itemRepo.findByItemID(purchasedItem.getItemID());
+                if (existingItem == null) {
+                    return ResponseEntity.badRequest().body("Item not found: " + purchasedItem.getItemID());
+                }
+
+                // Ensure itemQuantity is not null
+                Long existingQuantity = existingItem.getItemQuantity() != null ? existingItem.getItemQuantity() : 0;
+
+                // Check if enough stock is available
+                if (existingQuantity < purchasedItem.getItemQuantity()) {
+                    return ResponseEntity.badRequest().body("Insufficient stock for item: " + existingItem.getItemName());
+                }
+
+                // Deduct the purchased quantity from stock
+                existingItem.setItemQuantity(existingQuantity - purchasedItem.getItemQuantity());
+
+                // Save the updated item
+                itemRepo.save(existingItem);
+            }
+
+            return ResponseEntity.ok("Purchase recorded successfully, and stocks updated.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        }
+    }
+
+
+
 }

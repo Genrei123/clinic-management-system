@@ -3,6 +3,8 @@ package com.jwt.spring_security.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
+import java.util.Date;
+
 @Entity
 public class Consultation {
     @Id
@@ -14,7 +16,7 @@ public class Consultation {
     @JsonBackReference
     private Patient patient;
 
-    private String consultation_date;
+    private Date consultation_date;
     private Integer AOG;  // Changed to Integer
     private String BP;
     private Float weight; // Changed to Float
@@ -38,12 +40,28 @@ public class Consultation {
         this.patient = patient;
     }
 
-    public String getConsultation_date() {
+    public Date getConsultation_date() {
         return consultation_date;
     }
 
-    public void setConsultation_date(String consultation_date) {
+    public void setConsultation_date(Date consultation_date) {
         this.consultation_date = consultation_date;
+    }
+
+    public void setAOG(Integer AOG) {
+        this.AOG = AOG;
+    }
+
+    public void setWeight(Float weight) {
+        this.weight = weight;
+    }
+
+    public void setFH(Float FH) {
+        this.FH = FH;
+    }
+
+    public void setFHT(Float FHT) {
+        this.FHT = FHT;
     }
 
     public int getAOG() {

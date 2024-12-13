@@ -1,26 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import {
-  Home,
-  User,
-  Package,
-  Users,
-  FileText,
-  ChevronDown,
-  LogOut,
-  Settings,
-  Menu,
-  X,
-} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { Home, User, Package, Users, FileText, ChevronDown, LogOut, Settings, Menu, X } from 'lucide-react';
 import logo from "../assets/logo.svg";
 
-const Sidebar: React.FC = () => {
+function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { userRole } = useAuth();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
     navigate("/");
   };
 
@@ -35,11 +27,11 @@ const Sidebar: React.FC = () => {
   };
 
   const navItems = [
-    { path: "/home", label: "Home", icon: Home },
-    { path: "/patientrecords", label: "Patient", icon: User },
-    { path: "/inventory", label: "Inventory", icon: Package },
-    { path: "/employees", label: "Employees", icon: Users },
-    { path: "/reports", label: "Reports", icon: FileText },
+    { path: "/home", label: "Home", icon: Home, roles: ["owner", "employee"] },
+    { path: "/patientrecords", label: "Patient", icon: User, roles: ["owner", "employee"] },
+    { path: "/inventory", label: "Inventory", icon: Package, roles: ["owner"] },
+    { path: "/employees", label: "Employees", icon: Users, roles: ["owner", "employee"] },
+    { path: "/reports", label: "Reports", icon: FileText, roles: ["owner"] },
   ];
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -71,19 +63,21 @@ const Sidebar: React.FC = () => {
 
       {/* Navigation */}
       <nav className="flex-grow px-4 pb-4 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`${getLinkClassName(item.path)} ${
-              isCollapsed ? "justify-center" : ""
-            }`}
-            title={isCollapsed ? item.label : undefined} // Tooltip for collapsed icons
-          >
-            <item.icon className="h-6 w-6 flex-shrink-0" />
-            {!isCollapsed && <span>{item.label}</span>}
-          </Link>
-        ))}
+        {navItems
+          .filter((item) => item.roles.includes(userRole as "owner" | "employee"))
+          .map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`${getLinkClassName(item.path)} ${
+                isCollapsed ? "justify-center" : ""
+              }`}
+              title={isCollapsed ? item.label : undefined}
+            >
+              <item.icon className="h-6 w-6 flex-shrink-0" />
+              {!isCollapsed && <span>{item.label}</span>}
+            </Link>
+          ))}
 
         {/* Account Section */}
         {isCollapsed ? (
@@ -98,8 +92,7 @@ const Sidebar: React.FC = () => {
           <details className="group [&_summary::-webkit-details-marker]:hidden">
             <summary
               className={`flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium ${
-                isActiveLink("/account/details") ||
-                isActiveLink("/account/security")
+                isActiveLink("/account/details") || isActiveLink("/account/security")
                   ? "bg-blue-100 text-blue-700"
                   : "text-gray-700 hover:bg-gray-100 hover:text-blue-600"
               }`}
@@ -123,6 +116,12 @@ const Sidebar: React.FC = () => {
               >
                 Security
               </Link>
+              <Link
+                to="/account/branch"
+                className={getLinkClassName("/account/branch")}
+              >
+                Branch
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
@@ -138,9 +137,7 @@ const Sidebar: React.FC = () => {
       {/* Footer */}
       <div className="sticky inset-x-0 bottom-0 border-t border-gray-100 bg-white p-4">
         <div
-          className={`flex items-center gap-4 ${
-            isCollapsed ? "justify-center" : ""
-          }`}
+          className={`flex items-center gap-4 ${isCollapsed ? "justify-center" : ""}`}
         >
           <img
             alt="User avatar"
@@ -161,6 +158,7 @@ const Sidebar: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Sidebar;
+
