@@ -115,4 +115,37 @@ public class ItemController {
         return ResponseEntity.ok().body("Items deleted successfully");
     }
 
+    @PostMapping("/purchaseItems")
+    public ResponseEntity<?> purchaseItems(@RequestBody List<Item> purchasedItems) {
+        try {
+            for (Item purchasedItem : purchasedItems) {
+                // Fetch the existing item by ID
+                Item existingItem = itemRepo.findByItemID(purchasedItem.getItemID());
+                if (existingItem == null) {
+                    return ResponseEntity.badRequest().body("Item not found: " + purchasedItem.getItemID());
+                }
+
+                // Ensure itemQuantity is not null
+                Long existingQuantity = existingItem.getItemQuantity() != null ? existingItem.getItemQuantity() : 0;
+
+                // Check if enough stock is available
+                if (existingQuantity < purchasedItem.getItemQuantity()) {
+                    return ResponseEntity.badRequest().body("Insufficient stock for item: " + existingItem.getItemName());
+                }
+
+                // Deduct the purchased quantity from stock
+                existingItem.setItemQuantity(existingQuantity - purchasedItem.getItemQuantity());
+
+                // Save the updated item
+                itemRepo.save(existingItem);
+            }
+
+            return ResponseEntity.ok("Purchase recorded successfully, and stocks updated.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        }
+    }
+
+
+
 }
