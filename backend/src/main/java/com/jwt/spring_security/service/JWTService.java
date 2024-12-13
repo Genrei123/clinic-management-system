@@ -36,7 +36,8 @@ public class JWTService {
 
     public String generateToken(String username, String roles) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", roles); // Add roles as a custom claim
+        claims.put("role", roles); // Add roles as a custom claim
+        claims.put("username", username);
 
         return Jwts.builder()
                 .setClaims(claims) // Set claims

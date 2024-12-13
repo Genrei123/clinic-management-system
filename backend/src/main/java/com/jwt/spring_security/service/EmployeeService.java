@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeService {
@@ -29,6 +30,10 @@ public class EmployeeService {
 
     public Employee findByEmployeeID(int employeeID) {
         return employeeRepo.findByEmployeeID(employeeID);
+    }
+
+    public Optional<Employee> findByID(Long id) {
+        return employeeRepo.findById(id);
     }
 
     public boolean existsByEmployeeID(int employeeID) {

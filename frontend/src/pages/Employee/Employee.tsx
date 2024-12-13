@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from 'axios';
+import axios from "axios";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
-import ArchiveEmployee from './archive-employee';
-import { Camera, Upload, UserCheck, Calendar, Clock, Plus, Edit } from 'lucide-react';
-
+import ArchiveEmployee from "./archive-employee";
+import {
+  Camera,
+  Upload,
+  UserCheck,
+  Calendar,
+  Clock,
+  Plus,
+  Edit,
+} from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 
 interface Visit {
   visitDate: string;
@@ -18,9 +26,13 @@ interface Employee {
   birthdate: string;
   visitHistory: Visit[];
 }
+interface JwtPayload {
+  sub: string; // User ID
+  role: string; // User role
+}
 
 const Employee: React.FC = () => {
-  const { id } = useParams<{ id: string }>();  // Ensure the 'id' is defined
+  const { id } = useParams<{ id: string }>(); // Ensure the 'id' is defined
 
   const navigate = useNavigate();
   const [employeeImage, setEmployeeImage] = useState<string | null>(null);
@@ -28,57 +40,82 @@ const Employee: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
-  const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
+  const [showEmployeeTracker, setShowEmployeeTracker] =
+    useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  const fetchEmployee = async () => {
+  const fetchEmployee = async (token: string) => {
     try {
-        const response = await axios.get(`/employees/${id}`);
-        console.log('Response data:', response.data);  // Log the full response to inspect the structure
-        setEmployee(response.data);  // Ensure response.data is valid
-    } catch (error) {
-        if (axios.isAxiosError(error)) {
-            console.error("Axios Error:", error.response?.data);
-            setError(`Error: ${error.response?.data?.message || 'Unknown error'}`);
-        } else {
-            console.error("Unexpected Error:", error);
-            setError("Unexpected error occurred");
+      // Decode the token to get the role
+      const decoded: JwtPayload = jwtDecode(token);
+
+      if (decoded.role === "ROLE_OWNER" || decoded.role === "ROLE_EMPLOYEE") {
+        // Fetch employee data
+        const response = await axios.get(`/employees/${decoded.sub}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        setEmployee(response.data); // Ensure response.data is valid
+
+        // Adjust UI or perform actions based on role
+        if (decoded.role === "ROLE_OWNER") {
+          console.log("Role: OWNER - Display admin-specific data or actions.");
+          // Additional logic for ROLE_OWNER
+        } else if (decoded.role === "ROLE_EMPLOYEE") {
+          console.log(
+            "Role: EMPLOYEE - Display employee-specific data or actions."
+          );
+          // Additional logic for ROLE_EMPLOYEE
         }
+      } else {
+        setError(
+          "You do not have the necessary permissions to view this data."
+        );
+        console.error("Invalid role:", decoded.role);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios Error:", error.response?.data);
+        setError(`Error: ${error.response?.data?.message || "Unknown error"}`);
+      } else {
+        console.error("Unexpected Error:", error);
+        setError("Unexpected error occurred");
+      }
     } finally {
-        setLoading(false);
-    }
-};
-
-  
-  
-
-  useEffect(() => {
-    console.log("Employee ID from URL:", id); // Log to see the value of id
-    if (id) {
-      fetchEmployee();
-    } else {
-      console.log("Invalid employee ID", id); // Log if the ID is invalid
-      setError("Invalid employee ID");
       setLoading(false);
     }
+  };
+
+  // Updated useEffect to pass the token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You are not logged in.");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Employee ID from URL:", id); // Log to see the value of id
+    fetchEmployee(token);
   }, [id]);
-  
 
   const handleImageUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
         const formData = new FormData();
-        formData.append('image', file);
-  
+        formData.append("image", file);
+
         try {
           await axios.post(`/employees/${id}/upload-image`, formData, {
             headers: {
-              'Content-Type': 'multipart/form-data',
+              "Content-Type": "multipart/form-data",
             },
           });
-          fetchEmployee();
+          fetchEmployee(localStorage.getItem("token") || "");
           setEmployeeImage(URL.createObjectURL(file));
         } catch (error) {
           console.error("Error uploading image:", error);
@@ -96,27 +133,27 @@ const Employee: React.FC = () => {
         visitHistory: employee?.visitHistory || [], // Add visitHistory (empty array if not available)
       };
       await axios.put(`/employees/${id}`, updatedEmployee);
-      fetchEmployee();
+      fetchEmployee(localStorage.getItem("token") || "");
     } catch (error) {
       console.error("Error updating employee:", error);
     }
   };
-  
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!employee) return; // If no employee data is loaded, don't proceed
-  
+
     const updatedData: Employee = {
       id: employee.id, // Ensure that the id is included
-      name: (e.target as HTMLFormElement)['first-name'].value,
-      birthdate: `${(e.target as HTMLFormElement)['birth-year'].value}-${(e.target as HTMLFormElement)['birth-month'].value}-${(e.target as HTMLFormElement)['birth-day'].value}`,
+      name: (e.target as HTMLFormElement)["first-name"].value,
+      birthdate: `${(e.target as HTMLFormElement)["birth-year"].value}-${
+        (e.target as HTMLFormElement)["birth-month"].value
+      }-${(e.target as HTMLFormElement)["birth-day"].value}`,
       visitHistory: employee.visitHistory || [], // Ensure visitHistory is included
     };
-  
+
     handleUpdateEmployee(updatedData);
   };
-  
 
   const handleCheckInClick = () => {
     setShowTimeLog(true);
@@ -152,7 +189,6 @@ const Employee: React.FC = () => {
   if (error) {
     return <div className="text-red-500">{error}</div>; // Display the error message
   }
-  
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -163,12 +199,17 @@ const Employee: React.FC = () => {
           <div className="container mx-auto px-6 py-8">
             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-                <h2 className="text-3xl font-bold">{employee?.name || "Unknown Employee"}'s Profile</h2>
-                <p className="mt-2 text-blue-100">Employee ID: {employee?.id}</p>
+                <h2 className="text-3xl font-bold">
+                  {employee?.name || "Unknown Employee"}'s Profile
+                </h2>
+                <p className="mt-2 text-blue-100">
+                  Employee ID: {employee?.id}
+                </p>
 
                 <div className="bg-gray-50 p-4 rounded-lg shadow">
                   <p className="flex items-center text-gray-700">
-                    <span className="font-semibold mr-2">Birthdate:</span> {employee?.birthdate}
+                    <span className="font-semibold mr-2">Birthdate:</span>{" "}
+                    {employee?.birthdate}
                   </p>
                 </div>
               </div>
@@ -206,11 +247,17 @@ const Employee: React.FC = () => {
                   <div className="bg-gray-50 p-4 rounded-lg shadow">
                     <p className="flex items-center text-gray-700">
                       <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Employee ID:</span> {employee?.id}
+                      <span className="font-semibold mr-2">
+                        Employee ID:
+                      </span>{" "}
+                      {employee?.id}
                     </p>
                     <p className="flex items-center text-gray-700">
                       <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Birthdate:</span> {employee?.birthdate}
+                      <span className="font-semibold mr-2">
+                        Birthdate:
+                      </span>{" "}
+                      {employee?.birthdate}
                     </p>
                   </div>
                 </div>
@@ -248,8 +295,10 @@ const Employee: React.FC = () => {
                         <Edit className="w-5 h-5 mr-2" />
                         Edit Employee
                       </button>
-                      <ArchiveEmployee employeeId={id || ''} employeeName={employee!.name} />
-
+                      <ArchiveEmployee
+                        employeeId={id || ""}
+                        employeeName={employee!.name}
+                      />
                     </div>
                   </div>
                 </div>
@@ -258,13 +307,19 @@ const Employee: React.FC = () => {
               <div className="p-6 border-t border-gray-200">
                 {showEmployeeTracker && (
                   <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
+                    <h3 className="text-xl font-semibold mb-4">
+                      Employee Tracker
+                    </h3>
                     <div className="rounded-md border">
                       <table className="min-w-full">
                         <thead>
                           <tr>
-                            <th className="w-[150px] font-medium">Date of Edit</th>
-                            <th className="w-[150px] font-medium">File Record</th>
+                            <th className="w-[150px] font-medium">
+                              Date of Edit
+                            </th>
+                            <th className="w-[150px] font-medium">
+                              File Record
+                            </th>
                             <th className="w-[200px] font-medium">Patient</th>
                             <th className="w-[100px] font-medium">Actions</th>
                           </tr>
@@ -293,7 +348,9 @@ const Employee: React.FC = () => {
 
                 {showTimeLog && (
                   <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Check-ins</h3>
+                    <h3 className="text-xl font-semibold mb-4">
+                      Employee Check-ins
+                    </h3>
                     <div className="rounded-md border">
                       <table className="min-w-full">
                         <thead>
@@ -331,28 +388,37 @@ const Employee: React.FC = () => {
               onSubmit={(e) => {
                 e.preventDefault();
                 const updatedData: Employee = {
-                  name: (e.target as HTMLFormElement)['first-name'].value + ' ' + (e.target as HTMLFormElement)['last-name'].value,
-                  birthdate: `${(e.target as HTMLFormElement)['birth-year'].value}-${(e.target as HTMLFormElement)['birth-month'].value}-${(e.target as HTMLFormElement)['birth-day'].value}`,
-                  id: employee?.id || '', // Ensure id is passed
+                  name:
+                    (e.target as HTMLFormElement)["first-name"].value +
+                    " " +
+                    (e.target as HTMLFormElement)["last-name"].value,
+                  birthdate: `${
+                    (e.target as HTMLFormElement)["birth-year"].value
+                  }-${(e.target as HTMLFormElement)["birth-month"].value}-${
+                    (e.target as HTMLFormElement)["birth-day"].value
+                  }`,
+                  id: employee?.id || "", // Ensure id is passed
                   visitHistory: employee?.visitHistory || [], // Empty array if no visitHistory
                 };
                 handleUpdateEmployee(updatedData);
               }}
-              
             >
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col">
-                  <label htmlFor="first-name" className="text-sm font-medium">First Name</label>
+                  <label htmlFor="first-name" className="text-sm font-medium">
+                    First Name
+                  </label>
                   <input
-  type="text"
-  id="first-name"
-  className="border-2 rounded-md p-2"
-  defaultValue={employee?.name || ""}  // Fallback to an empty string if employee is not loaded
-/>
-
+                    type="text"
+                    id="first-name"
+                    className="border-2 rounded-md p-2"
+                    defaultValue={employee?.name || ""} // Fallback to an empty string if employee is not loaded
+                  />
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="last-name" className="text-sm font-medium">Last Name</label>
+                  <label htmlFor="last-name" className="text-sm font-medium">
+                    Last Name
+                  </label>
                   <input
                     type="text"
                     id="last-name"
@@ -363,42 +429,50 @@ const Employee: React.FC = () => {
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="email" className="text-sm font-medium">Email Address</label>
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   id="email"
                   className="border-2 rounded-md p-2"
-                  defaultValue={employee?.name} 
+                  defaultValue={employee?.name}
                 />
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="birth-year" className="text-sm font-medium">Birth Year</label>
+                <label htmlFor="birth-year" className="text-sm font-medium">
+                  Birth Year
+                </label>
                 <input
                   type="text"
                   id="birth-year"
                   className="border-2 rounded-md p-2"
-                  defaultValue={employee?.birthdate?.split('-')[0]} 
-                />
-              </div>
-              
-              <div className="flex flex-col">
-                <label htmlFor="birth-month" className="text-sm font-medium">Birth Month</label>
-                <input
-                  type="text"
-                  id="birth-month"
-                  className="border-2 rounded-md p-2"
-                  defaultValue={employee?.birthdate?.split('-')[1]} 
+                  defaultValue={employee?.birthdate?.split("-")[0]}
                 />
               </div>
 
               <div className="flex flex-col">
-                <label htmlFor="birth-day" className="text-sm font-medium">Birth Day</label>
+                <label htmlFor="birth-month" className="text-sm font-medium">
+                  Birth Month
+                </label>
+                <input
+                  type="text"
+                  id="birth-month"
+                  className="border-2 rounded-md p-2"
+                  defaultValue={employee?.birthdate?.split("-")[1]}
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label htmlFor="birth-day" className="text-sm font-medium">
+                  Birth Day
+                </label>
                 <input
                   type="text"
                   id="birth-day"
                   className="border-2 rounded-md p-2"
-                  defaultValue={employee?.birthdate?.split('-')[2]} 
+                  defaultValue={employee?.birthdate?.split("-")[2]}
                 />
               </div>
 

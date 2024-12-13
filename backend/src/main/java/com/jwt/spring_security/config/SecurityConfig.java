@@ -38,7 +38,7 @@ public class SecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/register").permitAll()
-                        .requestMatchers("/home", "/getPatient").hasAnyAuthority("employee", "owner") // Using hasAuthority instead of hasRole
+                        .requestMatchers("/home", "/getPatient", "/employees/me").hasAnyAuthority("employee", "owner") // Using hasAuthority instead of hasRole
                         .requestMatchers("/inventory", "/employees", "/reports").hasAuthority("owner") // Using hasAuthority instead of hasRole
                         .anyRequest().authenticated()
                 )
