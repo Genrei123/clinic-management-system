@@ -16,10 +16,6 @@ const LoginForm: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [openForgotPassword, setOpenForgotPassword] = useState(false);
 
-  
-  
-  
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   

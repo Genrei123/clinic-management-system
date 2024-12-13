@@ -58,6 +58,7 @@ const Patient: React.FC = () => {
   const [step, setStep] = useState<"create">();
 
   useEffect(() => {
+    
     const fetchPatientData = async () => {
       try {
         const patientInfo = await getPatientById(Number(id));
@@ -102,9 +103,12 @@ const Patient: React.FC = () => {
           files: [],
         });
       }
+
+
     };
 
     fetchPatientData();
+
   }, [id]);
 
   const handleImageUpload = useCallback(
@@ -142,7 +146,7 @@ const Patient: React.FC = () => {
       alert("Please select a form to generate.");
       return;
     }
-    navigate(`/generate-pdf?form=${selectedForm}&patientId=${patient.id}`);
+    navigate(`/generate-pdf?form=${selectedForm}&patientId=${patientInfo.clientID}`);
   }, [selectedForm, navigate, patient.id]);
 
   const handleDeleteLogs = () => {

@@ -11,6 +11,11 @@ const axiosInstance = axios.create({
 // Interceptor to dynamically add the token to headers before each request
 axiosInstance.interceptors.request.use((config) => {
   const storedToken = localStorage.getItem("token"); // Fetch the token dynamically
+  
+  if (!storedToken) {
+      console.warn("No token found in localStorage.");
+  }
+
   if (storedToken) {
     config.headers.Authorization = `Bearer ${storedToken}`;
   }

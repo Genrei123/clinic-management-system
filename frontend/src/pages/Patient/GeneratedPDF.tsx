@@ -113,7 +113,7 @@ const GeneratePDF: React.FC = () => {
   };
 
   const handleGoBack = () => {
-    navigate("/patientrecords");
+    navigate(-1);
   };
 
   return (
