@@ -13,6 +13,13 @@ import {
   Tabs,
   Tab,
 } from "@mui/material";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+import image1 from "../../assets/1.png";
+import image2 from "../../assets/2.png";
+import image3 from "../../assets/3.png";
+
 
 const NavButton: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Button
@@ -133,6 +140,23 @@ const LandingPage: React.FC = () => {
     { title: "Locations", content: "Find us in multiple locations across the city for your convenience." },
   ];
 
+  const carouselImages = [
+    image1,
+    image2,
+    image3
+  ];
+
+  const sliderSettings = {
+    autoplay: true,
+    autoplaySpeed: 4000,
+    infinite: true,
+    speed: 1000,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false,
+    fade: true as const,
+  };
+
   return (
     <Box sx={{ backgroundColor: "#0A1929", color: "#FFFFFF", minHeight: "100vh" }}>
       <AppBar position="sticky" sx={{ backgroundColor: "#0A1929", boxShadow: 3 }}>
@@ -159,31 +183,69 @@ const LandingPage: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      <Container sx={{ textAlign: "center", py: 8 }}>
-        <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-          Welcome to <Box component="span" sx={{ color: "#2196F3" }}>Our Clinic</Box>
-        </Typography>
-        <Typography variant="h6" sx={{ mb: 4, maxWidth: "800px", mx: "auto" }}>
-          Providing cutting-edge healthcare solutions tailored to your needs.
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "#2196F3",
-            color: "#FFFFFF",
-            py: 1.5,
-            px: 4,
-            fontSize: "1.1rem",
-            '&:hover': { backgroundColor: '#1976D2' },
-            textTransform: 'none',
-          }}
-          href="https://facebook.com/clinicpage"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Contact Us on Facebook
-        </Button>
-      </Container>
+      {/* Hero Section with Carousel */}
+      <Box sx={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+        <Slider {...sliderSettings}>
+          {carouselImages.map((imgSrc, index) => (
+            <Box
+              key={index}
+              sx={{
+                backgroundImage: `url(${imgSrc})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                height: "100vh",
+                width: "100%"
+              }}
+            >
+              {/* Overlay for better text visibility */}
+              <Box sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.5)"
+              }} />
+
+              {/* Hero Content */}
+              <Container sx={{ 
+                textAlign: "center", 
+                height: "100%", 
+                display: "flex", 
+                flexDirection: "column", 
+                justifyContent: "center",
+                position: "relative",
+                zIndex: 1
+              }}>
+                <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: "#FFFFFF" }}>
+                  Welcome to <Box component="span" sx={{ color: "#2196F3" }}>Our Clinic</Box>
+                </Typography>
+                <Typography variant="h6" sx={{ mb: 4, maxWidth: "800px", mx: "auto", color: "#FFFFFF" }}>
+                  Providing cutting-edge healthcare solutions tailored to your needs.
+                </Typography>
+                <Button
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "#2196F3",
+                    color: "#FFFFFF",
+                    py: 1.5,
+                    px: 4,
+                    fontSize: "1.1rem",
+                    '&:hover': { backgroundColor: '#1976D2' },
+                    textTransform: 'none',
+                    alignSelf: "center"
+                  }}
+                  href="https://facebook.com/clinicpage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Contact Us on Facebook
+                </Button>
+              </Container>
+            </Box>
+          ))}
+        </Slider>
+      </Box>
 
       <Container sx={{ py: 6 }}>
         <Grid container spacing={4}>
@@ -235,3 +297,4 @@ const LandingPage: React.FC = () => {
 };
 
 export default LandingPage;
+
