@@ -3,7 +3,6 @@ import { X, Trash } from "lucide-react";
 import axiosInstance from "../../config/axiosConfig";
 import inventoryService from "../../services/inventoryService";
 
-
 interface RenderService {
   serviceName: string;
   price: number;
@@ -23,19 +22,12 @@ interface RenderServicesModalProps {
   };
 }
 
-// Mock Data
-const mockServices = [
-  { serviceName: "Blood Test", price: 50, description: "General blood analysis." },
-  { serviceName: "X-Ray", price: 100, description: "Chest X-Ray imaging." },
-  { serviceName: "ECG", price: 80, description: "Heart monitoring and analysis." },
-];
-
-
 const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   isOpen,
   onClose,
   patient,
 }) => {
+  const [services, setServices] = useState<RenderService[]>([]);
   const [selectedServices, setSelectedServices] = useState<RenderService[]>([]);
   const [selectedMedicines, setSelectedMedicines] = useState<SelectedMedicine[]>([]);
   const [serviceSearch, setServiceSearch] = useState("");
@@ -44,21 +36,35 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   const [medicineSuggestions, setMedicineSuggestions] = useState<RenderService[]>([]);
   const [medicines, setMedicines] = useState<RenderService[]>([]);
 
+  // Fetch services from the database
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await axiosInstance.get("/service/getServices");
+        const formattedServices = response.data.map((service: any) => ({
+          serviceName: service.service_name,
+          price: service.service_price,
+          description: service.service_description,
+        }));
+        setServices(formattedServices);
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
   useEffect(() => {
     const fetchMedicines = async () => {
       try {
         const medicineData = await inventoryService.getItems();
-        console.log("Raw API response:", medicineData); // Ensure `itemID` is present in the response
-  
         const formattedMedicineData = medicineData.map((item) => ({
-          itemID: item.itemID, // Ensure `itemID` is mapped correctly
           serviceName: item.item_name,
           price: item.item_price,
-          quantity: item.item_quantity ?? 0, // Map `item_quantity` explicitly and default to 0 if null
-          description: `Quantity: ${item.item_quantity ?? 0}, Exp: ${item.exp_date}`, // Retain for display purposes
+          quantity: item.item_quantity ?? 0,
+          description: `Quantity: ${item.item_quantity ?? 0}, Exp: ${item.exp_date}`,
         }));
-  
-        console.log("Formatted Medicines:", formattedMedicineData); // Debug formatted data
         setMedicines(formattedMedicineData);
       } catch (error) {
         console.error("Error fetching medicines:", error);
@@ -66,12 +72,9 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
     };
     fetchMedicines();
   }, []);
-  
 
-
-  // Simulate fetching suggestions
   const fetchServiceSuggestions = (query: string) => {
-    const results = mockServices.filter((service) =>
+    const results = services.filter((service) =>
       service.serviceName.toLowerCase().includes(query.toLowerCase())
     );
     setServiceSuggestions(results);
@@ -141,52 +144,16 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
 
   const handleSubmit = async () => {
     try {
-      // Prepare purchase payload
-      const purchases = selectedMedicines.map((selectedMedicine) => {
-        const originalMedicine = medicines.find(
-          (medicine) => medicine.serviceName === selectedMedicine.serviceName
-        );
-  
-        if (!originalMedicine) {
-          throw new Error(`Medicine not found: ${selectedMedicine.serviceName}`);
-        }
-  
-        // Check stock availability
-        if (selectedMedicine.quantity > originalMedicine.quantity) {
-          throw new Error(
-            `Not enough stock for ${selectedMedicine.serviceName}. Available: ${originalMedicine.quantity}, Requested: ${selectedMedicine.quantity}`
-          );
-        }
-  
-        return {
-          itemID: originalMedicine.itemID, // Backend requires the `itemID`
-          itemQuantity: selectedMedicine.quantity, // Quantity purchased
-        };
-      });
-  
-      console.log("Purchase Payload:", purchases); // Debug the payload
-  
-      // Send purchase data to backend
-      const response = await axiosInstance.post("/purchaseItems", purchases);
-      alert(response.data); // Inform the staff about success
-  
-      // Refresh medicines list
-      const updatedMedicines = await inventoryService.getItems();
-      setMedicines(updatedMedicines);
-  
-      // Clear the cart and close the modal
-      setSelectedMedicines([]);
-      setSelectedServices([]);
+      console.log("Selected Services:", selectedServices);
+      console.log("Selected Medicines:", selectedMedicines);
+      alert("Services and medicines selected successfully!");
       onClose();
-    } catch (error: any) {
-      console.error("Error submitting purchase:", error);
-      alert(`Error: ${error.message}`);
+    } catch (error) {
+      console.error("Error submitting data:", error);
+      alert("An error occurred while submitting the data.");
     }
   };
-  
-  
-  
-  
+
   if (!isOpen) return null;
 
   return (

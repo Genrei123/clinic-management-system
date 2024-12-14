@@ -122,6 +122,13 @@ function Sidebar() {
               >
                 Branch
               </Link>
+
+              <Link
+                to="/account/services"
+                className={getLinkClassName("/account/services")}
+              >
+                Services
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
