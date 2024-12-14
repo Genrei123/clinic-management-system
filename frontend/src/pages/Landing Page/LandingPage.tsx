@@ -16,9 +16,9 @@ import {
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
-import image1 from "../../assets/1.png";
-import image2 from "../../assets/2.png";
-import image3 from "../../assets/3.png";
+import image1 from "../../assets/image1.png";
+import image2 from "../../assets/image2.png";
+import image3 from "../../assets/image3.png";
 
 
 const NavButton: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -135,9 +135,8 @@ const LandingPage: React.FC = () => {
   ];
 
   const infoBoxes = [
-    { title: "Our Mission", content: "To provide high-quality, accessible healthcare services to the community." },
-    { title: "Our Vision", content: "To become the leading clinic, recognized for innovative and compassionate care." },
-    { title: "Locations", content: "Find us in multiple locations across the city for your convenience." },
+    { title: "Our Mission", content: "Dedicated in rendering quality healthcare services, establishing cooperative relationships with healthcare professionals and promotion of wellness through health and awareness in enriching the quality of life in the community." },
+    { title: "Our Vision", content: "Envisions a partnership between healthcare providers and community dedicated to achieving excellence in health services and outcomes." },
   ];
 
   const carouselImages = [
@@ -148,7 +147,7 @@ const LandingPage: React.FC = () => {
 
   const sliderSettings = {
     autoplay: true,
-    autoplaySpeed: 4000,
+    autoplaySpeed: 3000,
     infinite: true,
     speed: 1000,
     slidesToShow: 1,
@@ -235,7 +234,7 @@ const LandingPage: React.FC = () => {
                     textTransform: 'none',
                     alignSelf: "center"
                   }}
-                  href="https://facebook.com/clinicpage"
+                  href="https://web.facebook.com/profile.php?id=100083275475984"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -290,11 +289,10 @@ const LandingPage: React.FC = () => {
       </Container>
 
       <Box sx={{ backgroundColor: "#102A43", py: 3, textAlign: "center" }}>
-        <Typography variant="body2">&copy; 2024 ClinicName. All rights reserved.</Typography>
+        <Typography variant="body2">2024 &copy; JIMIRENE Diagnostic and Midwifery Clinic. All rights reserved.</Typography>
       </Box>
     </Box>
   );
 };
 
 export default LandingPage;
-
