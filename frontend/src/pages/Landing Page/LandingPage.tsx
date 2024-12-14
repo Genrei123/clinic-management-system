@@ -217,7 +217,7 @@ const LandingPage: React.FC = () => {
                 zIndex: 1
               }}>
                 <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: "#FFFFFF" }}>
-                  Welcome to <Box component="span" sx={{ color: "#2196F3" }}>Our Clinic</Box>
+                  Welcome to <Box component="span" sx={{ color: "#2196F3" }}>JIMIRENE Maternity Clinic</Box>
                 </Typography>
                 <Typography variant="h6" sx={{ mb: 4, maxWidth: "800px", mx: "auto", color: "#FFFFFF" }}>
                   Providing cutting-edge healthcare solutions tailored to your needs.
