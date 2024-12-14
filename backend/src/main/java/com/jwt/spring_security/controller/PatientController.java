@@ -53,9 +53,9 @@ public class PatientController {
     }
 
     @PostMapping("/addPatient")
-    public ResponseEntity<Long> addPatient(@RequestBody PatientDTO patientDTO) {
+    public ResponseEntity<Patient> addPatient(@RequestBody PatientDTO patientDTO) {
         Long clientID = patientService.addPatient(patientDTO);
-        return ResponseEntity.ok(clientID);
+        return ResponseEntity.ok(patientRepo.findById(clientID).get());
     }
 
     @GetMapping("/getPatient")

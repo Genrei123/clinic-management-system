@@ -9,6 +9,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import Patient from "../../types/Patient";
 import { createEmptyPatient } from "../../utils/Patient";
 import { getPatientLogs } from "../../services/visitService";
+import ScanQRCodeModal from "./ScanQRCodeModal";
+
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -17,27 +19,29 @@ const Home: React.FC = () => {
   const [fullscreenTable, setFullscreenTable] = useState<
     "services" | "patients" | null
   >(null);
-  const [patients, setPatients] = useState<any[]>([]); // State for patients
-  const [loading, setLoading] = useState<boolean>(true); // State for loading
+  const [patients, setPatients] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]); // State for services
+  const [loadingPatients, setLoadingPatients] = useState<boolean>(true);
+  const [loadingServices, setLoadingServices] = useState<boolean>(true);
   const [token, setToken] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isQRCodeModalOpen, setQRCodeModalOpen] = useState(false);
 
-  // Fetch patients from the backend
+  // Fetch patients and services from the backend
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedRole = localStorage.getItem("userRole");
     const storedName = localStorage.getItem("username");
-  
+
     if (storedToken) {
       setToken(storedName);
     }
-  
+
     if (!storedToken || !storedRole) {
-      // If no token or role, redirect to login
       navigate("/login");
       return;
     }
-  
+
     const fetchPatients = async () => {
       try {
         const response = await axios.get("http://localhost:8080/getPatient", {
@@ -46,34 +50,38 @@ const Home: React.FC = () => {
             Authorization: `Bearer ${storedToken}`,
           },
         });
-
-        console.log(response.data);
-  
         setPatients(response.data);
       } catch (error) {
         console.error("Error fetching patients:", error);
       } finally {
-        setLoading(false);
+        setLoadingPatients(false);
       }
     };
 
-    const fetchPatientLogs = async () => { 
+    const fetchServices = async () => {
       try {
-        patients.forEach(async (patient) => {
-          const logs = await getPatientLogs(patient.clientID);
-          console.log("tesT: " + logs);
+        const response = await axios.get("http://localhost:8080/service/getServices", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${storedToken}`,
+          },
         });
-        
+        const formattedServices = response.data.map((service: any) => ({
+          name: service.service_name,
+          branch: service.branch || "Main Branch", // Assume default branch if not provided
+          price: service.service_price,
+        }));
+        setServices(formattedServices);
       } catch (error) {
-        console.error("Error fetching patient logs:", error);
+        console.error("Error fetching services:", error);
+      } finally {
+        setLoadingServices(false);
       }
-    }
+    };
 
-    fetchPatientLogs();
-  
     fetchPatients();
+    fetchServices();
   }, [navigate]);
-  
 
   const toggleFullscreen = (table: "services" | "patients") => {
     setFullscreenTable(fullscreenTable === table ? null : table);
@@ -81,6 +89,13 @@ const Home: React.FC = () => {
 
   const handleViewClick = (id: number) => {
     navigate(`/patient/${id}`);
+  };
+
+  const handleScanResult = (result: string) => {
+    setQRCodeModalOpen(false);
+    alert(`Scanned QR Code: ${result}`);
+    navigate(`/patient/${result}`);
+    // Additional logic can be added here for processing the scanned QR code
   };
 
   const renderTable = (tableType: "services" | "patients") => {
@@ -121,7 +136,7 @@ const Home: React.FC = () => {
                 <tr className="bg-gray-50 text-gray-600 uppercase leading-normal">
                   {tableType === "services" ? (
                     <>
-                      <th className="py-3 px-6 text-left">Service Offers</th>
+                      <th className="py-3 px-6 text-left">Service Name</th>
                       <th className="py-3 px-6 text-left">Branch</th>
                       <th className="py-3 px-6 text-right">Price</th>
                     </>
@@ -138,9 +153,31 @@ const Home: React.FC = () => {
               </thead>
               <tbody className="text-gray-600 font-light">
                 {tableType === "services" ? (
-                  // Hardcoded data for services table
-                  <>{/* Add your services rows here */}</>
-                ) : loading ? (
+                  loadingServices ? (
+                    <tr>
+                      <td colSpan={3} className="text-center py-4">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : services.length > 0 ? (
+                    services.map((service, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-6 text-left">{service.name}</td>
+                        <td className="py-3 px-6 text-left">{service.branch}</td>
+                        <td className="py-3 px-6 text-right">${service.price}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="text-center py-4">
+                        No services available.
+                      </td>
+                    </tr>
+                  )
+                ) : loadingPatients ? (
                   <tr>
                     <td colSpan={5} className="text-center py-4">
                       Loading...
@@ -163,8 +200,9 @@ const Home: React.FC = () => {
                         {patient.sex === "M" ? "Male" : "Female"}
                       </td>
                       <td className="py-3 px-6 text-center">
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                        onClick={() => handleViewClick(patient.clientID)}
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                          onClick={() => handleViewClick(patient.clientID)}
                         >
                           View
                         </button>
@@ -197,7 +235,9 @@ const Home: React.FC = () => {
               Welcome, {token} !
             </h1>
             <div className="flex justify-end space-x-4 mb-8">
-              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
+              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
+                onClick={() => setQRCodeModalOpen(true)}
+              >
                 Scan QR Code
               </button>
               <button
@@ -218,6 +258,12 @@ const Home: React.FC = () => {
         isOpen={isModalOpen}
         onClose={closeModal}
         formData={formData}
+      />
+
+      <ScanQRCodeModal
+        isOpen={isQRCodeModalOpen}
+        onClose={() => setQRCodeModalOpen(false)}
+        onScanResult={handleScanResult}
       />
     </div>
   );

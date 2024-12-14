@@ -27,6 +27,13 @@ public class UsersService {
 
     private BCryptPasswordEncoder passwordEncoder; // Injected BCryptPasswordEncoder
 
+    // get all users
+    public Iterable<Users> getAllUsers() {
+        return userRepo.findAll();
+    }
+
+
+
     public Users registerUser(Users user) {
         // Validate and set role
         if (user.getRole() == null || user.getRole().isEmpty()) {
