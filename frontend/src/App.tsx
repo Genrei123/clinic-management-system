@@ -41,7 +41,7 @@ function App() {
               <ProtectedRoute allowedRoles={["owner"]} element={<Report />} />
             }
           />
-
+          
           <Route
             path="account/branch"
             element={
@@ -51,7 +51,6 @@ function App() {
               />
             }
           />
-
           <Route
             path="account/services"
             element={

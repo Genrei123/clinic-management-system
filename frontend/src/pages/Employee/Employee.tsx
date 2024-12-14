@@ -1,20 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from '../../config/axiosConfig'; // Your Axios instance configuration
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import ArchiveEmployee from "./archive-employee";
-import {
-  Camera,
-  Upload,
-  UserCheck,
-  Calendar,
-  Clock,
-  Plus,
-  Edit,
-} from "lucide-react";
+import { Camera, Upload, UserCheck, Calendar, Clock, Plus, Edit } from 'lucide-react';
 import { jwtDecode } from "jwt-decode";
-
+import axios from 'axios';
 
 interface Visit {
   visitDate: string;
@@ -27,6 +19,7 @@ interface Employee {
   birthdate: string;
   visitHistory: Visit[];
 }
+
 interface JwtPayload {
   sub: string; // User ID
   role: string; // User role
@@ -40,11 +33,10 @@ const Employee: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
-  const [showEmployeeTracker, setShowEmployeeTracker] =
-    useState<boolean>(false);
+  const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  
+
   const token = localStorage.getItem("token"); // Get the token from local storage
   let decoded: JwtPayload | null = null;
 
@@ -57,14 +49,15 @@ const Employee: React.FC = () => {
   const fetchEmployee = async (token: string) => {
     try {
       if (decoded?.role === "ROLE_OWNER" || decoded?.role === "ROLE_EMPLOYEE") {
-        const response = await axios.get(`/employees/${decoded.sub}`, {
+        const response = await axiosInstance.get('/employees', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+        
+  
         setEmployee(response.data);
-
+  
         if (decoded.role === "ROLE_OWNER") {
           console.log("Role: OWNER - Display admin-specific data or actions.");
         } else if (decoded.role === "ROLE_EMPLOYEE") {
@@ -94,7 +87,7 @@ const Employee: React.FC = () => {
       setLoading(false);
       return;
     }
-  
+
     fetchEmployee(token); // Ensure `token` is used consistently
   }, [id]);
 
@@ -106,7 +99,7 @@ const Employee: React.FC = () => {
         formData.append("image", file);
 
         try {
-          await axios.post(`/employees/${id}/upload-image`, formData, {
+          await axiosInstance.post(`/employees/${id}/upload-image`, formData, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
@@ -120,7 +113,17 @@ const Employee: React.FC = () => {
     },
     [id]
   );
-
+  try {
+    // Your axios request here
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      // Now you can safely access AxiosError properties
+      console.error(error.response?.data);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+  }
+  
   const handleUpdateEmployee = async (updatedData: Employee) => {
     try {
       const updatedEmployee = {
@@ -128,346 +131,396 @@ const Employee: React.FC = () => {
         id: employee?.id,
         visitHistory: employee?.visitHistory || [],
       };
-      await axios.put(`/employees/${id}`, updatedEmployee);
+      await axiosInstance.put(`/employees/${id}`, updatedEmployee);
       fetchEmployee(localStorage.getItem("token") || "");
     } catch (error) {
       console.error("Error updating employee:", error);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!employee) return;
-
+  
+    // Get the form field values
+    const firstName = (e.target as HTMLFormElement)["first-name"].value;
+    const lastName = (e.target as HTMLFormElement)["last-name"].value;
+    const birthYear = (e.target as HTMLFormElement)["birth-year"].value;
+    const birthMonth = (e.target as HTMLFormElement)["birth-month"].value;
+    const birthDay = (e.target as HTMLFormElement)["birth-day"].value;
+  
+    // Ensure birthdate is formatted properly (e.g., "YYYY-MM-DD")
+    const formattedMonth = birthMonth.padStart(2, "0");
+    const formattedDay = birthDay.padStart(2, "0");
+    const birthdate = `${birthYear}-${formattedMonth}-${formattedDay}`;
+  
     const updatedData: Employee = {
-      id: employee.id,
-      name: (e.target as HTMLFormElement)["first-name"].value,
-      birthdate: `${(e.target as HTMLFormElement)["birth-year"].value}-${
-        (e.target as HTMLFormElement)["birth-month"].value
-      }-${(e.target as HTMLFormElement)["birth-day"].value}`,
-      visitHistory: employee.visitHistory || [],
+      id: "", // Id should be generated on the backend
+      name: `${firstName} ${lastName}`,
+      birthdate,
+      visitHistory: [], // Empty array for the new employee
     };
-
-    handleUpdateEmployee(updatedData);
+  
+    try {
+      // Sending POST request to create the new employee
+      const response = await axiosInstance.post(`/employees`, updatedData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+  
+      // Handle successful response
+      console.log("Employee created successfully:", response.data);
+      // Optionally reset the form or update the UI accordingly
+  
+      // You can reset the form if you want or update the UI accordingly
+      setShowPopup(false);
+      fetchEmployee(localStorage.getItem("token") || ""); // Refetch employee data after creation
+  
+    } catch (error: unknown) {
+      // Handle errors, including Axios-specific ones
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError;
+        console.error("Error creating employee:", axiosError.response?.data);
+        setError(`Error creating employee: ${axiosError.response?.data?.message || "Unknown error"}`);
+      } else {
+        // Handling other errors
+        console.error("Unexpected error:", error);
+        setError("Unexpected error occurred");
+      }
+    }
   };
-
+  
   const handleCheckInClick = () => {
     setShowTimeLog(true);
     setShowEmployeeTracker(false);
   };
-
+  
   const handleEmployeeTrackerClick = () => {
     setShowEmployeeTracker(true);
     setShowTimeLog(false);
   };
-
+  
   const handleImageClickAdd = () => {
     setIsEditing(false);
     setShowPopup(true);
   };
-
+  
   const handleImageClickEdit = () => {
     setIsEditing(true);
     setShowPopup(true);
   };
-
+  
   const timeEntries = [
     {
       logIn: "24/05/2024 11:53AM",
       logOut: "24/05/2024 5:00PM",
     },
   ];
-
+  
   if (loading) {
     return <div>Loading...</div>;
   }
-
+  
   if (error) {
     return <div className="text-red-500">{error}</div>;
   }
+  
 
   
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-          <div className="container mx-auto px-6 py-8">
-            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-                <h2 className="text-3xl font-bold">
-                  {employee?.name || "Unknown Employee"}'s Profile
-                </h2>
-                <p className="mt-2 text-blue-100">
-                  Employee ID: {employee?.id}
+  <div className="flex h-screen bg-gray-100">
+    <Sidebar />
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Navbar />
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+        <div className="container mx-auto px-6 py-8">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <h2 className="text-3xl font-bold">
+                {employee?.name || "Unknown Employee"}'s Profile
+              </h2>
+              <p className="mt-2 text-blue-100">
+                Employee ID: {employee?.id}
+              </p>
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow">
+                <p className="flex items-center text-gray-700">
+                  <span className="font-semibold mr-2">Birthdate:</span>{" "}
+                  {employee?.birthdate}
                 </p>
               </div>
+            </div>
 
-              <div className="p-6 grid md:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <div className="relative group">
-                    <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
-                      {employeeImage ? (
-                        <img
-                          src={employeeImage}
-                          alt="Employee"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Camera className="w-16 h-16 text-gray-400" />
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id="employee-image-upload"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
-                    <label
-                      htmlFor="employee-image-upload"
-                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-                    >
-                      <Upload className="w-8 h-8 mr-2" />
-                      Upload Image
-                    </label>
+            <div className="p-6 grid md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div className="relative group">
+                  <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                    {employeeImage ? (
+                      <img
+                        src={employeeImage}
+                        alt="Employee"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Camera className="w-16 h-16 text-gray-400" />
+                    )}
                   </div>
-
-                  <div className="bg-gray-50 p-4 rounded-lg shadow">
-                    <p className="flex items-center text-gray-700 mb-2">
-                      <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Employee ID:</span>
-                      {employee?.id}
-                    </p>
-                    <p className="flex items-center text-gray-700">
-                      <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">Birthdate:</span>
-                      {employee?.birthdate}
-                    </p>
-                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="employee-image-upload"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <label
+                    htmlFor="employee-image-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                  >
+                    <Upload className="w-8 h-8 mr-2" />
+                    Upload Image
+                  </label>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="bg-gray-50 p-4 rounded-lg shadow">
-                    <div className="grid grid-cols-1 gap-4">
-                      <button
-                        onClick={handleCheckInClick}
-                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                      >
-                        <Clock className="w-5 h-5 mr-2" />
-                        Employee Check-ins
-                      </button>
-
-                      {isOwner && (
-                        <>
-                          <button
-                            onClick={handleImageClickAdd}
-                            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                          >
-                            <Plus className="w-5 h-5 mr-2" />
-                            Add Employee
-                          </button>
-                          <button
-                            onClick={handleImageClickEdit}
-                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                          >
-                            <Edit className="w-5 h-5 mr-2" />
-                            Edit Employee
-                          </button>
-                          <button
-                            onClick={handleEmployeeTrackerClick}
-                            className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                          >
-                            <UserCheck className="w-5 h-5 mr-2" />
-                            Employee Tracker
-                          </button>
-                          <ArchiveEmployee
-                            employeeId={employee?.id || ""}
-                            employeeName={employee?.name || ""}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
+                <div className="bg-gray-50 p-4 rounded-lg shadow">
+                  <p className="flex items-center text-gray-700">
+                    <UserCheck className="w-5 h-5 mr-2 text-blue-500" />
+                    <span className="font-semibold mr-2">
+                      Employee ID:
+                    </span>{" "}
+                    {employee?.id}
+                  </p>
+                  <p className="flex items-center text-gray-700">
+                    <Calendar className="w-5 h-5 mr-2 text-blue-500" />
+                    <span className="font-semibold mr-2">
+                      Birthdate:
+                    </span>{" "}
+                    {employee?.birthdate}
+                  </p>
                 </div>
               </div>
+</div>
+              <div className="space-y-6">
+  <div className="bg-gray-50 p-4 rounded-lg shadow">
+    <div className="flex space-x-2 mt-4">
+      
+      <button
+        onClick={handleCheckInClick}
+        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+      >
+        <Clock className="w-5 h-5 mr-2" />
+        Employee Check-ins
+      </button>
+    </div>
 
-              <div className="p-6 border-t border-gray-200">
-                {showEmployeeTracker && (
-                  <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full bg-white border border-gray-300">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="py-2 px-4 border-b text-left">Date of Edit</th>
-                            <th className="py-2 px-4 border-b text-left">File Record</th>
-                            <th className="py-2 px-4 border-b text-left">Patient</th>
-                            <th className="py-2 px-4 border-b text-left">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[1, 2, 3, 4].map((record, index) => (
-                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                              <td className="py-2 px-4 border-b">24/05/2024</td>
-                              <td className="py-2 px-4 border-b">CSF</td>
-                              <td className="py-2 px-4 border-b">Genrey O. Cristobal</td>
-                              <td className="py-2 px-4 border-b">
-                                <button
-                                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm"
-                                  onClick={() => navigate(`/patient/${record}`)}
-                                >
-                                  View
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+    {/* Conditionally render buttons based on the state */}
+    {isOwner && ( // Only render these buttons if the user is the owner/admin
+  <div className="flex space-x-2 mt-2">
+    <button
+      onClick={handleImageClickAdd}
+      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+    >
+      <Plus className="w-5 h-5 mr-2" />
+      Add Employee
+    </button>
+    <button
+      onClick={handleImageClickEdit}
+      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+    >
+      <Edit className="w-5 h-5 mr-2" />
+      Edit Employee
+    </button>
+    <button
+        onClick={handleEmployeeTrackerClick}
+        className="flex-1 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+      >
+        <UserCheck className="w-5 h-5 mr-2" />
+        Employee Tracker
+      </button>
+    <ArchiveEmployee
+      employeeId={id || ""}
+      employeeName={employee!.name}
+    />
+  </div>
+)}
 
-                {showTimeLog && (
-                  <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Check-ins</h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full bg-white border border-gray-300">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="py-2 px-4 border-b text-left">Log-in</th>
-                            <th className="py-2 px-4 border-b text-left">Log-out</th>
+  </div>
+</div>
+
+              
+
+            <div className="p-6 border-t border-gray-200">
+              {showEmployeeTracker && (
+                <div className="mt-6">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Employee Tracker
+                  </h3>
+                  <div className="rounded-md border">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="w-[150px] font-medium">
+                            Date of Edit
+                          </th>
+                          <th className="w-[150px] font-medium">
+                            File Record
+                          </th>
+                          <th className="w-[200px] font-medium">Patient</th>
+                          <th className="w-[100px] font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[1, 2, 3, 4].map((record, index) => (
+                          <tr key={index}>
+                            <td>24/05/2024</td>
+                            <td>CSF</td>
+                            <td>Genrey O. Cristobal</td>
+                            <td>
+                              <button
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                                onClick={() => navigate(`/patient/${record}`)}
+                              >
+                                View
+                              </button>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {timeEntries.map((entry, index) => (
-                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                              <td className="py-2 px-4 border-b font-mono">{entry.logIn}</td>
-                              <td className="py-2 px-4 border-b font-mono">{entry.logOut}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {showTimeLog && (
+                <div className="mt-6">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Employee Check-ins
+                  </h3>
+                  <div className="rounded-md border">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="w-[200px] font-medium">Log-in</th>
+                          <th className="w-[200px] font-medium">Log-out</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {timeEntries.map((entry, index) => (
+                          <tr key={index}>
+                            <td className="font-mono">{entry.logIn}</td>
+                            <td className="font-mono">{entry.logOut}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
+    </div>
+  
+);
 
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-center mb-6">
               {isEditing ? "Edit Employee Account" : "Create Employee Account"}
             </h2>
-            <form
-              className="space-y-6"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const updatedData: Employee = {
-                  name: `${form['first-name'].value} ${form['last-name'].value}`,
-                  birthdate: `${form['birth-year'].value}-${form['birth-month'].value}-${form['birth-day'].value}`,
-                  id: employee?.id || "",
-                  visitHistory: employee?.visitHistory || [],
-                };
-                handleUpdateEmployee(updatedData);
-              }}
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col">
-                  <label htmlFor="first-name" className="text-sm font-medium mb-1">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    id="first-name"
-                    className="border-2 rounded-md p-2"
-                    defaultValue={employee?.name?.split(' ')[0] || ""}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label htmlFor="last-name" className="text-sm font-medium mb-1">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    id="last-name"
-                    className="border-2 rounded-md p-2"
-                    defaultValue={employee?.name?.split(' ')[1] || ""}
-                  />
-                </div>
-              </div>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+  <div className="grid grid-cols-2 gap-4">
+    <div className="flex flex-col">
+      <label htmlFor="first-name" className="text-sm font-medium">
+        First Name
+      </label>
+      <input
+        type="text"
+        id="first-name"
+        className="border-2 rounded-md p-2"
+        defaultValue={employee?.name?.split(" ")[0] || ""}
+      />
+    </div>
+    <div className="flex flex-col">
+      <label htmlFor="last-name" className="text-sm font-medium">
+        Last Name
+      </label>
+      <input
+        type="text"
+        id="last-name"
+        className="border-2 rounded-md p-2"
+        defaultValue={employee?.name?.split(" ")[1] || ""}
+      />
+    </div>
+  </div>
 
-              <div className="flex flex-col">
-                <label htmlFor="email" className="text-sm font-medium mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="border-2 rounded-md p-2"
-                  defaultValue={employee?.email || ""}
-                />
-              </div>
+  <div className="flex flex-col">
+    <label htmlFor="email" className="text-sm font-medium">
+      Email Address
+    </label>
+    <input
+      type="email"
+      id="email"
+      className="border-2 rounded-md p-2"
+      defaultValue={employee?.name}
+    />
+  </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex flex-col">
-                  <label htmlFor="birth-year" className="text-sm font-medium mb-1">
-                    Birth Year
-                  </label>
-                  <input
-                    type="text"
-                    id="birth-year"
-                    className="border-2 rounded-md p-2"
-                    defaultValue={employee?.birthdate?.split('-')[0] || ""}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label htmlFor="birth-month" className="text-sm font-medium mb-1">
-                    Birth Month
-                  </label>
-                  <input
-                    type="text"
-                    id="birth-month"
-                    className="border-2 rounded-md p-2"
-                    defaultValue={employee?.birthdate?.split('-')[1] || ""}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label htmlFor="birth-day" className="text-sm font-medium mb-1">
-                    Birth Day
-                  </label>
-                  <input
-                    type="text"
-                    id="birth-day"
-                    className="border-2 rounded-md p-2"
-                    defaultValue={employee?.birthdate?.split('-')[2] || ""}
-                  />
-                </div>
-              </div>
+  <div className="flex flex-col">
+    <label htmlFor="birth-year" className="text-sm font-medium">
+      Birth Year
+    </label>
+    <input
+      type="text"
+      id="birth-year"
+      className="border-2 rounded-md p-2"
+      defaultValue={employee?.birthdate?.split("-")[0] || ""}
+    />
+  </div>
 
-              <div className="flex justify-between pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPopup(false)}
-                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
+  <div className="flex flex-col">
+    <label htmlFor="birth-month" className="text-sm font-medium">
+      Birth Month
+    </label>
+    <input
+      type="text"
+      id="birth-month"
+      className="border-2 rounded-md p-2"
+      defaultValue={employee?.birthdate?.split("-")[1] || ""}
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label htmlFor="birth-day" className="text-sm font-medium">
+      Birth Day
+    </label>
+    <input
+      type="text"
+      id="birth-day"
+      className="border-2 rounded-md p-2"
+      defaultValue={employee?.birthdate?.split("-")[2] || ""}
+    />
+  </div>
+
+  <div className="mt-4 flex justify-between">
+    <button
+      type="button"
+      onClick={() => setShowPopup(false)}
+      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
+    >
+      Cancel
+    </button>
+    <button
+      type="submit"
+      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
+    >
+      Save
+    </button>
+  </div>
+</form>
+
           </div>
         </div>
       )}
@@ -476,3 +529,4 @@ const Employee: React.FC = () => {
 };
 
 export default Employee;
+
