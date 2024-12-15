@@ -4,13 +4,11 @@ import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import PatientProfileModal from "./PatientProfileModal";
 import useModal from "./useModal";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { useParams, useNavigate } from "react-router-dom";
 import Patient from "../../types/Patient";
 import { createEmptyPatient } from "../../utils/Patient";
 import { getPatientLogs } from "../../services/visitService";
-import ScanQRCodeModal from "./ScanQRCodeModal";
-
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +23,11 @@ const Home: React.FC = () => {
   const [loadingServices, setLoadingServices] = useState<boolean>(true);
   const [token, setToken] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isQRCodeModalOpen, setQRCodeModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<{ services: number; patients: number }>({
+    services: 1,
+    patients: 1,
+  });
+  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
 
   // Fetch patients and services from the backend
   useEffect(() => {
@@ -91,11 +93,10 @@ const Home: React.FC = () => {
     navigate(`/patient/${id}`);
   };
 
-  const handleScanResult = (result: string) => {
-    setQRCodeModalOpen(false);
-    alert(`Scanned QR Code: ${result}`);
-    navigate(`/patient/${result}`);
-    // Additional logic can be added here for processing the scanned QR code
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newItemsPerPage = parseInt(e.target.value, 10);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage({ services: 1, patients: 1 });
   };
 
   const renderTable = (tableType: "services" | "patients") => {
@@ -103,6 +104,17 @@ const Home: React.FC = () => {
     const tableClass = `bg-white rounded-lg shadow-md overflow-hidden ${
       isFullscreen ? "fixed inset-0 z-50 flex flex-col" : ""
     }`;
+
+    const data = tableType === "services" ? services : patients;
+    const currentPageData = data.slice(
+      (currentPage[tableType] - 1) * itemsPerPage,
+      currentPage[tableType] * itemsPerPage
+    );
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+
+    const handlePageChange = (newPage: number) => {
+      setCurrentPage((prev) => ({ ...prev, [tableType]: newPage }));
+    };
 
     return (
       <div className={tableClass}>
@@ -142,8 +154,7 @@ const Home: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <th className="py-3 px-6 text-center">No</th>
-                      <th className="py-3 px-6 text-left">Date In</th>
+                      <th className="py-3 px-6 text-center">No</th>            
                       <th className="py-3 px-6 text-left">Name</th>
                       <th className="py-3 px-6 text-center">Gender</th>
                       <th className="py-3 px-6 text-center">Action</th>
@@ -152,72 +163,93 @@ const Home: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-gray-600 font-light">
-                {tableType === "services" ? (
-                  loadingServices ? (
-                    <tr>
-                      <td colSpan={3} className="text-center py-4">
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : services.length > 0 ? (
-                    services.map((service, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-gray-200 hover:bg-gray-50"
-                      >
-                        <td className="py-3 px-6 text-left">{service.name}</td>
-                        <td className="py-3 px-6 text-left">{service.branch}</td>
-                        <td className="py-3 px-6 text-right">${service.price}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={3} className="text-center py-4">
-                        No services available.
-                      </td>
-                    </tr>
-                  )
-                ) : loadingPatients ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-4">
-                      Loading...
-                    </td>
-                  </tr>
-                ) : Array.isArray(patients) && patients.length > 0 ? (
-                  patients.map((patient, index) => (
-                    <tr
-                      key={patient.patientID}
-                      className="border-b border-gray-200 hover:bg-gray-50"
-                    >
-                      <td className="py-3 px-6 text-center">{index + 1}</td>
-                      <td className="py-3 px-6 text-left">
-                        {new Date(
-                          patient.consultation.consultation_date
-                        ).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-6 text-left">{`${patient.givenName} ${patient.lastName}`}</td>
-                      <td className="py-3 px-6 text-center">
-                        {patient.sex === "M" ? "Male" : "Female"}
-                      </td>
-                      <td className="py-3 px-6 text-center">
-                        <button
-                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                          onClick={() => handleViewClick(patient.clientID)}
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="text-center py-4">
-                      No patients found.
-                    </td>
-                  </tr>
-                )}
+                {tableType === "services"
+                  ? loadingServices
+                    ? (<tr>
+                        <td colSpan={3} className="text-center py-4">
+                          Loading...
+                        </td>
+                      </tr>)
+                    : currentPageData.length > 0 ? (
+                        currentPageData.map((service, index) => (
+                          <tr
+                            key={index}
+                            className="border-b border-gray-200 hover:bg-gray-50"
+                          >
+                            <td className="py-3 px-6 text-left">{service.name}</td>
+                            <td className="py-3 px-6 text-left">{service.branch}</td>
+                            <td className="py-3 px-6 text-right">${service.price}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="text-center py-4">
+                            No services available.
+                          </td>
+                        </tr>
+                      )
+                  : loadingPatients
+                    ? (<tr>
+                        <td colSpan={5} className="text-center py-4">
+                          Loading...
+                        </td>
+                      </tr>)
+                    : Array.isArray(currentPageData) && currentPageData.length > 0 ? (
+                        currentPageData.map((patient, index) => (
+                          <tr
+                            key={patient.patientID}
+                            className="border-b border-gray-200 hover:bg-gray-50"
+                          >
+                            <td className="py-3 px-6 text-center">{index + 1}</td>
+                            <td className="py-3 px-6 text-left">{`${patient.givenName} ${patient.lastName}`}</td>
+                            <td className="py-3 px-6 text-center">
+                              {patient.sex === "M" ? "Male" : "Female"}
+                            </td>
+                            <td className="py-3 px-6 text-center">
+                              <button
+                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                                onClick={() => handleViewClick(patient.clientID)}
+                              >
+                                View
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="text-center py-4">
+                            No patients found.
+                          </td>
+                        </tr>
+                      )}
               </tbody>
             </table>
+          </div>
+          <div className="mt-4 flex justify-between items-center">
+            <div>
+              <span className="text-gray-600">
+                Page {currentPage[tableType]} of {totalPages}
+              </span>
+            </div>
+            <div className="space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage[tableType] - 1)}
+                disabled={currentPage[tableType] === 1}
+                className="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(currentPage[tableType] + 1)}
+                disabled={currentPage[tableType] === totalPages}
+                className="px-3 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          <div className="mt-2">
+            
           </div>
         </div>
       </div>
@@ -235,9 +267,7 @@ const Home: React.FC = () => {
               Welcome, {token} !
             </h1>
             <div className="flex justify-end space-x-4 mb-8">
-              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
-                onClick={() => setQRCodeModalOpen(true)}
-              >
+              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
                 Scan QR Code
               </button>
               <button
@@ -259,14 +289,9 @@ const Home: React.FC = () => {
         onClose={closeModal}
         formData={formData}
       />
-
-      <ScanQRCodeModal
-        isOpen={isQRCodeModalOpen}
-        onClose={() => setQRCodeModalOpen(false)}
-        onScanResult={handleScanResult}
-      />
     </div>
   );
 };
 
 export default Home;
+
