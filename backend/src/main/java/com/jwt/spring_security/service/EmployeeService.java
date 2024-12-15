@@ -28,7 +28,7 @@ public class EmployeeService {
         return employeeRepo.findAll();
     }
 
-    public Employee findByEmployeeID(int employeeID) {
+    public Employee findByEmployeeID(String employeeID) {
         return employeeRepo.findByEmployeeID(employeeID);
     }
 
@@ -36,7 +36,7 @@ public class EmployeeService {
         return employeeRepo.findById(id);
     }
 
-    public boolean existsByEmployeeID(int employeeID) {
+    public boolean existsByEmployeeID(String employeeID) {
         return employeeRepo.findByEmployeeID(employeeID) != null;
     }
 
@@ -48,7 +48,7 @@ public class EmployeeService {
         return false;
     }
 
-    public Employee updateEmployee(int employeeID, Employee employeeDetails) {
+    public Employee updateEmployee(String employeeID, Employee employeeDetails) {
         Employee existingEmployee = employeeRepo.findByEmployeeID(employeeID);
         if (existingEmployee != null) {
             existingEmployee.setUsername(employeeDetails.getUsername());

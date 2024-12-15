@@ -6,14 +6,14 @@ import java.time.LocalDateTime;
 
 @Entity
 public class Employee extends Users {
-    private int employeeID;
+    private String employeeID;
     private LocalDateTime loginTimeStamp;
 
-    public int getEmployeeID() {
+    public String getEmployeeID() {
         return employeeID;
     }
 
-    public void setEmployeeID(int employeeID) {
+    public void setEmployeeID(String employeeID) {
         this.employeeID = employeeID;
     }
 

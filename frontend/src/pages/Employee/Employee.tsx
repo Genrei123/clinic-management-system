@@ -142,27 +142,20 @@ const Employee: React.FC = () => {
     e.preventDefault();
   
     // Get the form field values
-    const firstName = (e.target as HTMLFormElement)["first-name"].value;
-    const lastName = (e.target as HTMLFormElement)["last-name"].value;
-    const birthYear = (e.target as HTMLFormElement)["birth-year"].value;
-    const birthMonth = (e.target as HTMLFormElement)["birth-month"].value;
-    const birthDay = (e.target as HTMLFormElement)["birth-day"].value;
+    const employeeId = (e.target as HTMLFormElement)["employeeId"].value;
+    const username = (e.target as HTMLFormElement)["username"].value;
+    const password = (e.target as HTMLFormElement)["password"].value;
+    const role = (e.target as HTMLFormElement)["role"].value;
   
-    // Ensure birthdate is formatted properly (e.g., "YYYY-MM-DD")
-    const formattedMonth = birthMonth.padStart(2, "0");
-    const formattedDay = birthDay.padStart(2, "0");
-    const birthdate = `${birthYear}-${formattedMonth}-${formattedDay}`;
-  
-    const updatedData: Employee = {
-      id: "", // Id should be generated on the backend
-      name: `${firstName} ${lastName}`,
-      birthdate,
-      visitHistory: [], // Empty array for the new employee
+    const updatedData = {
+      username,
+      password,
+      role,
     };
   
     try {
       // Sending POST request to create the new employee
-      const response = await axiosInstance.post(`/employees`, updatedData, {
+      const response = await axiosInstance.post(`/addEmployee`, updatedData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -170,25 +163,23 @@ const Employee: React.FC = () => {
   
       // Handle successful response
       console.log("Employee created successfully:", response.data);
-      // Optionally reset the form or update the UI accordingly
   
-      // You can reset the form if you want or update the UI accordingly
       setShowPopup(false);
       fetchEmployee(localStorage.getItem("token") || ""); // Refetch employee data after creation
-  
     } catch (error: unknown) {
       // Handle errors, including Axios-specific ones
       if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
-        console.error("Error creating employee:", axiosError.response?.data);
-        setError(`Error creating employee: ${axiosError.response?.data?.message || "Unknown error"}`);
+        console.error("Error creating employee:", error.response?.data);
+        setError(
+          `Error creating employee: ${error.response?.data?.message || "Unknown error"}`
+        );
       } else {
-        // Handling other errors
         console.error("Unexpected error:", error);
         setError("Unexpected error occurred");
       }
     }
   };
+  
   
   const handleCheckInClick = () => {
     setShowTimeLog(true);
@@ -425,105 +416,84 @@ const Employee: React.FC = () => {
 );
 
       {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-center mb-6">
-              {isEditing ? "Edit Employee Account" : "Create Employee Account"}
-            </h2>
-            <form className="space-y-6" onSubmit={handleSubmit}>
-  <div className="grid grid-cols-2 gap-4">
-    <div className="flex flex-col">
-      <label htmlFor="first-name" className="text-sm font-medium">
-        First Name
-      </label>
-      <input
-        type="text"
-        id="first-name"
-        className="border-2 rounded-md p-2"
-        defaultValue={employee?.name?.split(" ")[0] || ""}
-      />
-    </div>
-    <div className="flex flex-col">
-      <label htmlFor="last-name" className="text-sm font-medium">
-        Last Name
-      </label>
-      <input
-        type="text"
-        id="last-name"
-        className="border-2 rounded-md p-2"
-        defaultValue={employee?.name?.split(" ")[1] || ""}
-      />
-    </div>
-  </div>
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-8 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
+      <h2 className="text-2xl font-bold text-center mb-6">
+        {isEditing ? "Edit Employee Account" : "Create Employee Account"}
+      </h2>
+      <form className="space-y-6" onSubmit={handleSubmit}>
 
-  <div className="flex flex-col">
-    <label htmlFor="email" className="text-sm font-medium">
-      Email Address
-    </label>
-    <input
-      type="email"
-      id="email"
-      className="border-2 rounded-md p-2"
-      defaultValue={employee?.name}
-    />
-  </div>
-
-  <div className="flex flex-col">
-    <label htmlFor="birth-year" className="text-sm font-medium">
-      Birth Year
-    </label>
-    <input
-      type="text"
-      id="birth-year"
-      className="border-2 rounded-md p-2"
-      defaultValue={employee?.birthdate?.split("-")[0] || ""}
-    />
-  </div>
-
-  <div className="flex flex-col">
-    <label htmlFor="birth-month" className="text-sm font-medium">
-      Birth Month
-    </label>
-    <input
-      type="text"
-      id="birth-month"
-      className="border-2 rounded-md p-2"
-      defaultValue={employee?.birthdate?.split("-")[1] || ""}
-    />
-  </div>
-
-  <div className="flex flex-col">
-    <label htmlFor="birth-day" className="text-sm font-medium">
-      Birth Day
-    </label>
-    <input
-      type="text"
-      id="birth-day"
-      className="border-2 rounded-md p-2"
-      defaultValue={employee?.birthdate?.split("-")[2] || ""}
-    />
-  </div>
-
-  <div className="mt-4 flex justify-between">
-    <button
-      type="button"
-      onClick={() => setShowPopup(false)}
-      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
-    >
-      Cancel
-    </button>
-    <button
-      type="submit"
-      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
-    >
-      Save
-    </button>
-  </div>
-</form>
-
-          </div>
+        <div className="flex flex-col">
+          <label htmlFor="employeeId" className="text-sm font-medium">
+            Employee ID
+          </label>
+          <input
+            type="text"
+            id="employeeID"
+            className="border-2 rounded-md p-2"
+            defaultValue={employee?.id || ""}
+            disabled={isEditing}
+          />
         </div>
-      )}
+
+        <div className="flex flex-col">
+          <label htmlFor="username" className="text-sm font-medium">
+            Username
+          </label>
+          <input
+            type="text"
+            id="username"
+            className="border-2 rounded-md p-2"
+            defaultValue={employee?.name || ""}
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label htmlFor="password" className="text-sm font-medium">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            className="border-2 rounded-md p-2"
+            defaultValue=""
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label htmlFor="role" className="text-sm font-medium">
+            Role
+          </label>
+          <select
+            id="role"
+            className="border-2 rounded-md p-2"
+            defaultValue={employee?.role || "employee"}
+          >
+            <option value="employee">Employee</option>
+            <option value="owner">Owner</option>
+          </select>
+        </div>
+
+        <div className="mt-4 flex justify-between">
+          <button
+            type="button"
+            onClick={() => setShowPopup(false)}
+            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

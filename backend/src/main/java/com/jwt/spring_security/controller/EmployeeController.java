@@ -33,7 +33,9 @@ public class EmployeeController {
     public ResponseEntity<?> addEmployee(@RequestBody @Validated Employee employee) {
         if (employeeService.existsByEmployeeID(employee.getEmployeeID())) {
             return ResponseEntity.badRequest()
-                    .body(new ApiErrorResponse("Validation Error", "Employee ID already exists", employee.getEmployeeID()));
+                    .body(new ApiErrorResponse("Validation Error", "Employee ID already exists " + employee, employee));
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiErrorResponse("Validation Error", "Employee ID already exists", employee.getEmployeeID()));
         }
         Employee savedEmployee = employeeService.save(employee);
         return ResponseEntity.ok(savedEmployee);
@@ -46,7 +48,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/readEmployee/{employeeID}")
-    public ResponseEntity<?> getEmployee(@PathVariable int employeeID) {
+    public ResponseEntity<?> getEmployee(@PathVariable String employeeID) {
         Employee employee = employeeService.findByEmployeeID(employeeID);
         if (employee == null) {
             return ResponseEntity.status(404)
@@ -56,7 +58,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/updateEmployee/{employeeID}")
-    public ResponseEntity<?> updateEmployee(@PathVariable int employeeID, @RequestBody @Validated Employee employeeDetails) {
+    public ResponseEntity<?> updateEmployee(@PathVariable String employeeID, @RequestBody @Validated Employee employeeDetails) {
         Employee updatedEmployee = employeeService.updateEmployee(employeeID, employeeDetails);
         if (updatedEmployee == null) {
             return ResponseEntity.status(404)
