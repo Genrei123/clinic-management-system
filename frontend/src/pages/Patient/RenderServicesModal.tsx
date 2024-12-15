@@ -42,6 +42,7 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   const [serviceSuggestions, setServiceSuggestions] = useState<RenderService[]>([]);
   const [medicineSuggestions, setMedicineSuggestions] = useState<SelectedMedicine[]>([]);
   const [medicines, setMedicines] = useState<SelectedMedicine[]>([]);
+  const [notes, setNotes] = useState("");
 
   // Fetch services from the database
   useEffect(() => {
@@ -173,7 +174,7 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
           item_quantity: medicine.quantity, // Quantity used
         })),
         totalCost: calculateTotalCost(),
-        notes: "Optional notes about the service.", // Add notes dynamically if needed
+        notes: notes, // Add notes dynamically if needed
       };
   
       console.log("Payload:", JSON.stringify(payload, null, 2));
@@ -334,6 +335,17 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
               )}
             </div>
           </div>
+        </div>
+
+        {/* Make notes */}
+        <div className="mt-6">
+          <label className="block text-sm font-semibold mb-2">Notes:</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full p-2 border rounded"
+            rows={4}
+          ></textarea>
         </div>
 
         <div className="mt-6">

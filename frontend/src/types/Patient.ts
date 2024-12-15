@@ -57,3 +57,39 @@ export default interface Patient {
     hypertension: boolean;
   };
 }
+
+interface ServiceDTO {
+  serviceID: number;
+  serviceName: string;
+  serviceDescription: string;
+  servicePrice: number;
+}
+
+interface ItemDTO {
+  itemID: number;
+  itemName: string;
+  itemQuantity: number;
+  itemPrice: number;
+}
+
+interface RenderedServiceDTO {
+  id: number;
+  patientId: number;
+  services: ServiceDTO[];
+  items: ItemDTO[];
+  totalCost: number;
+  notes: string;
+  renderedDate?: string; // if you added this field in the DTO
+}
+
+interface Visit {
+  visitDate: string;
+  reason: string;
+}
+
+interface File {
+  name: string;
+  uploadDate: string;
+  type: string;
+}
+
