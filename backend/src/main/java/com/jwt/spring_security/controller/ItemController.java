@@ -75,10 +75,6 @@ public class ItemController {
         return ResponseEntity.ok(savedItems); // 200 OK
     }
 
-
-
-
-
     @PutMapping("/updateItems/{id}")
     public ResponseEntity<Item> updateItems(@PathVariable Long id, @RequestBody Item itemDetails) {
         Item existingItem = itemRepo.findByItemID(id);

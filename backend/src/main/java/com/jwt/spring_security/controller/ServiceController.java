@@ -164,6 +164,58 @@ public class ServiceController {
         if (renderedServices.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No rendered services found for patient ID: " + patientId);
         }
+        
+
+        // Map each RenderedService to RenderedServiceDTO
+        List<RenderedServiceDTO> dtoList = new ArrayList<>();
+        for (RenderedService rs : renderedServices) {
+            RenderedServiceDTO dto = new RenderedServiceDTO();
+            dto.setId(rs.getId());
+            dto.setPatientId(rs.getPatient().getClientID()); // only store patient's ID
+            dto.setTotalCost(rs.getTotalCost());
+            dto.setNotes(rs.getNotes());
+
+            // Map services
+            List<ServiceDTO> serviceDTOs = new ArrayList<>();
+            if (rs.getServices() != null) {
+                for (Services service : rs.getServices()) {
+                    ServiceDTO sdto = new ServiceDTO();
+                    sdto.setServiceID(service.getServiceID());
+                    sdto.setServiceName(service.getService_name());
+                    sdto.setServiceDescription(service.getService_description());
+                    sdto.setServicePrice(service.getService_price());
+                    serviceDTOs.add(sdto);
+                }
+            }
+            dto.setServices(serviceDTOs);
+
+            // Map items
+            List<ItemDTO> itemDTOs = new ArrayList<>();
+            if (rs.getItems() != null) {
+                for (Item item : rs.getItems()) {
+                    ItemDTO idto = new ItemDTO();
+                    idto.setItemID(item.getItemID());
+                    idto.setItemName(item.getItemName());
+                    idto.setItemQuantity(item.getItemQuantity());
+                    idto.setItemPrice(item.getItemPrice());
+                    itemDTOs.add(idto);
+                }
+            }
+            dto.setItems(itemDTOs);
+
+            dtoList.add(dto);
+        }
+
+        return ResponseEntity.ok(dtoList);
+    }
+
+    @GetMapping("/getRenderedServices")
+    public ResponseEntity<?> getRenderedServices() {
+        List<RenderedService> renderedServices = renderedServiceRepository.findAll();
+
+        if (renderedServices.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No rendered services found.");
+        }
 
         // Map each RenderedService to RenderedServiceDTO
         List<RenderedServiceDTO> dtoList = new ArrayList<>();
