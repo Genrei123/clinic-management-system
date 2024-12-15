@@ -38,7 +38,7 @@ public class QRCodeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        String qrCodeContent = "Patient ID: " + patient.getClientID() + ", Name: " + patient.getGivenName();
+        String qrCodeContent = String.valueOf(patient.getClientID());
 
         BufferedImage qrCodeImage = qrCodeService.generateQRCode(qrCodeContent);
 

@@ -53,13 +53,13 @@ public class PatientController {
     }
 
     @PostMapping("/addPatient")
-    public ResponseEntity<Long> addPatient(@RequestBody PatientDTO patientDTO) {
+    public ResponseEntity<Patient> addPatient(@RequestBody PatientDTO patientDTO) {
         Long clientID = patientService.addPatient(patientDTO);
-        return ResponseEntity.ok(clientID);
+        return ResponseEntity.ok(patientRepo.findById(clientID).get());
     }
 
     @GetMapping("/getPatient")
-    public ResponseEntity<?> getPatients() {
+    public ResponseEntity<?> getAllPatients() {
         List<Patient> patients = patientRepo.findAll();
         if (patients.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No patients found.");
@@ -67,14 +67,46 @@ public class PatientController {
         return ResponseEntity.ok(patients);
     }
 
+
+    @PatchMapping("/archivePatient/{id}")
+    public ResponseEntity<?> archivePatient(@PathVariable Long id) {
+        Optional<Patient> patientOptional = patientRepo.findById(id);
+        if (patientOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient with ID " + id + " not found.");
+        }
+
+        Patient patient = patientOptional.get();
+        patient.setStatus("archived");
+        patientRepo.save(patient);
+
+        return ResponseEntity.ok("Patient with ID " + id + " archived successfully.");
+    }
+
+    @PatchMapping("/unarchivePatient/{id}")
+    public ResponseEntity<?> unarchivePatient(@PathVariable Long id) {
+        Optional<Patient> patientOptional = patientRepo.findById(id);
+        if (patientOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient with ID " + id + " not found.");
+        }
+
+        Patient patient = patientOptional.get();
+        patient.setStatus("active");
+        patientRepo.save(patient);
+
+        return ResponseEntity.ok("Patient with ID " + id + " unarchived successfully.");
+    }
+
+
+
     @GetMapping("/searchPatients")
-    public ResponseEntity<?> searchPatient(@RequestParam String query) {
-        List<Patient> patients = patientRepo.findPatientByGivenName(query);
+    public ResponseEntity<?> searchPatients(@RequestParam String query) {
+        List<Patient> patients = patientRepo.findByGivenNameAndStatus(query, "active");
         if (patients.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No patients found with the given name: " + query);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No active patients found with the given name: " + query);
         }
         return ResponseEntity.ok(patients);
     }
+
 
     @GetMapping("/getPatient/{id}")
     public ResponseEntity<?> getPatient(@PathVariable Long id) {
