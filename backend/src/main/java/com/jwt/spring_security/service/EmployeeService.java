@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,36 +20,48 @@ public class EmployeeService {
     @Autowired
     private JWTService jwtService;
 
+    // Save a new employee (with password encryption)
     public Employee save(Employee employee) {
         employee.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(employee.getPassword()));
         return employeeRepo.save(employee);
     }
 
+    // Find all employees
     public List<Employee> findAll() {
         return employeeRepo.findAll();
     }
 
-    public Employee findByEmployeeID(int employeeID) {
-        return employeeRepo.findByEmployeeID(employeeID);
+    // Find employee by employeeID
+    public Employee findByEmployeeID(Long employeeID) {
+        return employeeRepo.findByEmployeeID(employeeID); // Updated to Long
     }
 
+    // Find employee by username (this is the new method)
+    public Employee findByUsername(String username) {
+        return employeeRepo.findByUsername(username); // Ensure the repository has this method
+    }
+
+    // Find employee by ID
     public Optional<Employee> findByID(Long id) {
         return employeeRepo.findById(id);
     }
 
-    public boolean existsByEmployeeID(int employeeID) {
-        return employeeRepo.findByEmployeeID(employeeID) != null;
+    // Check if employee exists by employeeID
+    public boolean existsByEmployeeID(Long employeeID) {
+        return employeeRepo.findByEmployeeID(employeeID) != null; // Updated to Long
     }
 
-    public boolean deleteByEmployeeID(int employeeID) {
-        if (employeeRepo.existsById((long) employeeID)) {
-            employeeRepo.deleteById((long) employeeID);
+    // Delete employee by employeeID
+    public boolean deleteByEmployeeID(Long employeeID) {
+        if (employeeRepo.existsByEmployeeID(employeeID)) {
+            employeeRepo.deleteByEmployeeID(employeeID); // Updated to Long
             return true;
         }
         return false;
     }
 
-    public Employee updateEmployee(int employeeID, Employee employeeDetails) {
+    // Update employee information
+    public Employee updateEmployee(Long employeeID, Employee employeeDetails) {
         Employee existingEmployee = employeeRepo.findByEmployeeID(employeeID);
         if (existingEmployee != null) {
             existingEmployee.setUsername(employeeDetails.getUsername());
@@ -59,8 +72,14 @@ public class EmployeeService {
         }
         return null;
     }
+
+    // Save login information with timestamp
+    public Employee saveLoginTimestamp(Long employeeID) {
+        Employee employee = employeeRepo.findByEmployeeID(employeeID);
+        if (employee != null) {
+            employee.setLoginTimeStamp(LocalDateTime.now()); // Set current timestamp on login
+            return employeeRepo.save(employee);
+        }
+        return null; // If employee not found
+    }
 }
-
-
-
-

@@ -1,19 +1,22 @@
 package com.jwt.spring_security.model;
 
 import jakarta.persistence.Entity;
-
+import jakarta.persistence.Id;
 import java.time.LocalDateTime;
 
 @Entity
 public class Employee extends Users {
-    private int employeeID;
+
+    @Id
+    private String employeeID;
     private LocalDateTime loginTimeStamp;
 
-    public int getEmployeeID() {
+    // Getters and setters
+    public String getEmployeeID() {
         return employeeID;
     }
 
-    public void setEmployeeID(int employeeID) {
+    public void setEmployeeID(String employeeID) {
         this.employeeID = employeeID;
     }
 
@@ -28,7 +31,7 @@ public class Employee extends Users {
     @Override
     public String toString() {
         return "Employee{" +
-                "employeeID=" + employeeID +
+                "employeeID='" + employeeID + '\'' +
                 ", loginTimeStamp=" + loginTimeStamp +
                 ", username='" + getUsername() + '\'' +
                 ", role='" + getRole() + '\'' +
