@@ -32,7 +32,7 @@ interface File {
 }
 
 interface Patient {
-  id: string;
+  clientID: Number;
   name: string;
   expectedDateConfinement?: string;
   visitHistory: Visit[];
@@ -49,7 +49,7 @@ const Patient: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<string>("");
   const [patientInfo, setPatientInfo] = useState<any>();
   const [patient, setPatient] = useState<Patient>({
-    id: "",
+    clientID: 0,
     name: "",
     expectedDateConfinement: "",
     visitHistory: [],
@@ -96,7 +96,7 @@ const Patient: React.FC = () => {
         console.error("Error fetching patient data:", error);
         // Optionally set a default or empty patient state
         setPatient({
-          id: "",
+          clientID: 0,
           name: "",
           expectedDateConfinement: "",
           visitHistory: [],

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PatientRepo extends JpaRepository<Patient, Long> {
@@ -13,4 +14,5 @@ public interface PatientRepo extends JpaRepository<Patient, Long> {
     @Query("SELECT p FROM Patient p WHERE p.status = 'active'")
     List<Patient> findActivePatients();
     List<Patient> findByGivenNameAndStatus(String givenName, String status);
+    Optional<Patient> findByPatientID(String patientID);
 }

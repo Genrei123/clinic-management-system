@@ -55,7 +55,7 @@ public class Item {
     }
 
     public Long getItemQuantity() {
-        return itemQuantity;
+        return itemQuantity == null ? 0L: itemQuantity;
     }
 
     public void setItemQuantity(Long itemQuantity) {
