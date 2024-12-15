@@ -160,7 +160,7 @@ const LandingPage: React.FC = () => {
       <AppBar position="sticky" sx={{ backgroundColor: "#0A1929", boxShadow: 3 }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="h6" sx={{ fontWeight: "bold", letterSpacing: 1 }}>
-            ClinicName
+            JIMIRENE MATERNITY CLINIC
           </Typography>
           <Box>
             <NavButton>About Us</NavButton>
