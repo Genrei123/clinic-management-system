@@ -8,16 +8,14 @@ import { Camera, Upload, UserCheck, Calendar, Clock, Plus, Edit } from 'lucide-r
 import { jwtDecode } from "jwt-decode";
 import axios from 'axios';
 
-interface Visit {
-  visitDate: string;
-  reason: string;
-}
+
 
 interface Employee {
   id: string;
   name: string;
   birthdate: string;
   visitHistory: Visit[];
+  role: string; // Ensure role is here
 }
 
 interface JwtPayload {
@@ -140,34 +138,36 @@ const Employee: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted");
   
-    // Get the form field values
-    const employeeId = (e.target as HTMLFormElement)["employeeId"].value;
+    // Get form field values
+    const employeeID = (e.target as HTMLFormElement)["employeeID"].value;  // Assuming employeeID is provided manually
     const username = (e.target as HTMLFormElement)["username"].value;
     const password = (e.target as HTMLFormElement)["password"].value;
     const role = (e.target as HTMLFormElement)["role"].value;
   
+    // Construct the data object, including employeeID
     const updatedData = {
+      employeeID, // Include employeeID from the form
       username,
       password,
       role,
     };
   
+    console.log("Data to be sent:", updatedData);
+  
     try {
-      // Sending POST request to create the new employee
+      // Send a POST request to create a new employee
       const response = await axiosInstance.post(`/addEmployee`, updatedData, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
   
-      // Handle successful response
       console.log("Employee created successfully:", response.data);
-  
       setShowPopup(false);
-      fetchEmployee(localStorage.getItem("token") || ""); // Refetch employee data after creation
+      fetchEmployee(localStorage.getItem("token") || "");
     } catch (error: unknown) {
-      // Handle errors, including Axios-specific ones
       if (axios.isAxiosError(error)) {
         console.error("Error creating employee:", error.response?.data);
         setError(
@@ -179,6 +179,10 @@ const Employee: React.FC = () => {
       }
     }
   };
+  
+  
+  
+  
   
   
   const handleCheckInClick = () => {
@@ -422,74 +426,78 @@ const Employee: React.FC = () => {
         {isEditing ? "Edit Employee Account" : "Create Employee Account"}
       </h2>
       <form className="space-y-6" onSubmit={handleSubmit}>
+  <div className="flex flex-col">
+  <div className="flex flex-col">
+  <label htmlFor="employeeID" className="text-sm font-medium">
+    Employee ID
+  </label>
+  <input
+    type="text"
+    id="employeeID"
+    name="employeeID"
+    className="border-2 rounded-md p-2"
+    required
+  />
+</div>
 
-        <div className="flex flex-col">
-          <label htmlFor="employeeId" className="text-sm font-medium">
-            Employee ID
-          </label>
-          <input
-            type="text"
-            id="employeeID"
-            className="border-2 rounded-md p-2"
-            defaultValue={employee?.id || ""}
-            disabled={isEditing}
-          />
-        </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="username" className="text-sm font-medium">
-            Username
-          </label>
-          <input
-            type="text"
-            id="username"
-            className="border-2 rounded-md p-2"
-            defaultValue={employee?.name || ""}
-          />
-        </div>
+  </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="password" className="text-sm font-medium">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            className="border-2 rounded-md p-2"
-            defaultValue=""
-          />
-        </div>
+  <div className="flex flex-col">
+    <label htmlFor="username" className="text-sm font-medium">
+      Username
+    </label>
+    <input
+      type="text"
+      id="username" // Ensure ID matches the field in handleSubmit
+      className="border-2 rounded-md p-2"
+      defaultValue={employee?.name || ""}
+    />
+  </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="role" className="text-sm font-medium">
-            Role
-          </label>
-          <select
-            id="role"
-            className="border-2 rounded-md p-2"
-            defaultValue={employee?.role || "employee"}
-          >
-            <option value="employee">Employee</option>
-            <option value="owner">Owner</option>
-          </select>
-        </div>
+  <div className="flex flex-col">
+    <label htmlFor="password" className="text-sm font-medium">
+      Password
+    </label>
+    <input
+      type="password"
+      id="password"
+      className="border-2 rounded-md p-2"
+      defaultValue=""
+    />
+  </div>
 
-        <div className="mt-4 flex justify-between">
-          <button
-            type="button"
-            onClick={() => setShowPopup(false)}
-            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
-          >
-            Save
-          </button>
-        </div>
-      </form>
+  <div className="flex flex-col">
+    <label htmlFor="role" className="text-sm font-medium">
+      Role
+    </label>
+    <select
+      id="role" // Ensure ID matches the field in handleSubmit
+      className="border-2 rounded-md p-2"
+      defaultValue={employee?.role || "employee"}
+    >
+      <option value="employee">Employee</option>
+      <option value="owner">Owner</option>
+    </select>
+  </div>
+
+  <div className="mt-4 flex justify-between">
+    <button
+      type="button"
+      onClick={() => setShowPopup(false)}
+      className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md"
+    >
+      Cancel
+    </button>
+    <button
+      type="submit" // Ensure the button is type="submit"
+      className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
+    >
+      Save
+    </button>
+  </div>
+</form>
+
     </div>
   </div>
 )}
