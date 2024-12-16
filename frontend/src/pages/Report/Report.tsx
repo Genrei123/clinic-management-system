@@ -1,6 +1,5 @@
 // src/components/Report.tsx
 
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import Sidebar from "../../components/Sidebar";
@@ -246,25 +245,27 @@ const Report: React.FC = () => {
                   </tr>
                 )}
 
-                {/* Medicines Sold Data */}
-                {medicineData.length > 0 ? (
-                  medicineData.map((medicine, index) => (
-                    <tr
-                      key={`medicine-${index}`}
-                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                    >
-                      <td className="border px-4 py-2">Medicine Sold</td>
-                      <td className="border px-4 py-2">{medicine.name}</td>
-                      <td className="border px-4 py-2">{medicine.value}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="border px-4 py-12 text-center">
-                      No medicine sales data available
-                    </td>
-                  </tr>
-                )}
+{/* Medicines Sold Data */}
+{medicineData.length > 0 ? (
+  medicineData.map((medicine, index) => (
+    <tr
+      key={`medicine-${index}`}
+      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+    >
+      <td className="border px-4 py-2">Medicine Sold</td>
+      <td className="border px-4 py-2">{medicine.name}</td>
+      <td className="border px-4 py-2">
+      {medicine.value || 0}
+      </td>
+    </tr>
+  ))
+) : (
+  <tr>
+    <td colSpan={3} className="border px-4 py-12 text-center">
+      No medicine sales data available
+    </td>
+  </tr>
+)}
 
                 {/* Current Stock Data */}
                 {stockData.length > 0 ? (

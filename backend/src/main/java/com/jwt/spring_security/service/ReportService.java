@@ -32,7 +32,7 @@ public class ReportService {
 
             YearMonth yearMonth = YearMonth.of(year, month);
             aggregatedData.computeIfAbsent(yearMonth, k -> new HashMap<>())
-                    .put("patientCheckIns", totalPatients);
+                    .put("patient   CheckIns", totalPatients);
         }
 
         // Process employee data

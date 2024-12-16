@@ -80,6 +80,7 @@ public class ServiceController {
     @PostMapping("/renderService")
     public ResponseEntity<?> renderService(@RequestBody RenderedService request) {
         try {
+            // Log the incoming request for debugging
             System.out.println("Received RenderedService: " + request);
 
             // Validate and fetch patient details
@@ -109,13 +110,13 @@ public class ServiceController {
 
             // Validate and update item quantities (if applicable)
             List<Item> items = request.getItems();
-            if (items != null) {
+            if (items != null && !items.isEmpty()) {
                 for (Item item : items) {
-                    System.out.println("Processing Item: ID = " + item.getItemID());
                     if (item.getItemID() == null) {
                         return ResponseEntity.badRequest().body("Item ID cannot be null.");
                     }
 
+                    // Fetch and validate item
                     Item existingItem = itemRepo.findByItemID(item.getItemID());
                     if (existingItem == null) {
                         return ResponseEntity.badRequest().body("Item not found: " + item.getItemID());
@@ -127,17 +128,13 @@ public class ServiceController {
                         return ResponseEntity.badRequest().body("Insufficient stock for item: " + existingItem.getItemName());
                     }
 
-                    // Update the quantity
+                    // Update item quantity
                     System.out.println("Before update: Item ID = " + existingItem.getItemID() + ", Quantity = " + existingItem.getItemQuantity());
                     existingItem.setItemQuantity(existingItem.getItemQuantity() - item.getItemQuantity());
-                    System.out.println("Updated Quantity in Object: " + existingItem.getItemQuantity());
-
-                    // Save and flush the item to ensure persistence
-                    itemRepo.saveAndFlush(existingItem);
-                    System.out.println("After saveAndFlush: Item ID = " + existingItem.getItemID() + ", Quantity = " + existingItem.getItemQuantity());
+                    itemRepo.save(existingItem);
+                    System.out.println("Updated Quantity: " + existingItem.getItemQuantity());
                 }
             }
-
 
             // Save rendered service details
             RenderedService renderedService = new RenderedService();
@@ -156,6 +153,7 @@ public class ServiceController {
             return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/getRenderedServicesByPatientId/{patientId}")
     public ResponseEntity<?> getRenderedServicesByPatientId(@PathVariable Long patientId) {
