@@ -4,7 +4,8 @@ import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
 import PatientProfileModal from "./PatientProfileModal";
 import useModal from "./useModal";
-import { Maximize2, Minimize2 } from 'lucide-react';
+import QRCodeScannerModal from "./QRCodeScannerModal"; // Import the scanner
+import { Maximize2, Minimize2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import Patient from "../../types/Patient";
 import { createEmptyPatient } from "../../utils/Patient";
@@ -23,11 +24,17 @@ const Home: React.FC = () => {
   const [loadingServices, setLoadingServices] = useState<boolean>(true);
   const [token, setToken] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<{ services: number; patients: number }>({
+  const [currentPage, setCurrentPage] = useState<{
+    services: number;
+    patients: number;
+  }>({
     services: 1,
     patients: 1,
   });
   const [itemsPerPage, setItemsPerPage] = useState<number>(5);
+
+  // New state for QR Code Scanner Modal
+  const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
 
   // Fetch patients and services from the backend
   useEffect(() => {
@@ -62,12 +69,15 @@ const Home: React.FC = () => {
 
     const fetchServices = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/service/getServices", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${storedToken}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:8080/service/getServices",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${storedToken}`,
+            },
+          }
+        );
         const formattedServices = response.data.map((service: any) => ({
           name: service.service_name,
           branch: service.branch || "Main Branch", // Assume default branch if not provided
@@ -93,11 +103,58 @@ const Home: React.FC = () => {
     navigate(`/patient/${id}`);
   };
 
-  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleItemsPerPageChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const newItemsPerPage = parseInt(e.target.value, 10);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage({ services: 1, patients: 1 });
   };
+
+  const extractClientID = (data: string): string | null => {
+    try {
+      // Attempt to parse the data as a URL
+      const url = new URL(data);
+      const pathname = url.pathname; // e.g., /patient/123
+      const segments = pathname.split("/"); // ["", "patient", "123"]
+  
+      if (segments.length >= 3 && segments[1] === "patient") {
+        return segments[2];
+      }
+  
+      // If the data is just the clientID without URL
+      // Add your logic here if needed
+      // For example, validate if it's a numeric ID
+      if (/^\d+$/.test(data)) {
+        return data;
+      }
+  
+      return null;
+    } catch (error) {
+      // If data is not a valid URL, assume it's the clientID
+      // Validate the format if necessary
+      if (/^\d+$/.test(data)) { // Example: clientID is numeric
+        return data;
+      }
+      return null;
+    }
+  };
+  
+
+  const handleQRCodeScan = (data: string | null) => {
+    if (data) {
+      // Assuming the QR code contains the clientID directly
+      // If the QR code contains a URL, extract the clientID from it
+      const clientID = extractClientID(data);
+      if (clientID) {
+        navigate(`/patient/${clientID}`);
+      } else {
+        // Handle invalid QR code format
+        alert("Invalid QR Code format. Please try again.");
+      }
+    }
+  };
+  
 
   const renderTable = (tableType: "services" | "patients") => {
     const isFullscreen = fullscreenTable === tableType;
@@ -154,7 +211,7 @@ const Home: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <th className="py-3 px-6 text-center">No</th>            
+                      <th className="py-3 px-6 text-center">No</th>
                       <th className="py-3 px-6 text-left">Name</th>
                       <th className="py-3 px-6 text-center">Gender</th>
                       <th className="py-3 px-6 text-center">Action</th>
@@ -163,65 +220,70 @@ const Home: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-gray-600 font-light">
-                {tableType === "services"
-                  ? loadingServices
-                    ? (<tr>
-                        <td colSpan={3} className="text-center py-4">
-                          Loading...
+                {tableType === "services" ? (
+                  loadingServices ? (
+                    <tr>
+                      <td colSpan={3} className="text-center py-4">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : currentPageData.length > 0 ? (
+                    currentPageData.map((service, index) => (
+                      <tr
+                        key={index}
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-6 text-left">{service.name}</td>
+                        <td className="py-3 px-6 text-left">
+                          {service.branch}
                         </td>
-                      </tr>)
-                    : currentPageData.length > 0 ? (
-                        currentPageData.map((service, index) => (
-                          <tr
-                            key={index}
-                            className="border-b border-gray-200 hover:bg-gray-50"
-                          >
-                            <td className="py-3 px-6 text-left">{service.name}</td>
-                            <td className="py-3 px-6 text-left">{service.branch}</td>
-                            <td className="py-3 px-6 text-right">${service.price}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={3} className="text-center py-4">
-                            No services available.
-                          </td>
-                        </tr>
-                      )
-                  : loadingPatients
-                    ? (<tr>
-                        <td colSpan={5} className="text-center py-4">
-                          Loading...
+                        <td className="py-3 px-6 text-right">
+                          ${service.price}
                         </td>
-                      </tr>)
-                    : Array.isArray(currentPageData) && currentPageData.length > 0 ? (
-                        currentPageData.map((patient, index) => (
-                          <tr
-                            key={patient.patientID}
-                            className="border-b border-gray-200 hover:bg-gray-50"
-                          >
-                            <td className="py-3 px-6 text-center">{index + 1}</td>
-                            <td className="py-3 px-6 text-left">{`${patient.givenName} ${patient.lastName}`}</td>
-                            <td className="py-3 px-6 text-center">
-                              {patient.sex === "M" ? "Male" : "Female"}
-                            </td>
-                            <td className="py-3 px-6 text-center">
-                              <button
-                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                                onClick={() => handleViewClick(patient.clientID)}
-                              >
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={5} className="text-center py-4">
-                            No patients found.
-                          </td>
-                        </tr>
-                      )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="text-center py-4">
+                        No services available.
+                      </td>
+                    </tr>
+                  )
+                ) : loadingPatients ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : Array.isArray(currentPageData) &&
+                  currentPageData.length > 0 ? (
+                  currentPageData.map((patient, index) => (
+                    <tr
+                      key={patient.patientID}
+                      className="border-b border-gray-200 hover:bg-gray-50"
+                    >
+                      <td className="py-3 px-6 text-center">{index + 1}</td>
+                      <td className="py-3 px-6 text-left">{`${patient.givenName} ${patient.lastName}`}</td>
+                      <td className="py-3 px-6 text-center">
+                        {patient.sex === "M" ? "Male" : "Female"}
+                      </td>
+                      <td className="py-3 px-6 text-center">
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                          onClick={() => handleViewClick(patient.clientID)}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4">
+                      No patients found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -248,9 +310,7 @@ const Home: React.FC = () => {
               </button>
             </div>
           </div>
-          <div className="mt-2">
-            
-          </div>
+          <div className="mt-2"></div>
         </div>
       </div>
     );
@@ -267,7 +327,10 @@ const Home: React.FC = () => {
               Welcome, {token} !
             </h1>
             <div className="flex justify-end space-x-4 mb-8">
-              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
+              <button
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
+                onClick={() => setIsScannerOpen(true)} // Open the scanner modal
+              >
                 Scan QR Code
               </button>
               <button
@@ -277,6 +340,7 @@ const Home: React.FC = () => {
                 Create Patient Profile
               </button>
             </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {renderTable("services")}
               {renderTable("patients")}
@@ -289,9 +353,14 @@ const Home: React.FC = () => {
         onClose={closeModal}
         formData={formData}
       />
+
+      <QRCodeScannerModal
+        isOpen={isScannerOpen}
+        onRequestClose={() => setIsScannerOpen(false)}
+        onScan={(data) => handleQRCodeScan(data)}
+        />
     </div>
   );
 };
 
 export default Home;
-
