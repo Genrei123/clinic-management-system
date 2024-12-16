@@ -20,7 +20,6 @@ import image1 from "../../assets/image1.png";
 import image2 from "../../assets/image2.png";
 import image3 from "../../assets/image3.png";
 
-
 const NavButton: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Button
     color="inherit"
@@ -52,10 +51,10 @@ const InfoBox: React.FC<{ title: string; content: string }> = ({ title, content 
       }
     }}
   >
-    <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+    <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: "#FFFFFF" }}>
       {title}
     </Typography>
-    <Typography>{content}</Typography>
+    <Typography sx={{ color: "#FFFFFF" }}>{content}</Typography>
   </Box>
 );
 
@@ -161,7 +160,7 @@ const LandingPage: React.FC = () => {
       <AppBar position="sticky" sx={{ backgroundColor: "#0A1929", boxShadow: 3 }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="h6" sx={{ fontWeight: "bold", letterSpacing: 1 }}>
-            ClinicName
+            JIMIRENE Maternity and Diagnostic Clinic
           </Typography>
           <Box>
             <NavButton>About Us</NavButton>
@@ -247,9 +246,9 @@ const LandingPage: React.FC = () => {
       </Box>
 
       <Container sx={{ py: 6 }}>
-        <Grid container spacing={4}>
+        <Grid container spacing={4} justifyContent="center">
           {infoBoxes.map((box, index) => (
-            <Grid item xs={12} md={4} key={index}>
+            <Grid item xs={12} md={6} key={index}>
               <InfoBox title={box.title} content={box.content} />
             </Grid>
           ))}
@@ -257,7 +256,7 @@ const LandingPage: React.FC = () => {
       </Container>
 
       <Container sx={{ py: 6 }}>
-        <Typography variant="h4" sx={{ textAlign: "center", mb: 4 }}>
+        <Typography variant="h4" sx={{ textAlign: "center", mb: 4, color: "#FFFFFF" }}>
           Our Branches
         </Typography>
         <Tabs
