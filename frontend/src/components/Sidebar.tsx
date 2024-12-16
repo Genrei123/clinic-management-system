@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../contexts/AuthContext";
-import { Home, User, Package, Users, FileText, ChevronDown, LogOut, Settings, Menu, X } from 'lucide-react';
+import { Home, User, Package, Users, FileText, ChevronDown, LogOut, Settings, Menu, X, Clock, Building } from 'lucide-react';
 import logo from "../assets/logo.svg";
 
 interface TokenPayload {
@@ -52,7 +52,10 @@ function Sidebar() {
     { path: "/patientrecords", label: "Patient", icon: User, roles: ["owner", "employee"] },
     { path: "/inventory", label: "Inventory", icon: Package, roles: ["owner"] },
     { path: "/employees", label: "Employees", icon: Users, roles: ["owner", "employee"] },
+    { path: "/employee-clock-in", label: "Clock-In", icon: Clock, roles: ["employee"]},
     { path: "/reports", label: "Reports", icon: FileText, roles: ["owner"] },
+    { path: "/employee-clock-in", label: "Clock-In", icon: Clock, roles: ["owner", "employee"]},
+    { path: "/account/profiles", label: "Profiles", icon: User, roles: ["owner"]}
   ];
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -125,24 +128,21 @@ function Sidebar() {
               <ChevronDown className="h-5 w-5 transition duration-300 group-open:-rotate-180" />
             </summary>
             <nav className="mt-1.5 ml-8 flex flex-col">
-              <Link
-                to="/account/details"
-                className={getLinkClassName("/account/details")}
-              >
-                Details
-              </Link>
+              
               <Link
                 to="/account/security"
                 className={getLinkClassName("/account/security")}
               >
                 Security
               </Link>
+
               <Link
                 to="/account/branch"
                 className={getLinkClassName("/account/branch")}
               >
                 Branch
               </Link>
+              
               <Link
                 to="/account/services"
                 className={getLinkClassName("/account/services")}

@@ -16,6 +16,7 @@ import EmployeeDetails from "./pages/Employee/EmployeeDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AccountServices from "./pages/AccountServices";
 import EmployeeRecords from "./pages/Employee/EmployeeRecords";
+import EmployeeClockIn from "./pages/Employee/EmployeeClockIn";
 
 function App() {
   return (
@@ -63,6 +64,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/account/profiles"
+            element={
+              <ProtectedRoute
+                allowedRoles={["owner"]}
+                element={<AccountDetails />}
+              />
+            }
+          />
           {/* Shared routes */}
           <Route
             path="/employees"
@@ -82,6 +92,7 @@ function App() {
               />
             }
           />
+          <Route path="/employee-clock-in" element={<EmployeeClockIn />} />
           <Route
             path="/patientrecords"
             element={
@@ -109,7 +120,7 @@ function App() {
               />
             }
           />
-          <Route path="/account/details" element={<AccountDetails />} />
+
           <Route path="/account/security" element={<AccountSecurity />} />
           <Route path="/account/branch" element={<AccountBranch />} />
         </Routes>
