@@ -15,6 +15,7 @@ import GeneratePDF from "./pages/Patient/GeneratedPDF";
 import EmployeeDetails from "./pages/Employee/EmployeeDetails";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AccountServices from "./pages/AccountServices";
+import EmployeeRecords from "./pages/Employee/EmployeeRecords";
 
 function App() {
   return (
@@ -68,7 +69,7 @@ function App() {
             element={
               <ProtectedRoute
                 allowedRoles={["owner", "employee"]}
-                element={<Employee />}
+                element={<EmployeeRecords />}
               />
             }
           />

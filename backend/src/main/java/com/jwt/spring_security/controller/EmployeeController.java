@@ -30,13 +30,22 @@ public class EmployeeController {
 
     @PostMapping("/addEmployee")
     public ResponseEntity<?> addEmployee(@RequestBody @Validated Employee employee) {
+        // Check if employeeID already exists
         if (employeeService.existsByEmployeeID(employee.getEmployeeID())) {
             return ResponseEntity.badRequest()
                     .body(new ApiErrorResponse("Validation Error", "Employee ID already exists", employee.getEmployeeID()));
         }
+
+        // Check if email already exists
+        if (employeeService.existsByEmail(employee.getEmail())) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiErrorResponse("Validation Error", "Email already in use", employee.getEmail()));
+        }
+
         Employee savedEmployee = employeeService.save(employee);
         return ResponseEntity.ok(savedEmployee);
     }
+
 
     @GetMapping("/employees")
     public ResponseEntity<List<Employee>> getAllEmployees() {

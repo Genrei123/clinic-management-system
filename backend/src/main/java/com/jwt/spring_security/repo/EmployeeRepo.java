@@ -10,6 +10,7 @@ import java.util.List;
 public interface EmployeeRepo extends JpaRepository<Employee, Long> {
 
     Employee findByEmployeeID(int employeeID);
+    boolean existsByEmail(String email); // Add this method
 
 
 }

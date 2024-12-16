@@ -23,6 +23,7 @@ public class DataInitializer implements CommandLineRunner {
             owner.setPassword(new BCryptPasswordEncoder().encode("owner1234")); // Default password
             owner.setRole("owner"); // Ensure the role is OWNER
             owner.setOwnerID("OWNER001");
+            owner.setEmail("genreypogi@gmail.com");
 
             // Save the Owner to the database
             userRepo.save(owner);
@@ -36,6 +37,7 @@ public class DataInitializer implements CommandLineRunner {
             employee.setPassword(new BCryptPasswordEncoder().encode("employee1234"));
             employee.setRole("employee");
             employee.setOwnerID("EMPLOYEE001");
+            employee.setEmail("genreycristobal03@gmail.com");
 
             userRepo.save(employee);
             System.out.println("Default Employee account created with username: 'employee' and password: 'employee123'");
