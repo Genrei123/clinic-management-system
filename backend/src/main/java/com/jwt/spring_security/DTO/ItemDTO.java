@@ -5,7 +5,6 @@ public class ItemDTO {
     private String itemName;
     private Long itemQuantity;
     private Double itemPrice;
-    private Long totalQuantitySold;
 
     public Long getItemID() {
         return itemID;
@@ -34,13 +33,6 @@ public class ItemDTO {
     public void setItemPrice(Double itemPrice) {
         this.itemPrice = itemPrice;
     }
-
-    public Long getTotalQuantitySold() {
-        return totalQuantitySold;
-    }
-
-    public void setTotalQuantitySold(Long totalQuantitySold) {
-        this.totalQuantitySold = totalQuantitySold;}
 
 }
 
