@@ -1,29 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import Modal from "react-modal";
-import { QrReader } from "react-qr-reader";
-
+import QrScanner from "react-qr-scanner";
+import { useNavigate } from "react-router-dom";
 
 interface QRCodeScannerModalProps {
   isOpen: boolean;
   onRequestClose: () => void;
-  onScan: (data: string | null) => void;
 }
 
 const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   isOpen,
   onRequestClose,
-  onScan,
 }) => {
-  const handleScan = (data: string | null) => {
+  const navigate = useNavigate();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleScan = (data: any) => {
     if (data) {
-      onScan(data);
-      onRequestClose(); // Close modal after successful scan
+      console.log("QR Code Data:", data.text);
+      navigate(`/patient/${data.text}`);
+      onRequestClose();
     }
   };
 
   const handleError = (err: any) => {
     console.error("QR Code Scan Error:", err);
-    // Optionally, display an error message to the user
+    if (err.name === "NotAllowedError") {
+      setErrorMsg("Camera access was denied. Please allow camera access and try again.");
+    } else if (err.name === "NotFoundError") {
+      setErrorMsg("No camera found. Please connect a camera and try again.");
+    } else {
+      setErrorMsg("An unexpected error occurred while scanning the QR code.");
+    }
   };
 
   return (
@@ -31,7 +39,7 @@ const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
       isOpen={isOpen}
       onRequestClose={onRequestClose}
       contentLabel="Scan QR Code"
-      ariaHideApp={false} // Set to true in production and set app element
+      ariaHideApp={false} // Set to true in production and set app element for accessibility
       style={{
         content: {
           top: "50%",
@@ -48,8 +56,13 @@ const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
         },
       }}
     >
-      <h2 className="text-xl font-semibold mb-4">Scan QR Code</h2>
-      <QrReader
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Scan QR Code</h2>
+      {errorMsg && (
+        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+          {errorMsg}
+        </div>
+      )}
+      <QrScanner
         delay={300}
         onError={handleError}
         onScan={handleScan}

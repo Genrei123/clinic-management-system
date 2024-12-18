@@ -31,7 +31,7 @@ const Home: React.FC = () => {
     services: 1,
     patients: 1,
   });
-  const [itemsPerPage, setItemsPerPage] = useState<number>(5);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
   // New state for QR Code Scanner Modal
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);

@@ -5,6 +5,8 @@ import { addPatientLog } from "../../services/visitService";
 import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
 import { createEmptyPatient } from "../../utils/Patient";
 import ConfirmationModal from "./ConfirmationModal";
+import QRCodeModal from "../../components/QRCodeModal";
+import axiosInstance from "../../config/axiosConfig";
 
 interface PatientProfileModalProps {
   isOpen: boolean;
@@ -21,6 +23,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   const [visitPurpose, setVisitPurpose] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [qrCode, setQrCode] = useState<string | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -83,13 +86,23 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
         Number(newPatient.clientID),
         "Initial Check-up"
       );
+      
+
+      const qrResponse = await axiosInstance.get(`/generateqr?clientID=${newPatient.clientID}`, {
+        responseType: "blob",
+      });
+      
+      const qrURL = URL.createObjectURL(qrResponse.data);
+      setQrCode(qrURL);
+
       setSuccessMessage(
         `Patient profile for ${newPatient.lastName} was successfully created and visit logged.`
       );
-      setTimeout(() => {
-        setSuccessMessage("");
-        onClose();
-      }, 3000);
+
+
+    
+      
+
     } catch (error) {
       console.error("Error creating patient:", error);
       setErrorMessage(
@@ -412,6 +425,13 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
             data={formData}
             onClose={() => setIsModalOpen(false)}
             onConfirm={handleSubmitConfirmed}
+          />
+
+          {/* Use the QR Code Modal */}
+          <QRCodeModal
+            isOpen={!!qrCode}
+            qrCode={qrCode}
+            onClose={() => setQrCode(null)}
           />
         </div>
       </div>

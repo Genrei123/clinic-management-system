@@ -6,20 +6,40 @@ interface PatientDetailsModalProps {
   isOpen: boolean;
   data?: { [key: string]: any }; // Make `data` optional
   onClose: () => void;
-  
 }
 
 const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   isOpen,
   data = {}, // Default to empty object
   onClose,
-  }) => {
+}) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(data);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [status, setStatus] = useState(data?.status || "active");
+
+  // Friendly terms mapping
+  const friendlyTerms: { [key: string]: string } = {
+    clientID: "Patient ID",
+    lastName: "Last Name",
+    givenName: "First Name",
+    middleInitial: "Middle Initial",
+    sex: "Sex",
+    address: "Address",
+    age: "Age",
+    birthday: "Date of Birth",
+    religion: "Religion",
+    occupation: "Occupation",
+    lastDelivery: "Last Delivery Date",
+    philhealthID: "PhilHealth ID",
+    spouse: "Spouse Information",
+    pregnancy: "Pregnancy Information",
+    consultation: "Consultation Information",
+    medicalHistory: "Medical History",
+    // Add more mappings as needed
+  };
 
   useEffect(() => {
     if (isOpen && data) {
@@ -45,7 +65,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
   const handleArchive = async () => {
     try {
-      await axiosInstance.patch(`/archivePatient/${data.clientID}`);
+      await axiosInstance.patch(`/archivePatient/${formData.clientID}`);
       setIsArchiveModalOpen(false);
       setStatus("archived");
       onClose();
@@ -59,10 +79,9 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
   const handleUnarchive = async () => {
     try {
-      await axiosInstance.patch(`/unarchivePatient/${data.clientID}`);
+      await axiosInstance.patch(`/unarchivePatient/${formData.clientID}`);
       setIsArchiveModalOpen(false);
       setStatus("active");
-      ;
       onClose();
       alert("Patient unarchived successfully.");
       navigate("/patientrecords");
@@ -72,50 +91,139 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
     }
   };
 
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) =>
+      prev.includes(section)
+        ? prev.filter((s) => s !== section)
+        : [...prev, section]
+    );
+  };
+
+  const renderValue = (value: any, keyPath: string = ""): React.ReactNode => {
+    // Determine the patient's sex from formData
+    const patientSex = formData.sex?.toLowerCase();
+
+    if (typeof value === "object" && value !== null) {
+      // Handle the 'spouse' section
+      if (keyPath.toLowerCase() === "spouse") {
+        const hasSpouse =
+          value &&
+          Object.keys(value).some(
+            (subKey) =>
+              value[subKey] !== null &&
+              value[subKey] !== undefined &&
+              value[subKey] !== ""
+          );
+
+        if (!hasSpouse) {
+          return <span>No Spouse</span>;
+        }
+      }
+
+      // Handle the 'pregnancy' section
+      if (keyPath.toLowerCase() === "pregnancy") {
+        if (patientSex !== "female") {
+          return <span>N/A</span>;
+        }
+      }
+
+      return (
+        <div className="ml-4">
+          {Object.entries(value).map(([subKey, subValue]) => {
+            const fullKeyPath = keyPath ? `${keyPath}.${subKey}` : subKey;
+            const isExpandable =
+              typeof subValue === "object" && subValue !== null;
+
+            return (
+              <div key={fullKeyPath} className="mb-2">
+                {isExpandable ? (
+                  <div>
+                    <button
+                      className="text-left w-full flex justify-between items-center focus:outline-none"
+                      onClick={() => toggleSection(fullKeyPath)}
+                    >
+                      <span className="font-medium">
+                        {friendlyTerms[subKey] || subKey}
+                      </span>
+                      <span>
+                        {expandedSections.includes(fullKeyPath) ? "-" : "+"}
+                      </span>
+                    </button>
+                    {expandedSections.includes(fullKeyPath) && (
+                      <div className="ml-4">
+                        {renderValue(subValue, fullKeyPath)}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex">
+                    <span className="font-medium w-1/3 text-right pr-2">
+                      {friendlyTerms[subKey] || subKey}:
+                    </span>
+                    <span className="w-2/3">
+                      {renderValue(subValue, fullKeyPath)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    } else if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    } else {
+      return value?.toString() || "N/A";
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl max-h-[90vh] overflow-auto">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">Patient Details</h2>
-        <div className="space-y-6 mb-8">
-          <table className="w-full table-auto border-collapse">
-            <tbody>
-              {Object.entries(formData)
-                .filter(([key]) => key !== "imagePath")
-                .map(([key, value]) => (
-                  <tr key={key} className="border-b border-gray-200 last:border-b-0">
-                    <td className="py-3 pr-6 font-medium text-right align-top w-1/4">
-                      {key}:
-                    </td>
-                    <td className="py-3 pl-6 text-left align-top">
-                      {value?.toString() || "N/A"}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex justify-end space-x-6 pt-6 border-t border-gray-200">
-          <button
-            className={`${
-              status === "archived" ? "bg-green-500" : "bg-yellow-500"
-            } text-white px-8 py-3 rounded-lg text-lg hover:${
-              status === "archived" ? "bg-green-600" : "bg-yellow-600"
-            } transition-colors duration-200`}
-            onClick={() => setIsArchiveModalOpen(true)}
-          >
-            {status === "archived" ? "Unarchive" : "Archive"}
-          </button>
-          <button
-            className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg text-lg hover:bg-gray-300 transition-colors duration-200"
-            onClick={onClose}
-          >
-            Close
-          </button>
+    <>
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-6xl max-h-[90vh] overflow-auto">
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">Patient Details</h2>
+          <div className="space-y-6 mb-8">
+            <table className="w-full table-auto border-collapse">
+              <tbody>
+                {Object.entries(formData)
+                  .filter(([key]) => key !== "imagePath")
+                  .map(([key, value]) => (
+                    <tr key={key} className="border-b border-gray-200 last:border-b-0">
+                      <td className="py-3 pr-6 font-medium text-right align-top w-1/4">
+                        {friendlyTerms[key] || key}:
+                      </td>
+                      <td className="py-3 pl-6 text-left align-top">
+                        {renderValue(value, key)}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-end space-x-6 pt-6 border-t border-gray-200">
+            <button
+              className={`${
+                status === "archived" ? "bg-green-500" : "bg-yellow-500"
+              } text-white px-8 py-3 rounded-lg text-lg hover:${
+                status === "archived" ? "bg-green-600" : "bg-yellow-600"
+              } transition-colors duration-200`}
+              onClick={() => setIsArchiveModalOpen(true)}
+            >
+              {status === "archived" ? "Unarchive" : "Archive"}
+            </button>
+            <button
+              className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg text-lg hover:bg-gray-300 transition-colors duration-200"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Archive/Unarchive Confirmation Modal */}
       {isArchiveModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -146,7 +254,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

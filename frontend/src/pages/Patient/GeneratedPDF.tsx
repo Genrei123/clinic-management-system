@@ -10,6 +10,7 @@ import ClaimForm1 from "../../assets/pdf/CF1.pdf";
 import ClaimForm2 from "../../assets/pdf/CF2.pdf";
 
 import axiosInstance from "../../config/axiosConfig";
+import Patient from "../../types/Patient";
 
 type PatientType = "Parent" | "Child";
 
@@ -25,7 +26,7 @@ const GeneratePDF: React.FC = () => {
   const navigate = useNavigate();
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [patientData, setPatientData] = useState<PatientPayload | null>(null);
+  const [patientData, setPatientData] = useState<Patient | null>(null);
 
   useEffect(() => {
     setSearchParams((params) => {
@@ -47,7 +48,7 @@ const GeneratePDF: React.FC = () => {
         params: { patientId },
       });
       if (response.data && response.data.length > 0) {
-        return response.data[0] as PatientPayload;
+        return response.data[0] as Patient;
       } else {
         throw new Error("No patient data found.");
       }
@@ -58,20 +59,29 @@ const GeneratePDF: React.FC = () => {
   };
 
   // Mapping function
-  const getFieldMappings = (formType: string, patient: PatientPayload) => {
+  const getFieldMappings = (formType: string, patient: Patient) => {
     const textFields: { [key: string]: any } = {};
     const checkBoxFields: { [key: string]: any } = {};
 
     // Common Text Fields
+    if (formType === "CF1" || formType === "CSF") {
+      textFields["MI_last_name"] = patient.lastName;
+      textFields["MI_first_name"] = patient.givenName;
+      //textFields["MI_middle_name"] = patient.middleName;
+      // Split Birth Date
+      //patient.birthday = patient.birthday.split("T")[0];
+      // const birthDate = new Date(patient.birthday);
+      // const birthMonth = birthDate.getMonth() + 1;
+      textFields["MI_birth_date_month"] = 21;
+
+    }
+
     
     textFields["MI_last_name"] = patient.lastName;
     textFields["MI_first_name"] = patient.givenName;
     textFields["EC_Contact_Number"] = "test";
     
-    
   
-    
-
     return { textFields, checkBoxFields };
   };
 
