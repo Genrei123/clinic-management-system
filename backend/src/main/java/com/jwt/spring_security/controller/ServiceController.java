@@ -111,7 +111,6 @@ public class ServiceController {
             List<Item> items = request.getItems();
             if (items != null) {
                 for (Item item : items) {
-                    System.out.println("Processing Item: ID = " + item.getItemID());
                     if (item.getItemID() == null) {
                         return ResponseEntity.badRequest().body("Item ID cannot be null.");
                     }
@@ -120,24 +119,20 @@ public class ServiceController {
                     if (existingItem == null) {
                         return ResponseEntity.badRequest().body("Item not found: " + item.getItemID());
                     }
-                    if (existingItem.getItemQuantity() == null || item.getItemQuantity() == null) {
+                    if (existingItem.getItemStock() == null || item.getItemQuantity() == null) {
                         return ResponseEntity.badRequest().body("Item quantities must not be null.");
                     }
-                    if (existingItem.getItemQuantity() < item.getItemQuantity()) {
+                    if (existingItem.getItemStock() < item.getItemQuantity()) {
                         return ResponseEntity.badRequest().body("Insufficient stock for item: " + existingItem.getItemName());
                     }
 
                     // Update the quantity
-                    System.out.println("Before update: Item ID = " + existingItem.getItemID() + ", Quantity = " + existingItem.getItemQuantity());
-                    existingItem.setItemQuantity(existingItem.getItemQuantity() - item.getItemQuantity());
-                    System.out.println("Updated Quantity in Object: " + existingItem.getItemQuantity());
+                    existingItem.setItemStock(existingItem.getItemStock() - item.getItemQuantity());
 
                     // Save and flush the item to ensure persistence
                     itemRepo.saveAndFlush(existingItem);
-                    System.out.println("After saveAndFlush: Item ID = " + existingItem.getItemID() + ", Quantity = " + existingItem.getItemQuantity());
                 }
             }
-
 
             // Save rendered service details
             RenderedService renderedService = new RenderedService();
@@ -148,7 +143,6 @@ public class ServiceController {
             renderedService.setNotes(request.getNotes());
 
             RenderedService savedService = renderedServiceRepository.save(renderedService);
-            System.out.println("Saved RenderedService ID: " + savedService.getId());
 
             return ResponseEntity.ok("Service rendered successfully with ID: " + savedService.getId());
         } catch (Exception e) {
@@ -156,6 +150,7 @@ public class ServiceController {
             return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/getRenderedServicesByPatientId/{patientId}")
     public ResponseEntity<?> getRenderedServicesByPatientId(@PathVariable Long patientId) {

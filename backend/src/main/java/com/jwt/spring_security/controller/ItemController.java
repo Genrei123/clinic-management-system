@@ -94,6 +94,7 @@ public class ItemController {
         // Update the properties of the item
         existingItem.setItemName(itemDetails.getItemName());
         existingItem.setItemQuantity(itemDetails.getItemQuantity());
+        existingItem.setItemStock(itemDetails.getItemStock());
         existingItem.setItemPrice(itemDetails.getItemPrice());
         existingItem.setManufactureDate(itemDetails.getManufactureDate());
         existingItem.setExpDate(itemDetails.getExpDate());

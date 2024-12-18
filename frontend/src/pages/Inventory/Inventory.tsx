@@ -22,6 +22,7 @@ interface InventoryItem {
   itemID: number;
   item_name: string; // Changed from 'name' to 'item_name'
   item_quantity: number; // Changed from 'quantity' to 'item_quantity'
+  item_stock: number; // Changed from 'itemStock' to 'item_stock'
   item_price: number; // Changed from 'price' to 'item_price'
   manufacture_date: string; // Changed from 'manufacturedDate' to 'manufacture_date'
   exp_date: string; // Changed from 'expirationDate' to 'exp_date'
@@ -99,6 +100,7 @@ const Inventory: React.FC = () => {
     itemID: 1,
     item_name: "",
     item_quantity: 0,
+    item_stock: 0,
     item_price: 0,
     manufacture_date: "",
     exp_date: "",
@@ -117,7 +119,8 @@ const Inventory: React.FC = () => {
         const fetchedItems = response.data.map((item: any) => ({
           itemID: item.itemID,                
           item_name: item.item_name,           
-          item_quantity: item.item_quantity,   
+          item_quantity: item.item_quantity,
+          item_stock: item.item_stock,   
           item_price: item.item_price,         
           manufacture_date: item.manufacture_date,  
           exp_date: item.exp_date,  
@@ -322,6 +325,7 @@ const Inventory: React.FC = () => {
         itemID: items.length + 1,
         item_name: "",
         item_quantity: 0,
+        item_stock: 0,
         item_price: 0,
         manufacture_date: "",
         exp_date: "",
@@ -360,6 +364,7 @@ const Inventory: React.FC = () => {
         itemID: items.length + prevItems.length + 1, // Incrementing the ID for each new item
         item_name: "",  // matching the property name with the database field
         item_quantity: 0,
+        item_stock: 0,
         item_price: 0,
         manufacture_date: "",
         exp_date: "",
@@ -394,6 +399,7 @@ const Inventory: React.FC = () => {
         const formattedItem = {
           item_name: newItems[0].item_name,
           item_quantity: newItems[0].item_quantity,
+          item_stock: newItems[0].item_stock,
           item_price: newItems[0].item_price,
           manufacture_date: newItems[0].manufacture_date,
           exp_date: newItems[0].exp_date,
@@ -416,6 +422,7 @@ const Inventory: React.FC = () => {
         const formattedItems = newItems.map((item) => ({
           item_name: item.item_name,
           item_quantity: item.item_quantity,
+          item_stock: item.item_stock,
           item_price: item.item_price,
           manufacture_date: item.manufacture_date,
           exp_date: item.exp_date,
@@ -489,6 +496,7 @@ const Inventory: React.FC = () => {
         </StyledTableCell>
         <StyledTableCell>Medicine</StyledTableCell>
         <StyledTableCell align="right">Quantity</StyledTableCell>
+        <StyledTableCell align="right">Item Stock</StyledTableCell>
         <StyledTableCell align="right">Price (₱/pc)</StyledTableCell>
         <StyledTableCell align="right">Manufactured Date</StyledTableCell>
         <StyledTableCell align="right">Expiration Date</StyledTableCell>
@@ -509,6 +517,7 @@ const Inventory: React.FC = () => {
 
           <StyledTableCell>{item.item_name}</StyledTableCell>
           <StyledTableCell align="right">{item.item_quantity}</StyledTableCell>
+          <StyledTableCell align="right">{item.item_stock}</StyledTableCell>
           <StyledTableCell align="right">{item.item_price}</StyledTableCell>
 
           <StyledTableCell align="right">{item.manufacture_date}</StyledTableCell>
@@ -573,6 +582,12 @@ const Inventory: React.FC = () => {
             onChange={(e) => handleAddItemChange(index, "item_quantity", Number(e.target.value))}
             className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
           />
+          <label className="block mb-2 font-semibold">Remaining Stock:</label>
+          <input
+            type="number"
+            value={item.item_stock}
+            onChange={(e) => handleAddItemChange(index, "item_stock", Number(e.target.value))}
+            className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"/>
           <label className="block mb-2 font-semibold">Price:</label>
           <input
             type="number"
@@ -674,6 +689,14 @@ const Inventory: React.FC = () => {
           <p className="text-red-500 text-sm">{validationErrors.item_quantity}</p>
         )}
 
+        {/* Remaining Stock */}
+        <label className="block mb-2 font-semibold">Remaining Stock:</label>
+        <input
+          type="number"
+          value={editingItem.item_stock}
+          onChange={(e) => handleEditChange("item_stock", e.target.value)}
+          className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"/>
+
         {/* Item Price */}
         <label className="block mb-2 font-semibold">Item Price:</label>
         <input
@@ -713,16 +736,16 @@ const Inventory: React.FC = () => {
         {/* Branch transfer */}
         <label className="block mb-2 font-semibold">Transfer to Branch:</label>
         <select
-          value={editingItem?.branch?.branchID || ""}
+          value={editingItem.branch?.branchID || ""} // Default to empty string if branchID is undefined
           onChange={(e) => handleEditChange("branch", e.target.value)}
           className="border border-gray-300 p-2 w-full rounded-md shadow-sm mb-4"
         >
-          <option value="" disabled>Select a Branch</option>
-          {branches.map((branch) => (
-            <option key={branch.branchID} value={branch.branchID}>
-              {branch.branch_name}
-            </option>
-          ))}
+        <option value="" disabled>Select a Branch</option>
+        {branches.map((branch) => (
+          <option key={branch.branchID} value={branch.branchID}>
+            {branch.branch_name}
+          </option>
+        ))}
         </select>
         {validationErrors.branch && (
           <p className="text-red-500 text-sm">{validationErrors.branch}</p>
