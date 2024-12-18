@@ -78,10 +78,9 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     try {
       const newPatient = await addPatient(formData);
 
-      console.log(newPatient);
-      
+    
       await addPatientLog(
-        Number(newPatient),
+        Number(newPatient.clientID),
         "Initial Check-up"
       );
       setSuccessMessage(

@@ -1,240 +1,232 @@
-import React, { useState, useCallback } from "react";
+// src/pages/EmployeeDetail/EmployeeDetail.tsx
+
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
-import Modal from "../../components/Add"; // Import Modal
+import {
+  Camera,
+  Upload,
+  FileText,
+  UserCheck,
+  Calendar,
+  Clock,
+  ChevronRight,
+  Edit,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { getEmployeeById } from "../../services/employeeService"; // Implement this service
+import { Employee } from "../../types/Employee";
+import axiosInstance from "../../config/axiosConfig"; // If needed for image uploads
 
-interface Visit {
-  visitDate: string;
-  reason: string;
-}
-
-interface Patient {
-  id: string;
-  name: string;
-  birthdate: string;
-  visitHistory: Visit[];
-}
-
-const Employee: React.FC = () => {
+const EmployeeDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patientImage, setPatientImage] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [showTimeLog, setShowTimeLog] = useState<boolean>(false);
-  const [showEmployeeTracker, setShowEmployeeTracker] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // Modal state
-  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [employeeImage, setEmployeeImage] = useState<string | null>(null);
+  
 
-  const rowsPerPage = 5;
+  // Ref for hidden file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const patient: Patient = {
-    id: id || "",
-    name: "Cristobal, Genrey O.",
-    birthdate: "24/05/2024",
-    visitHistory: [
-      { visitDate: "2024-11-20", reason: "Routine Checkup" },
-      { visitDate: "2024-11-15", reason: "Follow-Up" },
-      { visitDate: "2024-11-10", reason: "Emergency Visit" },
-      { visitDate: "2024-11-05", reason: "Vaccination" },
-      { visitDate: "2024-10-30", reason: "Initial Consultation" },
-      { visitDate: "2024-10-20", reason: "Routine Checkup" },
-    ],
-  };
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      setLoading(true);
+      try {
+        if (id) {
+          const data = await getEmployeeById(Number(id));
+          setEmployee(data);
+          if (data.imagePath) {
+            setEmployeeImage(data.imagePath);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching employee:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const totalPages = Math.ceil(patient.visitHistory.length / rowsPerPage);
-
-  const paginatedVisits = patient.visitHistory.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
+    fetchEmployee();
+  }, [id]);
 
   const handleImageUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          setPatientImage(result);
-        };
-        reader.readAsDataURL(file);
+      if (!file || !employee) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setEmployeeImage(result);
+      };
+      reader.readAsDataURL(file);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("employeeId", String(employee.employeeID));
+
+      try {
+        const response = await axiosInstance.post(
+          "/uploadEmployeeImage",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Image uploaded successfully:", response.data);
+          if (response.data.imagePath) {
+            setEmployeeImage(response.data.imagePath);
+          }
+        } else {
+          console.error("Upload failed with status:", response.status);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
       }
     },
-    []
+    [employee]
   );
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  if (loading) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Navbar />
+          <main className="flex-1 flex items-center justify-center">
+            <p>Loading employee details...</p>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
-  const handleCheckInClick = () => {
-    setShowTimeLog(true);
-    setShowEmployeeTracker(false);
-  };
-
-  const handleEmployeeTrackerClick = () => {
-    setShowEmployeeTracker(true);
-    setShowTimeLog(false);
-  };
-
-  const handleOpenModal = () => {
-    setIsModalOpen(true); // Open modal when the user needs to submit credentials
-  };
-
-  const handleModalSubmit = (credentials: { username: string; password: string }) => {
-    console.log("Submitted credentials:", credentials);
-    setCredentials(credentials); // Store credentials or use for further logic
-    setIsModalOpen(false); // Close modal after submission
-  };
-
-  const timeEntries = [
-    {
-      logIn: "24/05/2024 11:53AM",
-      logOut: "24/05/2024 5:00PM",
-    },
-    {
-      logIn: "24/05/2024 11:53AM",
-      logOut: "24/05/2024 5:00PM",
-    },
-    {
-      logIn: "24/05/2024 11:53AM",
-      logOut: "24/05/2024 5:00PM",
-    },
-    {
-      logIn: "24/05/2024 11:53AM",
-      logOut: "24/05/2024 5:00PM",
-    },
-  ];
+  if (!employee) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Navbar />
+          <main className="flex-1 flex items-center justify-center">
+            <p>Employee not found.</p>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar />
-      <div className="ml-128 w-full">
+
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-            <div className="bg-blue-600 text-white p-4">
-              <h2 className="text-2xl font-bold">{patient.name}'s Employee Details</h2>
-            </div>
-            <div className="p-6 grid md:grid-cols-2 gap-6">
-              {/* Patient Image Upload Section */}
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-96 h-96 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
-                  {patientImage ? (
-                    <img src={patientImage} alt="Patient" className="w-full h-full object-cover" />
-                  ) : (
-                    <p className="text-gray-500">No Image Uploaded</p>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="patient-image-upload"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-                <label
-                  htmlFor="patient-image-upload"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
-                >
-                  Upload Image
-                </label>
+
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+          <div className="container mx-auto px-6 py-8">
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+              {/* Header Section */}
+              <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
+                <h2 className="text-3xl font-bold">
+                  {employee.username}'s Profile
+                </h2>
+                <p className="mt-2 text-green-100">Employee ID: {employee.employeeID}</p>
               </div>
 
-              {/* Employee Tracker / Time Log Buttons */}
-              <div className="space-y-6">
-                <div className="flex space-x-4 mb-6">
-                  <button
-                    onClick={handleEmployeeTrackerClick}
-                    className="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Check-ins
-                  </button>
-                  <button
-                    onClick={handleCheckInClick}
-                    className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded flex-1 flex items-center gap-2"
-                  >
-                    Employee Tracker
-                  </button>
+              {/* Main Content */}
+              <div className="p-6 grid md:grid-cols-2 gap-6">
+                {/* Profile Image and Basic Info */}
+                <div className="space-y-6">
+                  {/* Profile Image Upload */}
+                  <div className="relative group">
+                    <div className="w-64 h-64 mx-auto bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                      {employeeImage ? (
+                        <img
+                          src={employeeImage}
+                          alt="Employee"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Camera className="w-16 h-16 text-gray-400" />
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="employee-image-upload"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                    <label
+                      htmlFor="employee-image-upload"
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                    >
+                      <Upload className="w-8 h-8 mr-2" />
+                      Upload Image
+                    </label>
+                  </div>
+
+                  {/* Employee Basic Information */}
+                  <div className="bg-gray-50 p-4 rounded-lg shadow">
+                    <p className="flex items-center text-gray-700">
+                      <UserCheck className="w-5 h-5 mr-2 text-green-500" />
+                      <span className="font-semibold mr-2">Employee ID:</span>{" "}
+                      {employee.employeeID}
+                    </p>
+                    <p className="flex items-center text-gray-700">
+                      <Calendar className="w-5 h-5 mr-2 text-green-500" />
+                      <span className="font-semibold mr-2">Username:</span>{" "}
+                      {employee.username}
+                    </p>
+                    <p className="flex items-center text-gray-700">
+                      <FileText className="w-5 h-5 mr-2 text-green-500" />
+                      <span className="font-semibold mr-2">Email:</span>{" "}
+                      {employee.email}
+                    </p>
+                    <p className="flex items-center text-gray-700">
+                      <Clock className="w-5 h-5 mr-2 text-green-500" />
+                      <span className="font-semibold mr-2">Role:</span>{" "}
+                      {employee.role}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Time Log / Employee Tracker Content */}
-                {showTimeLog && (
-                  <div className="mt-6">
-                    <div className="rounded-md border">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="w-[200px] font-medium">Log-in</th>
-                            <th className="w-[200px] font-medium">Log-out</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {timeEntries.map((entry, index) => (
-                            <tr key={index}>
-                              <td className="font-mono">{entry.logIn}</td>
-                              <td className="font-mono">{entry.logOut}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                {/* Action Buttons */}
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-4 rounded-lg shadow">
+                    <div className="space-y-4">
+                      {/* Edit Employee Details */}
+                      <button
+                        
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Edit className="w-5 h-5 mr-2" />
+                        Edit Details
+                      </button>
+                      {/* Additional Actions */}
+                      <button
+                        className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                      >
+                        <Plus className="w-5 h-5 mr-2" />
+                        Add Additional Info
+                      </button>
                     </div>
                   </div>
-                )}
-
-                {showEmployeeTracker && (
-                  <div className="mt-6">
-                    <h3 className="text-xl font-semibold mb-4">Employee Tracker</h3>
-                    {/* Example table for employee tracking */}
-                    <div className="rounded-md border">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr>
-                            <th className="w-[150px] font-medium">Date of Edit</th>
-                            <th className="w-[150px] font-medium">File Record</th>
-                            <th className="w-[200px] font-medium">Patient</th>
-                            <th className="w-[100px] font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[1, 2, 3, 4].map((_, index) => (
-                            <tr key={index}>
-                              <td>24/05/2024</td>
-                              <td>Record 1</td>
-                              <td>Genrey O. Cristobal</td>
-                              <td>
-                                <button className="text-blue-500 hover:text-blue-700">View</button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Trigger Modal Button */}
-              <div className="mt-6">
-                <button
-                  onClick={handleOpenModal}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Open Credentials Modal
-                </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
-
-      {/* Modal Component */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleModalSubmit}
-      />
     </div>
   );
 };
 
-export default Employee;
+export default EmployeeDetails;

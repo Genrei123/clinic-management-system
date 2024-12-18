@@ -4,13 +4,18 @@ import axiosInstance from "../../config/axiosConfig";
 import inventoryService from "../../services/inventoryService";
 
 interface RenderService {
+  serviceID: number; // Matches backend `serviceID`
   serviceName: string;
-  price: number;
-  description: string;
+  servicePrice: number;
+  serviceDescription: string;
 }
 
-interface SelectedMedicine extends RenderService {
+interface SelectedMedicine {
+  itemID: number; // Matches backend `itemID`
+  itemName: string;
+  itemPrice: number;
   quantity: number;
+  expDate: string;
 }
 
 interface RenderServicesModalProps {
@@ -18,6 +23,8 @@ interface RenderServicesModalProps {
   onClose: () => void;
   patient: {
     id: string;
+    clientID: Number;
+    patientID: string; // Use `patientID` from the `Patient` model
     name: string;
   };
 }
@@ -33,8 +40,9 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   const [serviceSearch, setServiceSearch] = useState("");
   const [medicineSearch, setMedicineSearch] = useState("");
   const [serviceSuggestions, setServiceSuggestions] = useState<RenderService[]>([]);
-  const [medicineSuggestions, setMedicineSuggestions] = useState<RenderService[]>([]);
-  const [medicines, setMedicines] = useState<RenderService[]>([]);
+  const [medicineSuggestions, setMedicineSuggestions] = useState<SelectedMedicine[]>([]);
+  const [medicines, setMedicines] = useState<SelectedMedicine[]>([]);
+  const [notes, setNotes] = useState("");
 
   // Fetch services from the database
   useEffect(() => {
@@ -42,9 +50,10 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
       try {
         const response = await axiosInstance.get("/service/getServices");
         const formattedServices = response.data.map((service: any) => ({
+          serviceID: service.serviceID, // Map to match backend `serviceID`
           serviceName: service.service_name,
-          price: service.service_price,
-          description: service.service_description,
+          servicePrice: service.service_price,
+          serviceDescription: service.service_description,
         }));
         setServices(formattedServices);
       } catch (error) {
@@ -56,14 +65,16 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   }, []);
 
   useEffect(() => {
+    console.log("Patient:", patient);
     const fetchMedicines = async () => {
       try {
         const medicineData = await inventoryService.getItems();
-        const formattedMedicineData = medicineData.map((item) => ({
-          serviceName: item.item_name,
-          price: item.item_price,
-          quantity: item.item_quantity ?? 0,
-          description: `Quantity: ${item.item_quantity ?? 0}, Exp: ${item.exp_date}`,
+        const formattedMedicineData = medicineData.map((item: any) => ({
+          itemID: item.itemID, // Map to match backend `itemID`
+          itemName: item.item_name,
+          itemPrice: item.item_price,
+          quantity: 1, // Default initial quantity for selection
+          expDate: item.exp_date,
         }));
         setMedicines(formattedMedicineData);
       } catch (error) {
@@ -82,7 +93,7 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
 
   const fetchMedicineSuggestions = (query: string) => {
     const results = medicines.filter((medicine) =>
-      medicine.serviceName.toLowerCase().includes(query.toLowerCase())
+      medicine.itemName.toLowerCase().includes(query.toLowerCase())
     );
     setMedicineSuggestions(results);
   };
@@ -108,19 +119,16 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   };
 
   const handleServiceSuggestionClick = (service: RenderService) => {
-    if (!selectedServices.some((s) => s.serviceName === service.serviceName)) {
+    if (!selectedServices.some((s) => s.serviceID === service.serviceID)) {
       setSelectedServices((prev) => [...prev, service]);
     }
     setServiceSearch("");
     setServiceSuggestions([]);
   };
 
-  const handleMedicineSuggestionClick = (medicine: RenderService) => {
-    if (!selectedMedicines.some((m) => m.serviceName === medicine.serviceName)) {
-      setSelectedMedicines((prev) => [
-        ...prev,
-        { ...medicine, quantity: 1 },
-      ]);
+  const handleMedicineSuggestionClick = (medicine: SelectedMedicine) => {
+    if (!selectedMedicines.some((m) => m.itemID === medicine.itemID)) {
+      setSelectedMedicines((prev) => [...prev, medicine]);
     }
     setMedicineSearch("");
     setMedicineSuggestions([]);
@@ -142,17 +150,47 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
     }
   };
 
+  const calculateTotalCost = () => {
+    const servicesCost = selectedServices.reduce((sum, service) => sum + service.servicePrice, 0);
+    const medicinesCost = selectedMedicines.reduce(
+      (sum, medicine) => sum + medicine.itemPrice * medicine.quantity,
+      0
+    );
+    return servicesCost + medicinesCost;
+  };
+
   const handleSubmit = async () => {
     try {
-      console.log("Selected Services:", selectedServices);
-      console.log("Selected Medicines:", selectedMedicines);
-      alert("Services and medicines selected successfully!");
+      // Prepare the payload
+      const payload = {
+        patient: {
+          patientID: patient.id, // Use `patientID` from the `Patient` model
+        },
+        services: selectedServices.map((service) => ({
+          serviceID: service.serviceID, // Use `serviceID` from the backend
+        })),
+        items: selectedMedicines.map((medicine) => ({
+          itemID: medicine.itemID, // Use `itemID` from the backend
+          item_quantity: medicine.quantity, // Quantity used
+        })),
+        totalCost: calculateTotalCost(),
+        notes: notes, // Add notes dynamically if needed
+      };
+  
+      console.log("Payload:", JSON.stringify(payload, null, 2));
+  
+      // Send the payload to the backend
+      const response = await axiosInstance.post("/service/renderService", payload);
+      alert("Services and medicines rendered successfully!");
+  
+      // Close the modal after success
       onClose();
     } catch (error) {
       console.error("Error submitting data:", error);
       alert("An error occurred while submitting the data.");
     }
   };
+  
 
   if (!isOpen) return null;
 
@@ -213,7 +251,7 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
                       className="p-2 hover:bg-gray-100 cursor-pointer"
                       onClick={() => handleMedicineSuggestionClick(medicine)}
                     >
-                      {medicine.serviceName}
+                      {medicine.itemName}
                     </li>
                   ))}
                 </ul>
@@ -237,9 +275,9 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
                     >
                       <div>
                         <h4 className="font-medium">{service.serviceName}</h4>
-                        <p className="text-sm text-gray-600">{service.description}</p>
+                        <p className="text-sm text-gray-600">{service.serviceDescription}</p>
                         <p className="text-sm text-gray-800 font-bold">
-                          ${service.price}
+                          PHP {service.servicePrice}
                         </p>
                       </div>
                       <button
@@ -264,10 +302,10 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
                       className="border rounded-md p-4 shadow-sm flex items-center justify-between mb-2"
                     >
                       <div>
-                        <h4 className="font-medium">{medicine.serviceName}</h4>
-                        <p className="text-sm text-gray-600">{medicine.description}</p>
+                        <h4 className="font-medium">{medicine.itemName}</h4>
+                        <p className="text-sm text-gray-600">Exp: {medicine.expDate}</p>
                         <p className="text-sm text-gray-800 font-bold">
-                          ${medicine.price}
+                          PHP {medicine.itemPrice}
                         </p>
                         <div className="flex items-center space-x-2 mt-2">
                           <label className="text-sm font-semibold">Quantity:</label>
@@ -297,6 +335,17 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
               )}
             </div>
           </div>
+        </div>
+
+        {/* Make notes */}
+        <div className="mt-6">
+          <label className="block text-sm font-semibold mb-2">Notes:</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full p-2 border rounded"
+            rows={4}
+          ></textarea>
         </div>
 
         <div className="mt-6">

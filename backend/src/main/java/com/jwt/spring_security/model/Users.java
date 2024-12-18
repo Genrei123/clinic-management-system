@@ -12,6 +12,17 @@ public class Users {
     private String password;
     private String role; // Add role to differentiate Owner and Employee
 
+    @Column(unique = true) // Ensures email uniqueness
+    private String email;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public Long getId() {
         return id;
     }

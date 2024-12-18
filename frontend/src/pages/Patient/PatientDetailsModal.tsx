@@ -1,94 +1,78 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axiosInstance from "../../config/axiosConfig";
+import { useNavigate } from "react-router-dom";
 
 interface PatientDetailsModalProps {
   isOpen: boolean;
-  data: { [key: string]: any };
+  data?: { [key: string]: any }; // Make `data` optional
   onClose: () => void;
+  
 }
 
 const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   isOpen,
-  data,
+  data = {}, // Default to empty object
   onClose,
-}) => {
+  }) => {
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState(data);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [status, setStatus] = useState(data?.status || "active");
+
+  useEffect(() => {
+    if (isOpen && data) {
+      setFormData(data);
+      setStatus(data.status || "active");
+      setExpandedSections([]);
+    } else if (!isOpen) {
+      setIsEditing(false);
+      setExpandedSections([]);
+    }
+  }, [isOpen, data]);
+
+  const handleUpdate = async () => {
+    try {
+      await axiosInstance.patch(`/updatePatient/${formData.clientID}`, formData);
+      setIsEditing(false);
+      alert("Patient details updated successfully.");
+    } catch (error) {
+      console.error("Error updating patient:", error);
+      alert("An error occurred while updating patient details.");
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      await axiosInstance.patch(`/archivePatient/${data.clientID}`);
+      setIsArchiveModalOpen(false);
+      setStatus("archived");
+      onClose();
+      alert("Patient archived successfully.");
+      navigate("/patientrecords");
+    } catch (error) {
+      console.error("Error archiving patient:", error);
+      alert("An error occurred while archiving the patient.");
+    }
+  };
+
+  const handleUnarchive = async () => {
+    try {
+      await axiosInstance.patch(`/unarchivePatient/${data.clientID}`);
+      setIsArchiveModalOpen(false);
+      setStatus("active");
+      ;
+      onClose();
+      alert("Patient unarchived successfully.");
+      navigate("/patientrecords");
+    } catch (error) {
+      console.error("Error unarchiving patient:", error);
+      alert("An error occurred while unarchiving the patient.");
+    }
+  };
+
   if (!isOpen) return null;
-
-  const friendlyTerms: { [key: string]: string } = {
-    patientID: "Patient ID",
-    lastName: "Last Name",
-    givenName: "First Name",
-    middleInitial: "Middle Initial",
-    sex: "Sex",
-    address: "Address",
-    age: "Age",
-    birthday: "Date of Birth",
-    religion: "Religion",
-    occupation: "Occupation",
-    lastDelivery: "Last Delivery Date",
-    philhealthID: "PhilHealth ID",
-    spouse: "Spouse Information",
-    pregnancy: "Pregnancy Information",
-    consultation: "Consultation Information",
-    medicalHistory: "Medical History",
-    // Nested spouse keys
-    spouseName: "Spouse Name",
-    spouseBirthday: "Spouse's Date of Birth",
-    spouseReligion: "Spouse's Religion",
-    spouseOccupation: "Spouse's Occupation",
-    spouseContactNumber: "Spouse's Contact Number",
-    spouseAge: "Spouse's Age",
-    // Pregnancy keys
-    gravida: "Number of Pregnancies",
-    para: "Number of Births",
-    term: "Full-term Births",
-    pre_term: "Pre-term Births",
-    abortion: "Number of Abortions",
-    living: "Living Children",
-    LMP: "Last Menstrual Period",
-    EDC: "Estimated Due Date",
-    IT_date: "Initial Treatment Date",
-    menarche: "Age at First Menstruation",
-    // Consultation keys
-    consultationDate: "Consultation Date",
-    AOG: "Age of Gestation (weeks)",
-    BP: "Blood Pressure",
-    weight: "Weight",
-    FH: "Fundal Height",
-    FHT: "Fetal Heart Tone",
-    remarks: "Remarks",
-    // Medical history keys
-    smoking: "Smoker",
-    allergies: "Allergies",
-    drugIntake: "Taking Medications",
-    bleedingAnemia: "History of Bleeding/Anemia",
-    diabetesCongenitalAnomalies: "Diabetes or Congenital Anomalies",
-    previousCSection: "Previous C-Section",
-    consecutiveMiscarriages: "Consecutive Miscarriages",
-    postPartumHemorrhage: "Postpartum Hemorrhage",
-    forcepDelivery: "Forceps Delivery",
-    hypertension: "Hypertension",
-  };
-
-  const renderValue = (value: any): React.ReactNode => {
-    if (typeof value === "object" && value !== null) {
-      return (
-        <div className="grid grid-cols-2 gap-4">
-          {Object.entries(value).map(([key, val]) => (
-            <div key={key} className="flex">
-              <span className="font-medium w-1/2 text-right pr-2">
-                {friendlyTerms[key] || key}:
-              </span>
-              <span className="w-1/2">{renderValue(val)}</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    if (typeof value === "boolean") {
-      return value ? "Yes" : "No";
-    }
-    return value?.toString() || "N/A";
-  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -97,20 +81,15 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
         <div className="space-y-6 mb-8">
           <table className="w-full table-auto border-collapse">
             <tbody>
-              {Object.entries(data)
-                .filter(
-                  ([key]) => key !== "imagePath" && key !== "clientID" // Filter unused keys
-                )
+              {Object.entries(formData)
+                .filter(([key]) => key !== "imagePath")
                 .map(([key, value]) => (
-                  <tr
-                    key={key}
-                    className="border-b border-gray-200 last:border-b-0"
-                  >
+                  <tr key={key} className="border-b border-gray-200 last:border-b-0">
                     <td className="py-3 pr-6 font-medium text-right align-top w-1/4">
-                      {friendlyTerms[key] || key}:
+                      {key}:
                     </td>
                     <td className="py-3 pl-6 text-left align-top">
-                      {renderValue(value)}
+                      {value?.toString() || "N/A"}
                     </td>
                   </tr>
                 ))}
@@ -118,17 +97,55 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
           </table>
         </div>
         <div className="flex justify-end space-x-6 pt-6 border-t border-gray-200">
-          <button className="bg-blue-500 text-white px-8 py-3 rounded-lg text-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
-            Edit
+          <button
+            className={`${
+              status === "archived" ? "bg-green-500" : "bg-yellow-500"
+            } text-white px-8 py-3 rounded-lg text-lg hover:${
+              status === "archived" ? "bg-green-600" : "bg-yellow-600"
+            } transition-colors duration-200`}
+            onClick={() => setIsArchiveModalOpen(true)}
+          >
+            {status === "archived" ? "Unarchive" : "Archive"}
           </button>
           <button
-            className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg text-lg hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg text-lg hover:bg-gray-300 transition-colors duration-200"
             onClick={onClose}
           >
             Close
           </button>
         </div>
       </div>
+
+      {isArchiveModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-bold text-gray-800">
+              Confirm {status === "archived" ? "Unarchive" : "Archive"}
+            </h3>
+            <p className="text-gray-600 my-4">
+              Are you sure you want to {status === "archived" ? "unarchive" : "archive"} this patient?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+                onClick={() => setIsArchiveModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={`${
+                  status === "archived" ? "bg-green-500" : "bg-yellow-500"
+                } text-white px-4 py-2 rounded-lg hover:${
+                  status === "archived" ? "bg-green-600" : "bg-yellow-600"
+                }`}
+                onClick={status === "archived" ? handleUnarchive : handleArchive}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,4 +5,6 @@ import com.jwt.spring_security.model.Services;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ServiceRepository extends JpaRepository<Services, Long> {
+
+
 }

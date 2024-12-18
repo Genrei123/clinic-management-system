@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
@@ -18,7 +18,7 @@ import { getPatientById } from "../../services/patientService";
 import useModal from "../Home/useModal";
 import RenderServicesModal from "./RenderServicesModal";
 import PatientDetailsModal from "./PatientDetailsModal";
-
+import axiosInstance from "../../config/axiosConfig";
 
 interface Visit {
   visitDate: string;
@@ -31,17 +31,36 @@ interface File {
   type: string;
 }
 
+interface ServiceItem {
+  itemName: string;
+  itemQuantity: number;
+  itemPrice: number;
+}
+
+interface ServiceRendered {
+  renderedDate: string;
+  services: { serviceName: string; servicePrice: number }[];
+  items?: ServiceItem[];
+  totalCost: number;
+  notes: string;
+}
+
 interface Patient {
-  id: string;
+  clientID: Number;
   name: string;
   expectedDateConfinement?: string;
   visitHistory: Visit[];
   files: File[];
+  renderedServices?: ServiceRendered[];
 }
 
 const Patient: React.FC = () => {
   const { isModalOpen, openModal, closeModal } = useModal();
-  const { isModalOpen: isPatientModalOpen, openModal: openPatientModal, closeModal: closePatientModal } = useModal();
+  const {
+    isModalOpen: isPatientModalOpen,
+    openModal: openPatientModal,
+    closeModal: closePatientModal,
+  } = useModal();
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -49,7 +68,7 @@ const Patient: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<string>("");
   const [patientInfo, setPatientInfo] = useState<any>();
   const [patient, setPatient] = useState<Patient>({
-    id: "",
+    clientID: 0,
     name: "",
     expectedDateConfinement: "",
     visitHistory: [],
@@ -57,14 +76,43 @@ const Patient: React.FC = () => {
   });
   const [step, setStep] = useState<"create">();
 
+  // Ref for the hidden file input for multiple file uploads
+  const multipleFilesInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    
     const fetchPatientData = async () => {
       try {
         const patientInfo = await getPatientById(Number(id));
-        console.log("Patient Info:", patientInfo);
-
         setPatientInfo(patientInfo);
+
+        // Initialize an empty array for services
+        let servicesData = [];
+
+        try {
+          // Separate try-catch for services endpoint to handle potential 404
+          const servicesResponse = await axiosInstance.get(
+            `/service/getRenderedServicesByPatientId/${patientInfo.clientID}`
+          );
+          servicesData = servicesResponse.data;
+        } catch (serviceError: any) {
+          // Generic error handling for services fetch
+          if (serviceError.response?.status === 404) {
+            console.log(`No services found for patient ${patientInfo.clientID}`);
+          } else {
+            console.warn("Error fetching services:", serviceError);
+          }
+        }
+
+        // Map services data (will be an empty array if fetch failed)
+        const mappedRenderedServices = (servicesData || []).map((rs: any) => ({
+          renderedDate: rs.renderedDate
+            ? new Date(rs.renderedDate).toLocaleDateString()
+            : "",
+          services: rs.services || [],
+          items: rs.items || [],
+          notes: rs.notes || "",
+          totalCost: rs.totalCost || 0,
+        }));
 
         setPatient({
           id: patientInfo?.patientID || "",
@@ -74,71 +122,121 @@ const Patient: React.FC = () => {
               } ${patientInfo.lastName || ""}`.trim()
             : "",
           expectedDateConfinement: patientInfo.pregnancy?.edc
-            ? new Date(patientInfo.pregnancy.edc)
-                .toISOString()
-                .split("T")[0]
+            ? new Date(patientInfo.pregnancy.edc).toISOString().split("T")[0]
             : "",
-          visitHistory: patientInfo?.consultation
-            ? [
-                {
-                  visitDate: new Date(patientInfo.consultation.consultation_date || "").toLocaleDateString(),
-                  reason: patientInfo.consultation.remarks || "Checkup",
-                },
-              ]
-            : [],
-          files: [],
+          renderedServices: mappedRenderedServices,
+          visitHistory: [],
+          files: [], // Assuming we fetch files separately if needed
         });
 
         if (patientInfo?.imagePath) {
           setPatientImage(patientInfo.imagePath);
+        } else {
+          setPatientImage(null);
         }
       } catch (error) {
         console.error("Error fetching patient data:", error);
-        // Optionally set a default or empty patient state
         setPatient({
-          id: "",
+          clientID: 0,
           name: "",
           expectedDateConfinement: "",
           visitHistory: [],
           files: [],
+          renderedServices: [], // Added renderedServices to match initial state
         });
       }
-
-
     };
 
     fetchPatientData();
-
   }, [id]);
 
   const handleImageUpload = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          setPatientImage(result);
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setPatientImage(result);
+      };
+      reader.readAsDataURL(file);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("patientId", String(patientInfo.clientID));
+
+      try {
+        const response = await axiosInstance.post(
+          "/uploadPatientImage",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Image uploaded successfully:", response.data);
+          if (response.data.imagePath) {
+            setPatientImage(response.data.imagePath);
+          }
+        } else {
+          console.error("Upload failed with status:", response.status);
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
       }
     },
-    []
+    [patientInfo]
   );
 
-  const uploadOtherFiles = useCallback(() => {
-    console.log("Uploading other files to Google Drive (placeholder).");
-    alert("File uploaded to Google Drive (placeholder).");
-    // In a real implementation, you would upload the file and then add it to the patient's files array
-    const newFile: File = {
-      name: "New File.pdf",
-      uploadDate: new Date().toISOString().split("T")[0],
-      type: "PDF",
-    };
-    setPatient((prev) => ({
-      ...prev,
-      files: [...prev.files, newFile],
-    }));
+  const handleOtherFilesInputChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]); // 'files' must match @RequestParam on backend
+      }
+      formData.append("patientId", String(patientInfo.clientID));
+
+      try {
+        const response = await axiosInstance.post(
+          "/uploadPatientFiles",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Files uploaded successfully:", response.data);
+          // Assume response.data contains an updated file list or the newly uploaded files
+          if (response.data.files) {
+            setPatient((prev) => ({
+              ...prev,
+              files: [...prev.files, ...response.data.files],
+            }));
+          }
+        } else {
+          console.error("Upload failed with status:", response.status);
+        }
+      } catch (error) {
+        console.error("Error uploading files:", error);
+      }
+    },
+    [patientInfo]
+  );
+
+  const triggerMultipleFileUpload = useCallback(() => {
+    if (multipleFilesInputRef.current) {
+      multipleFilesInputRef.current.click();
+    }
   }, []);
 
   const handleGeneratePDF = useCallback(() => {
@@ -146,12 +244,10 @@ const Patient: React.FC = () => {
       alert("Please select a form to generate.");
       return;
     }
-    navigate(`/generate-pdf?form=${selectedForm}&patientId=${patientInfo.clientID}`);
+    navigate(
+      `/generate-pdf?form=${selectedForm}&patientId=${patientInfo.clientID}`
+    );
   }, [selectedForm, navigate, patient.id]);
-
-  const handleDeleteLogs = () => {
-    console.log("Deleting logs (placeholder).");
-  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -244,13 +340,15 @@ const Patient: React.FC = () => {
                         <FileText className="w-5 h-5 mr-2" />
                         Generate PDF
                       </button>
-                      <button
-                        onClick={uploadOtherFiles}
-                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                      >
-                        <Upload className="w-5 h-5 mr-2" />
-                        Upload Other Files
-                      </button>
+
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        ref={multipleFilesInputRef}
+                        className="hidden"
+                        onChange={handleOtherFilesInputChange}
+                      />
                       <button
                         onClick={openModal}
                         className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
@@ -262,10 +360,10 @@ const Patient: React.FC = () => {
                       <button
                         onClick={openPatientModal}
                         className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                        >
+                      >
                         <UserCheck className="w-5 h-5 mr-2" />
                         Patient Details
-                        </button>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -273,41 +371,77 @@ const Patient: React.FC = () => {
 
               <div className="p-6 border-t border-gray-200">
                 <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                  Visit History
+                  Rendered Services
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gray-50">
                         <th className="border border-gray-200 p-2 text-left">
-                          Visit Date
+                          Services
                         </th>
                         <th className="border border-gray-200 p-2 text-left">
-                          Reason
+                          Items
                         </th>
-
-                        
+                        <th className="border border-gray-200 p-2 text-left">
+                          Total Cost
+                        </th>
+                        <th className="border border-gray-200 p-2 text-left">
+                          Notes
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {patient.visitHistory.map((visit, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="border border-gray-200 p-2">
-                            <div className="flex items-center">
-                              <Calendar className="w-5 h-5 mr-2 text-gray-500" />
-                              {visit.visitDate}
-                            </div>
+                      {patient.renderedServices &&
+                      patient.renderedServices.length > 0 ? (
+                        patient.renderedServices.map(
+                          (rs: any, index: number) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="border border-gray-200 p-2">
+                                <ul className="list-disc ml-5">
+                                  {rs.services.map((s: any, sIndex: number) => (
+                                    <li key={sIndex}>
+                                      {s.serviceName} - PHP
+                                      {s.servicePrice.toFixed(2)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </td>
+                              <td className="border border-gray-200 p-2">
+                                {rs.items && rs.items.length > 0 ? (
+                                  <ul className="list-disc ml-5">
+                                    {rs.items.map(
+                                      (item: any, iIndex: number) => (
+                                        <li key={iIndex}>
+                                          {item.itemName} @ PHP
+                                          {item.itemPrice.toFixed(2)}
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                ) : (
+                                  <span>No items used</span>
+                                )}
+                              </td>
+                              <td className="border border-gray-200 p-2">
+                                PHP{rs.totalCost.toFixed(2)}
+                              </td>
+                              <td className="border border-gray-200 p-2">
+                                {rs.notes}
+                              </td>
+                            </tr>
+                          )
+                        )
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="border border-gray-200 p-2 text-center"
+                          >
+                            No rendered services found.
                           </td>
-                          <td className="border border-gray-200 p-2">
-                            <div className="flex items-center">
-                              <Clock className="w-5 h-5 mr-2 text-gray-500" />
-                              {visit.reason}
-                            </div>
-                          </td>
-
-                          
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -316,8 +450,16 @@ const Patient: React.FC = () => {
           </div>
         </main>
       </div>
-      <RenderServicesModal isOpen={isModalOpen} onClose={closeModal} patient={patient} />
-      <PatientDetailsModal isOpen={isPatientModalOpen} onClose={closePatientModal} data={patientInfo} />
+      <RenderServicesModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        patient={patient}
+      />
+      <PatientDetailsModal
+        isOpen={isPatientModalOpen}
+        onClose={closePatientModal}
+        data={patientInfo}
+      />
     </div>
   );
 };

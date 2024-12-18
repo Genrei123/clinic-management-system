@@ -1,6 +1,7 @@
 package com.jwt.spring_security.controller;
 
 import com.jwt.spring_security.model.Users;
+import com.jwt.spring_security.repo.UserRepo;
 import com.jwt.spring_security.response.UserResponse;
 import com.jwt.spring_security.service.UsersService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +11,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 public class UsersController {
 
     @Autowired
     UsersService usersService;
+
+    @Autowired
+    UserRepo userRepo;
 
     @PostMapping("/register")
     public Users registerUser(@RequestBody Users user) {
@@ -69,6 +74,11 @@ public class UsersController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/users")
+    public List<Users> getAllUsers() {
+        return userRepo.findAll();
     }
 
 

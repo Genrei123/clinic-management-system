@@ -114,10 +114,10 @@ const LandingPage: React.FC = () => {
 
   const branches = [
     {
-      name: "Branch 1",
-      address: "123 Main Street, City A",
+      name: "Main Branch",
+      address: "BLK 27 LOT 17 PKG2 PHASE 10-A BAGONG SILANG CALOOCAN CITY, Caloocan, Kalakhang Maynila",
       fbLink: "https://facebook.com/branch1",
-      mapLink: "https://www.google.com/maps?q=123+Main+Street,+City+A",
+      mapLink: "https://maps.app.goo.gl/3Hrb9vifsrHtxNwC7",
     },
     {
       name: "Branch 2",
@@ -136,6 +136,7 @@ const LandingPage: React.FC = () => {
   const infoBoxes = [
     { title: "Our Mission", content: "Dedicated in rendering quality healthcare services, establishing cooperative relationships with healthcare professionals and promotion of wellness through health and awareness in enriching the quality of life in the community." },
     { title: "Our Vision", content: "Envisions a partnership between healthcare providers and community dedicated to achieving excellence in health services and outcomes." },
+    { title: "Our Service", content: "We offer comprehensive healthcare services, including general consultations, preventive care, diagnostics, chronic disease management, minor procedures, and specialized referrals to meet your health needs." }
   ];
 
   const carouselImages = [
@@ -163,8 +164,6 @@ const LandingPage: React.FC = () => {
             JIMIRENE Maternity and Diagnostic Clinic
           </Typography>
           <Box>
-            <NavButton>About Us</NavButton>
-            <NavButton>Locations</NavButton>
             <Button
               variant="outlined"
               sx={{

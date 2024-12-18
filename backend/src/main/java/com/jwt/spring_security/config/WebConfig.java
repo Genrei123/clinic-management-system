@@ -25,7 +25,7 @@ public class WebConfig {
                 HttpHeaders.CONTENT_TYPE,
                 HttpHeaders.ACCEPT
         ));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         source.registerCorsConfiguration("/**", config);
         FilterRegistrationBean bean = new FilterRegistrationBean(new org.springframework.web.filter.CorsFilter(source));
         bean.setOrder(-102);

@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Calendar, Settings, LogOut, Search, X } from 'lucide-react';
+import { Bell, LogOut, Search, X } from "lucide-react";
 import CalendarModal from "./modals/CalendarModal";
 import SettingsModal from "./modals/SettingsModal";
 import NotificationsModal from "./modals/NotificationsModal";
 import LogoutModal from "./modals/LogoutModal";
 import { searchPatients } from "../services/patientService";
 import Patient from "../types/Patient";
-
-// Removed local Patient interface as it is now imported from patientService
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -32,20 +30,25 @@ const Navbar: React.FC = () => {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
+    setFilteredPatients([]);
+    setError(null);
+
     if (query.trim() === "") {
       setFilteredPatients([]);
       return;
     }
 
     setLoading(true);
-    setError(null);
-
     try {
       const result = await searchPatients(query);
-      setFilteredPatients(result);
-
+      if (result.length === 0) {
+        setError("No results found.");
+      } else {
+        setFilteredPatients(result);
+      }
     } catch (err: any) {
-      console.error(err.message);
+      console.error("Search error:", err);
+      setError("No patient matches " + query + " Please try again.");
     } finally {
       setLoading(false);
     }
@@ -54,8 +57,6 @@ const Navbar: React.FC = () => {
   return (
     <div className="bg-white shadow-md">
       <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
-        
-        
         {/* Search Bar */}
         <div className="relative w-full max-w-md mx-4">
           <div className="relative">
@@ -72,38 +73,56 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Search Results Dropdown */}
-          {filteredPatients.length > 0 && (
+          {(filteredPatients.length > 0 || error || loading) && (
             <div className="absolute z-10 w-full mt-2 bg-white border rounded-lg shadow-lg">
               <div className="p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-lg font-semibold text-gray-700">Search Results:</h3>
-                  <button 
-                    onClick={() => setFilteredPatients([])} 
+                  <h3 className="text-lg font-semibold text-gray-700">
+                    Search Results:
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setFilteredPatients([]);
+                      setError(null);
+                    }}
                     className="text-gray-500 hover:text-gray-700 transition duration-150 ease-in-out"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                <ul className="divide-y divide-gray-200">
-                  {filteredPatients.map((patient) => (
-                    <li
-                      key={patient.clientID}
-                      className="py-3 flex justify-between items-center hover:bg-gray-50 transition duration-150 ease-in-out cursor-pointer"
-                    >
-                      <div>
-                        <span className="font-medium text-gray-800">{patient.lastName + " " + patient.givenName}</span>
-                        <p className="text-sm text-gray-600">
-                          {patient.sex}, Age: {patient.age}
-                        </p>
-                      </div>
-                      <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                        onClick={() => handleViewClick(patient.clientID)}
+                {loading && (
+                  <p className="text-sm text-gray-600 text-center">
+                    Searching...
+                  </p>
+                )}
+                {!loading && error && (
+                  <p className="text-sm text-gray-600 text-center">{error}</p>
+                )}
+                {!loading && !error && (
+                  <ul className="divide-y divide-gray-200">
+                    {filteredPatients.map((patient) => (
+                      <li
+                        key={patient.clientID}
+                        className="py-3 flex justify-between items-center hover:bg-gray-50 transition duration-150 ease-in-out cursor-pointer"
+                      >
+                        <div>
+                          <span className="font-medium text-gray-800">
+                            {patient.lastName + " " + patient.givenName}
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            {patient.sex}, Age: {patient.age}
+                          </p>
+                        </div>
+                        <button
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-full text-xs transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                          onClick={() => handleViewClick(patient.clientID)}
                         >
                           View
                         </button>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           )}
@@ -111,10 +130,16 @@ const Navbar: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
-          <NavbarButton onClick={() => setIsNotificationsOpen(true)} icon={Bell} label="Notifications" />
-          <NavbarButton onClick={() => setIsCalendarOpen(true)} icon={Calendar} label="Calendar" />
-          <NavbarButton onClick={() => setIsSettingsOpen(true)} icon={Settings} label="Settings" />
-          <NavbarButton onClick={() => setIsLogoutModalOpen(true)} icon={LogOut} label="Logout" />
+          <NavbarButton
+            onClick={() => setIsNotificationsOpen(true)}
+            icon={Bell}
+            label="Notifications"
+          />
+          <NavbarButton
+            onClick={() => setIsLogoutModalOpen(true)}
+            icon={LogOut}
+            label="Logout"
+          />
         </div>
       </nav>
 
@@ -145,7 +170,11 @@ interface NavbarButtonProps {
   label: string;
 }
 
-const NavbarButton: React.FC<NavbarButtonProps> = ({ onClick, icon: Icon, label }) => (
+const NavbarButton: React.FC<NavbarButtonProps> = ({
+  onClick,
+  icon: Icon,
+  label,
+}) => (
   <button
     onClick={onClick}
     className="p-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -156,4 +185,3 @@ const NavbarButton: React.FC<NavbarButtonProps> = ({ onClick, icon: Icon, label 
 );
 
 export default Navbar;
-

@@ -9,11 +9,13 @@ import CSF from "../../assets/pdf/CSF.pdf";
 import ClaimForm1 from "../../assets/pdf/CF1.pdf";
 import ClaimForm2 from "../../assets/pdf/CF2.pdf";
 
+import axiosInstance from "../../config/axiosConfig";
+
 type PatientType = "Parent" | "Child";
 
 const GeneratePDF: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [formType, setFormType] = useState<string | null>(
+  const [formType, setFormType] = useState<string>(
     searchParams.get("form") || "CSF"
   );
   const [patientType, setPatientType] = useState<PatientType>("Parent");
@@ -23,13 +25,55 @@ const GeneratePDF: React.FC = () => {
   const navigate = useNavigate();
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [patientData, setPatientData] = useState<PatientPayload | null>(null);
 
   useEffect(() => {
     setSearchParams((params) => {
-      params.set("form", formType || "CSF");
+      params.set("form", formType);
       return params;
     });
   }, [formType, setSearchParams]);
+
+  // Helper function to convert timestamp to Date
+  const timestampToDate = (timestamp: number | null): Date | null => {
+    if (!timestamp) return null;
+    return new Date(timestamp);
+  };
+
+  // Function to fetch patient data
+  const fetchPatientData = async () => {
+    try {
+      const response = await axiosInstance.get("/getPatient", {
+        params: { patientId },
+      });
+      if (response.data && response.data.length > 0) {
+        return response.data[0] as PatientPayload;
+      } else {
+        throw new Error("No patient data found.");
+      }
+    } catch (error) {
+      console.error("Error fetching patient data:", error);
+      throw error;
+    }
+  };
+
+  // Mapping function
+  const getFieldMappings = (formType: string, patient: PatientPayload) => {
+    const textFields: { [key: string]: any } = {};
+    const checkBoxFields: { [key: string]: any } = {};
+
+    // Common Text Fields
+    
+    textFields["MI_last_name"] = patient.lastName;
+    textFields["MI_first_name"] = patient.givenName;
+    textFields["EC_Contact_Number"] = "test";
+    
+    
+  
+    
+
+    return { textFields, checkBoxFields };
+  };
 
   const getPDFFile = () => {
     switch (formType) {
@@ -46,42 +90,53 @@ const GeneratePDF: React.FC = () => {
 
   const handleIframeLoad = () => setLoading(false);
 
-  const fetchPatientData = async () => {
-    const response = await fetch(
-      `http://localhost:8080/getPatient?patientId=${patientId}`
-    );
-    if (!response.ok) {
-      throw new Error("Failed to fetch patient data.");
-    }
-    return response.json();
-  };
-
   const getPrefilledPDFFile = async () => {
+    if (!patientData) return null;
+
     try {
+      // Fetch the PDF file as array buffer using fetch
       const pdfBytes = await fetch(getPDFFile()).then((res) =>
         res.arrayBuffer()
       );
       const pdfDoc = await PDFDocument.load(pdfBytes);
       const form = pdfDoc.getForm();
 
-      //const patientData = await fetchPatientData();
+      const { textFields, checkBoxFields } = getFieldMappings(
+        formType,
+        patientData
+      );
 
-      //console.log("Patient Data:", patientData);
+      // Set Text Fields
+      Object.entries(textFields).forEach(([fieldName, value]) => {
+        try {
+          const textField = form.getTextField(fieldName);
+          if (textField) {
+            textField.setText(value.toString());
+          } else {
+            console.warn(`Text field "${fieldName}" not found in the PDF.`);
+          }
+        } catch (error) {
+          console.error(`Error setting text field "${fieldName}":`, error);
+        }
+      });
 
-      // Update form fields based on the data returned
-
-      // List all form fields
-      console.log("Form Fields:", form.getFields());
-
-      
-
-      if (patientType === "Parent") {
-        form.getTextField("MI_last_name").setText("Cristobal");
-        form.getTextField("MI_first_name").setText("Genrey");
-      } else {
-        form.getTextField("MI_last_name").setText("");
-        form.getTextField("MC_printed_name_member_rep").setText("Jaden");
-      }
+      // Set Checkboxes
+      Object.entries(checkBoxFields).forEach(([fieldName, value]) => {
+        try {
+          const checkbox = form.getCheckBox(fieldName);
+          if (checkbox) {
+            if (value.toString().toLowerCase() === "yes") {
+              checkbox.check();
+            } else {
+              checkbox.uncheck();
+            }
+          } else {
+            console.warn(`Checkbox field "${fieldName}" not found in the PDF.`);
+          }
+        } catch (error) {
+          console.error(`Error setting checkbox field "${fieldName}":`, error);
+        }
+      });
 
       const updatedPdfBytes = await pdfDoc.save();
       const blob = new Blob([updatedPdfBytes], { type: "application/pdf" });
@@ -94,15 +149,40 @@ const GeneratePDF: React.FC = () => {
 
   useEffect(() => {
     const loadPrefilledPDF = async () => {
-      setLoading(true);
-      const prefilledPDFUrl = await getPrefilledPDFFile();
-      setPdfUrl(prefilledPDFUrl);
-      setIframeKey((prevKey) => prevKey + 1);
-      setLoading(false);
+      if (!patientId) {
+        console.error("No patient ID provided.");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await fetchPatientData();
+        setPatientData(data);
+      } catch (error) {
+        console.error("Error fetching patient data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadPrefilledPDF();
-  }, [formType, patientType, patientId]);
+  }, [patientId]);
+
+  useEffect(() => {
+    const generatePDF = async () => {
+      if (!patientData) return;
+
+      setLoading(true);
+      const prefilledPDFUrl = await getPrefilledPDFFile();
+      if (prefilledPDFUrl) {
+        setPdfUrl(prefilledPDFUrl);
+        setIframeKey((prevKey) => prevKey + 1);
+      }
+      setLoading(false);
+    };
+
+    generatePDF();
+  }, [formType, patientType, patientData]);
 
   const handleFormChange = (newFormType: string) => {
     setFormType(newFormType);

@@ -21,6 +21,9 @@ public class Item {
     @JsonProperty("item_quantity")
     private Long itemQuantity;
 
+    @JsonProperty("item_stock")
+    private Long itemStock;
+
     @JsonProperty("item_price")
     private Double itemPrice;
 
@@ -37,6 +40,14 @@ public class Item {
     @ManyToOne
     @JoinColumn(name = "branchID", referencedColumnName = "branchID")
     private Branch branch;
+
+    public Long getItemStock() {
+        return itemStock;
+    }
+
+    public void setItemStock(Long itemStock) {
+        this.itemStock = itemStock;
+    }
 
     public Long getItemID() {
         return itemID;
@@ -55,7 +66,7 @@ public class Item {
     }
 
     public Long getItemQuantity() {
-        return itemQuantity;
+        return itemQuantity == null ? 0L: itemQuantity;
     }
 
     public void setItemQuantity(Long itemQuantity) {

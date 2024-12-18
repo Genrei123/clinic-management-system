@@ -47,9 +47,19 @@ public class Patient {
     @JsonManagedReference
     private MedicalHistory medicalHistory;
 
+    @Column(nullable = false)
+    private String status = "active"; // Default status is active
+
     // Getters and setters
 
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public MedicalHistory getMedicalHistory() {
         return medicalHistory;
