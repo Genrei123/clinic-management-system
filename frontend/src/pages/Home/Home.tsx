@@ -80,7 +80,7 @@ const Home: React.FC = () => {
         );
         const formattedServices = response.data.map((service: any) => ({
           name: service.service_name,
-          branch: service.branch || "Main Branch", // Assume default branch if not provided
+          branch: service.branch.branch_name || "Main Branch", // Assume default branch if not provided
           price: service.service_price,
         }));
         setServices(formattedServices);
@@ -238,7 +238,7 @@ const Home: React.FC = () => {
                           {service.branch}
                         </td>
                         <td className="py-3 px-6 text-right">
-                          ${service.price}
+                          PHP {service.price}
                         </td>
                       </tr>
                     ))
