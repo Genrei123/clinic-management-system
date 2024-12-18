@@ -83,8 +83,9 @@ export default function AccountDetails() {
   };
 
   const handleDelete = async (employeeID) => {
+    console.log("Deleting employee with ID:", employeeID); // Debugging line
     try {
-      await axiosInstance.delete(`/deleteEmployee/${employeeID}`);
+      await axiosInstance.delete(`/employees/deleteAccount/${employeeID}`);
       setAccounts((prev) =>
         prev.filter((account) => account.employeeID !== employeeID)
       );
@@ -94,6 +95,9 @@ export default function AccountDetails() {
       setMessage("An error occurred while deleting the account.");
     }
   };
+  
+  
+  
 
   const resetForm = () => {
     setAccountData({
@@ -159,11 +163,12 @@ export default function AccountDetails() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(account.employeeID)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      Delete
-                    </button>
+  onClick={() => handleDelete(account.employeeID)}
+  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+>
+  Delete
+</button>
+
                   </div>
                 </div>
               ))}

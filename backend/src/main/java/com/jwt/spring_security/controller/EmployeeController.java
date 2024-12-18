@@ -51,15 +51,15 @@ public class EmployeeController {
     }
 
 
-
-
-    @DeleteMapping("/delete/{employeeID}")
-    public ResponseEntity<?> deleteEmployee(@PathVariable int employeeID) {
-        boolean isRemoved = employeeService.deleteByEmployeeID(employeeID);
-        if (!isRemoved) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiErrorResponse("Not Found", "Employee with ID " + employeeID + " not found", employeeID));
+    @DeleteMapping("/deleteAccount/{employeeID}")
+    public ResponseEntity<String> deleteEmployee(@PathVariable int employeeID) {
+        boolean isDeleted = employeeService.deleteByEmployeeID(employeeID);
+        if (isDeleted) {
+            return ResponseEntity.ok("Employee deleted successfully");
+        } else {
+            return ResponseEntity.status(404).body("Employee not found");
         }
-        return ResponseEntity.noContent().build();
     }
 }
+
+
