@@ -49,11 +49,14 @@ export default function AccountDetails() {
 
         if (isEditing) {
             // Update account
-            await axiosInstance.put(`/updateAccount/${accountData.employeeID}`, accountData, config);
+            await axiosInstance.put(`/employees/updateAccount/${accountData.employeeID}`, accountData, config);
+
+
             setMessage("Account updated successfully!");
         } else {
             // Add new account
-            await axiosInstance.post("/addEmployee", accountData, config);
+            await axiosInstance.post("/employees/add", accountData, config);
+
             setMessage("Account added successfully!");
         }
 
@@ -203,15 +206,15 @@ export default function AccountDetails() {
                   Employee ID
                 </label>
                 <input
-                  type="number"
-                  id="employeeID"
-                  name="employeeID"
-                  value={accountData.employeeID}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  disabled={isEditing} // Prevent changing Employee ID during edit
-                />
+  type="number"
+  id="employeeID"
+  name="employeeID"
+  value={accountData.employeeID}
+  onChange={handleChange}
+  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  required
+/>
+
               </div>
               <div>
                 <label

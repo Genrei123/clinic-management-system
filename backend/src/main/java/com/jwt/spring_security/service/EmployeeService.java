@@ -2,7 +2,6 @@ package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Employee;
 import com.jwt.spring_security.repo.EmployeeRepo;
-import com.jwt.spring_security.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,11 +15,8 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepo employeeRepo;
 
-    @Autowired
-    private JWTService jwtService;
-
     public Employee save(Employee employee) {
-        employee.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(employee.getPassword()));
+        employee.setPassword(new BCryptPasswordEncoder().encode(employee.getPassword()));
         return employeeRepo.save(employee);
     }
 
@@ -50,21 +46,13 @@ public class EmployeeService {
 
     public Employee updateEmployee(int employeeID, Employee employeeDetails) {
         Employee existingEmployee = employeeRepo.findByEmployeeID(employeeID);
-        if (existingEmployee != null) {
-            existingEmployee.setUsername(employeeDetails.getUsername());
-            if (employeeDetails.getPassword() != null && !employeeDetails.getPassword().isEmpty()) {
-                existingEmployee.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(employeeDetails.getPassword()));
-            }
-            return employeeRepo.save(existingEmployee);
+        if (existingEmployee == null) {
+            return null;
         }
-        return null;
-    }
 
-    public boolean existsByEmail(String email) {
-        return employeeRepo.existsByEmail(email);
+        existingEmployee.setUsername(employeeDetails.getUsername());
+        existingEmployee.setEmail(employeeDetails.getEmail());
+        existingEmployee.setRole(employeeDetails.getRole());
+        return employeeRepo.save(existingEmployee);
     }
 }
-
-
-
-
