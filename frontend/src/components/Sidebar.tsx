@@ -52,9 +52,8 @@ function Sidebar() {
     { path: "/patientrecords", label: "Patient", icon: User, roles: ["owner", "employee"] },
     { path: "/inventory", label: "Inventory", icon: Package, roles: ["owner"] },
     { path: "/employees", label: "Employees", icon: Users, roles: ["owner", "employee"] },
-    { path: "/employee-clock-in", label: "Clock-In", icon: Clock, roles: ["employee"]},
+    { path: "/employee-clock-in", label: "Clock-In", icon: Clock, roles: ["employee", "owner"]},
     { path: "/reports", label: "Reports", icon: FileText, roles: ["owner"] },
-    { path: "/employee-clock-in", label: "Clock-In", icon: Clock, roles: ["owner", "employee"]},
     { path: "/account/profiles", label: "Profiles", icon: User, roles: ["owner"]}
   ];
 

@@ -2,7 +2,6 @@ package com.jwt.spring_security.service;
 
 import com.jwt.spring_security.model.Employee;
 import com.jwt.spring_security.repo.EmployeeRepo;
-import com.jwt.spring_security.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,55 +15,52 @@ public class EmployeeService {
     @Autowired
     private EmployeeRepo employeeRepo;
 
-    @Autowired
-    private JWTService jwtService;
-
+    // Save new employee with encrypted password
     public Employee save(Employee employee) {
-        employee.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(employee.getPassword()));
+        employee.setPassword(new BCryptPasswordEncoder().encode(employee.getPassword()));
         return employeeRepo.save(employee);
     }
 
+    // Fetch all employees
     public List<Employee> findAll() {
         return employeeRepo.findAll();
     }
 
+    // Find employee by employeeID
     public Employee findByEmployeeID(int employeeID) {
         return employeeRepo.findByEmployeeID(employeeID);
     }
 
+    // Find employee by ID
     public Optional<Employee> findByID(Long id) {
         return employeeRepo.findById(id);
     }
 
+    // Check if employee exists by employeeID
     public boolean existsByEmployeeID(int employeeID) {
         return employeeRepo.findByEmployeeID(employeeID) != null;
     }
 
+    // Delete employee by employeeID
     public boolean deleteByEmployeeID(int employeeID) {
-        if (employeeRepo.existsById((long) employeeID)) {
-            employeeRepo.deleteById((long) employeeID);
+        Employee employee = employeeRepo.findByEmployeeID(employeeID);
+        if (employee != null) {
+            employeeRepo.delete(employee);  // Delete by employee entity
             return true;
         }
         return false;
     }
 
+    // Update existing employee details
     public Employee updateEmployee(int employeeID, Employee employeeDetails) {
         Employee existingEmployee = employeeRepo.findByEmployeeID(employeeID);
-        if (existingEmployee != null) {
-            existingEmployee.setUsername(employeeDetails.getUsername());
-            if (employeeDetails.getPassword() != null && !employeeDetails.getPassword().isEmpty()) {
-                existingEmployee.setPassword(new BCryptPasswordEncoder(Constants.BCRYPT_STRENGTH).encode(employeeDetails.getPassword()));
-            }
-            return employeeRepo.save(existingEmployee);
+        if (existingEmployee == null) {
+            return null;
         }
-        return null;
-    }
 
-    public boolean existsByEmail(String email) {
-        return employeeRepo.existsByEmail(email);
+        existingEmployee.setUsername(employeeDetails.getUsername());
+        existingEmployee.setEmail(employeeDetails.getEmail());
+        existingEmployee.setRole(employeeDetails.getRole());
+        return employeeRepo.save(existingEmployee);
     }
 }
-
-
-
-

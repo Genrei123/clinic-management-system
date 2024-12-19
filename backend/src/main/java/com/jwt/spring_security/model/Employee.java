@@ -1,26 +1,25 @@
 package com.jwt.spring_security.model;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 public class Employee extends Users {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private int employeeID;
     private LocalDateTime loginTimeStamp;
     private String imagePath;
 
-    public String getImagePath() {
-        return imagePath;
+    // Getters and Setters
+    public Long getId() {
+        return id;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public int getEmployeeID() {
@@ -37,6 +36,14 @@ public class Employee extends Users {
 
     public void setLoginTimeStamp(LocalDateTime loginTimeStamp) {
         this.loginTimeStamp = loginTimeStamp;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     @Override

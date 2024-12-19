@@ -4,13 +4,12 @@ import com.jwt.spring_security.model.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface EmployeeRepo extends JpaRepository<Employee, Long> {
 
+    // Custom query to find employee by employeeID
     Employee findByEmployeeID(int employeeID);
-    boolean existsByEmail(String email); // Add this method
 
-
+    // Custom query to check if an email already exists in the database
+    boolean existsByEmail(String email);
 }

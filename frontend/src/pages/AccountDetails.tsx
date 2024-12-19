@@ -50,10 +50,13 @@ export default function AccountDetails() {
         if (isEditing) {
             // Update account
             await axiosInstance.put(`/updateAccount/${accountData.employeeID}`, accountData, config);
+
+
             setMessage("Account updated successfully!");
         } else {
             // Add new account
-            await axiosInstance.post("/addEmployee", accountData, config);
+            await axiosInstance.post("/add", accountData, config);
+
             setMessage("Account added successfully!");
         }
 
@@ -80,8 +83,9 @@ export default function AccountDetails() {
   };
 
   const handleDelete = async (employeeID) => {
+    console.log("Deleting employee with ID:", employeeID); // Debugging line
     try {
-      await axiosInstance.delete(`/deleteEmployee/${employeeID}`);
+      await axiosInstance.delete(`/deleteAccount/${employeeID}`);
       setAccounts((prev) =>
         prev.filter((account) => account.employeeID !== employeeID)
       );
@@ -91,6 +95,9 @@ export default function AccountDetails() {
       setMessage("An error occurred while deleting the account.");
     }
   };
+  
+  
+  
 
   const resetForm = () => {
     setAccountData({
@@ -156,11 +163,12 @@ export default function AccountDetails() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(account.employeeID)}
-                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    >
-                      Delete
-                    </button>
+  onClick={() => handleDelete(account.employeeID)}
+  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+>
+  Delete
+</button>
+
                   </div>
                 </div>
               ))}
@@ -203,15 +211,15 @@ export default function AccountDetails() {
                   Employee ID
                 </label>
                 <input
-                  type="number"
-                  id="employeeID"
-                  name="employeeID"
-                  value={accountData.employeeID}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                  disabled={isEditing} // Prevent changing Employee ID during edit
-                />
+  type="number"
+  id="employeeID"
+  name="employeeID"
+  value={accountData.employeeID}
+  onChange={handleChange}
+  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+  required
+/>
+
               </div>
               <div>
                 <label
