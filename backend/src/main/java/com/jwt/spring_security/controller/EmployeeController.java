@@ -12,16 +12,25 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/employees")
 public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
 
-    @GetMapping("/all")
+    @GetMapping("/employees")
     public ResponseEntity<List<Employee>> getAllEmployees() {
         List<Employee> employees = employeeService.findAll();
         return ResponseEntity.ok(employees);
+    }
+
+    @GetMapping("/readEmployee/{employeeID}")
+    public ResponseEntity<?> getEmployee(@PathVariable int employeeID) {
+        Employee employee = employeeService.findByEmployeeID(employeeID);
+        if (employee == null) {
+            return ResponseEntity.status(404)
+                    .body(new ApiErrorResponse("Not Found", "Employee with ID " + employeeID + " not found", employeeID));
+        }
+        return ResponseEntity.ok(employee);
     }
 
     @GetMapping("/{employeeID}")
@@ -60,6 +69,7 @@ public class EmployeeController {
             return ResponseEntity.status(404).body("Employee not found");
         }
     }
+
 }
 
 
