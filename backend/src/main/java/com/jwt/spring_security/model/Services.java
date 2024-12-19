@@ -1,9 +1,7 @@
 package com.jwt.spring_security.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import org.antlr.v4.runtime.misc.NotNull;
 
 @Entity
 public class Services {
@@ -13,7 +11,21 @@ public class Services {
 
     private String service_name;
     private String service_description;
+
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "branchID", referencedColumnName = "branchID")
+    private Branch branch;
+
     private double service_price;
+
+    public Branch getBranch() {
+        return branch;
+    }
+
+    public void setBranch(Branch branch) {
+        this.branch = branch;
+    }
 
     public Long getServiceID() {
         return serviceID;

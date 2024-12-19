@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import axiosInstance from "../../config/axiosConfig";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -70,6 +71,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     forcepDelivery: "Forceps Delivery",
     hypertension: "Hypertension",
   };
+
+  useEffect(() => {
+    const response = axiosInstance.get(`/generateqr?clientID=/${data.clientID}`);
+    console.log(response);
+  });
 
   const renderValue = (value: any): React.ReactNode => {
     if (typeof value === "object" && value !== null) {
