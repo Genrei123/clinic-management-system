@@ -21,18 +21,6 @@ import image1 from "../../assets/image1.png";
 import image2 from "../../assets/image2.png";
 import image3 from "../../assets/image3.png";
 
-const NavButton: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Button
-    color="inherit"
-    sx={{
-      mx: 1,
-      '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.08)' },
-      textTransform: 'none',
-    }}
-  >
-    {children}
-  </Button>
-);
 
 const InfoBox: React.FC<{ title: string; content: string }> = ({ title, content }) => (
   <Box

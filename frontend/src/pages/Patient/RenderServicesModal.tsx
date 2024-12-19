@@ -179,10 +179,7 @@ const RenderServicesModal: React.FC<RenderServicesModalProps> = ({
   
       console.log("Payload:", JSON.stringify(payload, null, 2));
   
-      // Send the payload to the backend
-      const response = await axiosInstance.post("/service/renderService", payload);
-      alert("Services and medicines rendered successfully!");
-  
+
       // Close the modal after success
       onClose();
     } catch (error) {

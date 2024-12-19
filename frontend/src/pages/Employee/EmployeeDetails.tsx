@@ -38,9 +38,7 @@ const EmployeeDetails: React.FC = () => {
         if (id) {
           const data = await getEmployeeById(Number(id));
           setEmployee(data);
-          if (data.imagePath) {
-            setEmployeeImage(data.imagePath);
-          }
+          
         }
       } catch (error) {
         console.error("Error fetching employee:", error);

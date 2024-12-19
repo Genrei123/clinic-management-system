@@ -14,7 +14,6 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   onClose,
 }) => {
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(data);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
@@ -46,22 +45,8 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
       setFormData(data);
       setStatus(data.status || "active");
       setExpandedSections([]);
-    } else if (!isOpen) {
-      setIsEditing(false);
-      setExpandedSections([]);
     }
   }, [isOpen, data]);
-
-  const handleUpdate = async () => {
-    try {
-      await axiosInstance.patch(`/updatePatient/${formData.clientID}`, formData);
-      setIsEditing(false);
-      alert("Patient details updated successfully.");
-    } catch (error) {
-      console.error("Error updating patient:", error);
-      alert("An error occurred while updating patient details.");
-    }
-  };
 
   const handleArchive = async () => {
     try {
@@ -260,3 +245,4 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 };
 
 export default PatientDetailsModal;
+

@@ -127,14 +127,6 @@ function Sidebar() {
               <ChevronDown className="h-5 w-5 transition duration-300 group-open:-rotate-180" />
             </summary>
             <nav className="mt-1.5 ml-8 flex flex-col">
-              
-              <Link
-                to="/account/security"
-                className={getLinkClassName("/account/security")}
-              >
-                Security
-              </Link>
-
               <Link
                 to="/account/branch"
                 className={getLinkClassName("/account/branch")}

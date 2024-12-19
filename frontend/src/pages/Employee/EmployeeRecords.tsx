@@ -46,9 +46,7 @@ const EmployeeRecords: React.FC = () => {
 
   // Filter employees based on search term, role, email, and viewArchived
   const filteredEmployees = employees
-    .filter((employee) =>
-      viewArchived ? employee.status === "archived" : employee.status !== "archived"
-    )
+    
     .filter(
       (employee) =>
         `${employee.username || ""}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,24 +100,8 @@ const EmployeeRecords: React.FC = () => {
                     <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                   </div>
                   <div className="flex space-x-2">
-                    <select
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 flex items-center"
-                      value={filterRole}
-                      onChange={(e) => setFilterRole(e.target.value)}
-                    >
-                      <option value="">All Roles</option>
-                      <option value="admin">Admin</option>
-                      <option value="employee">Employee</option>
-                      <option value="manager">Manager</option>
-                      {/* Add more roles as needed */}
-                    </select>
-                    <input
-                      type="text"
-                      placeholder="Filter by Email"
-                      className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                      value={filterEmail}
-                      onChange={(e) => setFilterEmail(e.target.value)}
-                    />
+                    
+                    
                     <button
                       className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center"
                       onClick={() => window.location.reload()}
@@ -127,14 +109,7 @@ const EmployeeRecords: React.FC = () => {
                       <RefreshCw className="mr-2" size={18} />
                       Refresh
                     </button>
-                    <button
-                      className={`px-4 py-2 ${
-                        viewArchived ? "bg-gray-500 text-white" : "bg-red-500 text-white"
-                      } rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center`}
-                      onClick={() => setViewArchived(!viewArchived)}
-                    >
-                      {viewArchived ? "View Active" : "View Archived"}
-                    </button>
+                    
                   </div>
                 </div>
                 {loading ? (
@@ -149,7 +124,7 @@ const EmployeeRecords: React.FC = () => {
                           <th className="px-6 py-3">Email</th>
                           <th className="px-6 py-3">Role</th>
                           <th className="px-6 py-3">Last Login</th>
-                          <th className="px-6 py-3">Action</th>
+                          
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -166,14 +141,6 @@ const EmployeeRecords: React.FC = () => {
                               {employee.loginTimeStamp
                                 ? employee.loginTimeStamp[0] + "/" + employee.loginTimeStamp[1]  + "/" + employee.loginTimeStamp[2]
                                 : "Never"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <button
-                                onClick={() => handleViewClick(employee.employeeID)}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                              >
-                                View
-                              </button>
                             </td>
                           </tr>
                         ))}

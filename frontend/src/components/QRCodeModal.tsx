@@ -8,6 +8,8 @@ interface QRCodeModalProps {
   onClose: () => void;
 }
 
+
+
 const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, qrCode, onClose }) => {
   if (!isOpen) return null;
 

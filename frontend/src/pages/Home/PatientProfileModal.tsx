@@ -27,22 +27,30 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+) => {
     const { name, value } = e.target;
 
     if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof Patient],
-          [child]: value,
-        },
-      }));
+        const [parent, child] = name.split(".");
+        setFormData((prev) => {
+            // Create a type-safe copy of the nested object
+            const parentObj = prev[parent as keyof Patient];
+            const existingNested = (parentObj && typeof parentObj === 'object') 
+                ? { ...parentObj as object }
+                : {};
+
+            return {
+                ...prev,
+                [parent]: {
+                    ...existingNested,
+                    [child]: value,
+                },
+            };
+        });
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     }
-  };
+};
 
   const handleCreatePatient = (e: React.FormEvent) => {
     e.preventDefault();

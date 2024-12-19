@@ -119,7 +119,7 @@ const EmployeeClockIn: React.FC = () => {
           <tbody>
             {clockIns.map((clockIn) => (
               <tr key={clockIn.id} className="border-b hover:bg-gray-50">
-                <td className="py-3 px-4">{clockIn.employeeName}</td>
+                <td className="py-3 px-4">{clockIn.employeeId}</td>
                 <td className="py-3 px-4">
                   {
                     branches.find((branch) => branch.branchID === clockIn.branchId)

@@ -404,17 +404,7 @@ const Employee: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col">
-                <label htmlFor="email" className="text-sm font-medium mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="border-2 rounded-md p-2"
-                  defaultValue={employee?.email || ""}
-                />
-              </div>
+              {/* Email field removed as it does not exist on Employee type */}
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex flex-col">

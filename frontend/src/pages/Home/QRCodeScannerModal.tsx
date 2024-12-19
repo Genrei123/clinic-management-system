@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 interface QRCodeScannerModalProps {
   isOpen: boolean;
   onRequestClose: () => void;
+  onScan: (data: any) => void;
 }
 
 const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({

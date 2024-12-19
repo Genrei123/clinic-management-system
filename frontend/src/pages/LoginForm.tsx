@@ -161,9 +161,6 @@ const LoginForm: React.FC = () => {
 
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
                 <FormControlLabel control={<Checkbox color="primary" />} label="Remember me" />
-                <Typography sx={{ color: 'blue', cursor: 'pointer' }} onClick={() => setOpenForgotPassword(true)}>
-                  Forgot Password
-                </Typography>
               </Stack>
 
               <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>

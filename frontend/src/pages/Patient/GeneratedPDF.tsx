@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { PDFDocument } from "pdf-lib";
 import { ArrowLeft } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
@@ -23,7 +23,6 @@ const GeneratePDF: React.FC = () => {
   const patientId = searchParams.get("patientId");
   const [loading, setLoading] = useState(true);
   const [iframeKey, setIframeKey] = useState(0);
-  const navigate = useNavigate();
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [patientData, setPatientData] = useState<Patient | null>(null);
@@ -34,12 +33,6 @@ const GeneratePDF: React.FC = () => {
       return params;
     });
   }, [formType, setSearchParams]);
-
-  // Helper function to convert timestamp to Date
-  const timestampToDate = (timestamp: number | null): Date | null => {
-    if (!timestamp) return null;
-    return new Date(timestamp);
-  };
 
   // Function to fetch patient data
   const fetchPatientData = async () => {
@@ -200,10 +193,6 @@ const GeneratePDF: React.FC = () => {
 
   const handlePatientTypeChange = (newPatientType: PatientType) => {
     setPatientType(newPatientType);
-  };
-
-  const handleGoBack = () => {
-    navigate(-1);
   };
 
   return (

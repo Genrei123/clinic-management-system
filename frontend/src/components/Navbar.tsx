@@ -131,11 +131,6 @@ const Navbar: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex items-center space-x-4">
           <NavbarButton
-            onClick={() => setIsNotificationsOpen(true)}
-            icon={Bell}
-            label="Notifications"
-          />
-          <NavbarButton
             onClick={() => setIsLogoutModalOpen(true)}
             icon={LogOut}
             label="Logout"

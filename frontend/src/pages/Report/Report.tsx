@@ -55,9 +55,6 @@ interface ChartData {
 }
 
 const Report: React.FC = () => {
-  const [services, setServices] = useState<Service[]>([]);
-  const [renderedServices, setRenderedServices] = useState<RenderedService[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
   const [serviceData, setServiceData] = useState<ChartData[]>([]);
   const [medicineData, setMedicineData] = useState<ChartData[]>([]);
   const [stockData, setStockData] = useState<ChartData[]>([]);
@@ -75,13 +72,9 @@ const Report: React.FC = () => {
         ]);
 
         setServices(servicesResponse.data);
-        setRenderedServices(renderedServicesResponse.data);
-        setItems(itemsResponse.data);
-
         aggregateData(renderedServicesResponse.data, itemsResponse.data);
       } catch (err: any) {
         console.error("Error fetching data:", err);
-        setError("Failed to fetch data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -243,4 +236,8 @@ const Report: React.FC = () => {
 };
 
 export default Report;
+// This function can be used to process or store the services data if needed
+const setServices = (data: Service[]) => {
+  console.log("Services data:", data);
+};
 

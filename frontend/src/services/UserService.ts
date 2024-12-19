@@ -6,3 +6,13 @@ export const updateUser = async (username: string, data: Partial<User>) => {
   const response = await axiosInstance.put(`/update/${username}`, payload);
   return response.data;
 };
+
+interface PasswordData {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export const changePassword = (passwordData: PasswordData) => {
+  return axiosInstance.put("/change-password", passwordData);
+};

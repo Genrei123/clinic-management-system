@@ -8,11 +8,6 @@ import {
   FileText,
   UserCheck,
   Calendar,
-  Clock,
-  ChevronRight,
-  Edit,
-  Plus,
-  Trash2,
 } from "lucide-react";
 import { getPatientById } from "../../services/patientService";
 import useModal from "../Home/useModal";
@@ -46,6 +41,8 @@ interface ServiceRendered {
 }
 
 interface Patient {
+  id: string;
+  patientID: string;
   clientID: Number;
   name: string;
   expectedDateConfinement?: string;
@@ -68,13 +65,15 @@ const Patient: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<string>("");
   const [patientInfo, setPatientInfo] = useState<any>();
   const [patient, setPatient] = useState<Patient>({
+    id: "",
+    patientID: "",
     clientID: 0,
     name: "",
     expectedDateConfinement: "",
     visitHistory: [],
     files: [],
+    renderedServices: [],
   });
-  const [step, setStep] = useState<"create">();
 
   // Ref for the hidden file input for multiple file uploads
   const multipleFilesInputRef = useRef<HTMLInputElement>(null);
@@ -116,6 +115,8 @@ const Patient: React.FC = () => {
 
         setPatient({
           id: patientInfo?.patientID || "",
+          patientID: patientInfo?.patientID || "",
+          clientID: patientInfo?.clientID || 0,
           name: patientInfo
             ? `${patientInfo.givenName || ""} ${
                 patientInfo.middleInitial || ""
@@ -137,6 +138,8 @@ const Patient: React.FC = () => {
       } catch (error) {
         console.error("Error fetching patient data:", error);
         setPatient({
+          id: "",
+          patientID: "",
           clientID: 0,
           name: "",
           expectedDateConfinement: "",
@@ -232,12 +235,6 @@ const Patient: React.FC = () => {
     },
     [patientInfo]
   );
-
-  const triggerMultipleFileUpload = useCallback(() => {
-    if (multipleFilesInputRef.current) {
-      multipleFilesInputRef.current.click();
-    }
-  }, []);
 
   const handleGeneratePDF = useCallback(() => {
     if (!selectedForm) {
