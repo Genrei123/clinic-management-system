@@ -249,56 +249,61 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
                 </div>
               ))}
 
-              <h3 className="col-span-2 font-bold mt-4">Pregnancy Details</h3>
-              {[
-                "GRAVIDA",
-                "PARA",
-                "TERM",
-                "PRE_TERM",
-                "ABORTION",
-                "LIVING",
-              ].map((field) => (
-                <div key={field}>
-                  <label htmlFor={field} className="block text-sm font-medium">
-                    {field}
-                  </label>
-                  <input
-                    id={field}
-                    name={`pregnancy.${field}`}
-                    type="number"
-                    value={(formData.pregnancy as any)[field] || ""}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
-                  />
-                </div>
-              ))}
+              {/* Pregnancy Details (conditionally rendered based on formData.sex) */}
+                {formData.sex === "F" && (
+                  <>
+                    <h3 className="col-span-2 font-bold mt-4">Pregnancy Details</h3>
+                    {[
+                      "GRAVIDA",
+                      "PARA",
+                      "TERM",
+                      "PRE_TERM",
+                      "ABORTION",
+                      "LIVING",
+                    ].map((field) => (
+                      <div key={field}>
+                        <label htmlFor={field} className="block text-sm font-medium">
+                          {field}
+                        </label>
+                        <input
+                          id={field}
+                          name={`pregnancy.${field}`}
+                          type="number"
+                          value={(formData.pregnancy as any)[field] || ""}
+                          onChange={handleInputChange}
+                          className="w-full border rounded-lg p-2"
+                        />
+                      </div>
+                    ))}
 
-              {[
-                { label: "LMP", name: "pregnancy.LMP", type: "date" },
-                { label: "EDC", name: "pregnancy.EDC", type: "date" },
-                { label: "IT_date", name: "pregnancy.IT_date", type: "date" },
-                {
-                  label: "Menarche",
-                  name: "pregnancy.menarche",
-                  type: "date",
-                },
-              ].map(({ label, name, type = "text" }) => (
-                <div key={name}>
-                  <label htmlFor={name} className="block text-sm font-medium">
-                    {label}
-                  </label>
-                  <input
-                    id={name}
-                    name={name}
-                    type={type}
-                    value={
-                      (formData.pregnancy as any)[name.split(".")[1]] || ""
-                    }
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
-                  />
-                </div>
-              ))}
+                    {[
+                      { label: "LMP", name: "pregnancy.LMP", type: "date" },
+                      { label: "EDC", name: "pregnancy.EDC", type: "date" },
+                      { label: "IT_date", name: "pregnancy.IT_date", type: "date" },
+                      {
+                        label: "Menarche",
+                        name: "pregnancy.menarche",
+                        type: "date",
+                      },
+                    ].map(({ label, name, type = "text" }) => (
+                      <div key={name}>
+                        <label htmlFor={name} className="block text-sm font-medium">
+                          {label}
+                        </label>
+                        <input
+                          id={name}
+                          name={name}
+                          type={type}
+                          value={
+                            (formData.pregnancy as any)[name.split(".")[1]] || ""
+                          }
+                          onChange={handleInputChange}
+                          className="w-full border rounded-lg p-2"
+                        />
+                      </div>
+                    ))}
+                  </>
+                )}
 
               <h3 className="col-span-2 font-bold mt-4">
                 Consultation Details
