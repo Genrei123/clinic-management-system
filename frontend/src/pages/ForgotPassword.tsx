@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField } from '@mui/material';
+import axios from 'axios';
 
 interface ForgotPasswordProps {
   open: boolean;
@@ -7,11 +8,16 @@ interface ForgotPasswordProps {
 }
 
 const ForgotPassword: React.FC<ForgotPasswordProps> = ({ open, handleClose }) => {
-  const [email, setEmail] = React.useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
 
-  const handleResetPassword = () => {
-    console.log('Password reset for email:', email);
-    handleClose(); 
+  const handleResetPassword = async () => {
+    try {
+      const response = await axios.post('/api/forgot-password', { email });
+      setMessage(response.data.message);
+    } catch (error) {
+      setMessage('E-mail is not registered.');
+    }
   };
 
   return (
@@ -29,6 +35,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ open, handleClose }) =>
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+        {message && <p>{message}</p>}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="primary">

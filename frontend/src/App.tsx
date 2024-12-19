@@ -17,6 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AccountServices from "./pages/AccountServices";
 import EmployeeRecords from "./pages/Employee/EmployeeRecords";
 import EmployeeClockIn from "./pages/Employee/EmployeeClockIn";
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Owner-only routes */}
           <Route
