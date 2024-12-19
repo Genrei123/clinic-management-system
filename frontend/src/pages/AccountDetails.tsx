@@ -85,7 +85,7 @@ export default function AccountDetails() {
   const handleDelete = async (employeeID) => {
     console.log("Deleting employee with ID:", employeeID); // Debugging line
     try {
-      await axiosInstance.delete(`/employees/deleteAccount/${employeeID}`);
+      await axiosInstance.delete(`/deleteAccount/${employeeID}`);
       setAccounts((prev) =>
         prev.filter((account) => account.employeeID !== employeeID)
       );
