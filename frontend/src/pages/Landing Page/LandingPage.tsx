@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -16,6 +16,7 @@ import {
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
+import axiosInstance from "../../config/axiosConfig";
 import image1 from "../../assets/image1.png";
 import image2 from "../../assets/image2.png";
 import image3 from "../../assets/image3.png";
@@ -37,6 +38,7 @@ const InfoBox: React.FC<{ title: string; content: string }> = ({ title, content 
   <Box
     sx={{
       backgroundColor: "#102A43",
+      color: "#FFFFFF",
       p: 4,
       borderRadius: 2,
       textAlign: "center",
@@ -51,28 +53,33 @@ const InfoBox: React.FC<{ title: string; content: string }> = ({ title, content 
       }
     }}
   >
-    <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: "#FFFFFF" }}>
+    <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
       {title}
     </Typography>
-    <Typography sx={{ color: "#FFFFFF" }}>{content}</Typography>
+    <Typography>{content}</Typography>
   </Box>
 );
 
 const BranchCard: React.FC<{
   name: string;
   address: string;
-  fbLink: string;
+  contact: string;
   mapLink: string;
-}> = ({ name, address, fbLink, mapLink }) => (
+}> = ({ name, address, contact, mapLink }) => (
   <Card sx={{
     backgroundColor: "#102A43",
     color: "#FFFFFF",
+    p: 4,
+    borderRadius: 2,
+    textAlign: "center",
     height: "100%",
     display: "flex",
     flexDirection: "column",
-    transition: "transform 0.3s ease-in-out",
+    justifyContent: "center",
+    transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
     '&:hover': {
-      transform: "translateY(-5px)"
+      transform: "translateY(-5px)",
+      boxShadow: 3
     }
   }}>
     <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
@@ -84,12 +91,10 @@ const BranchCard: React.FC<{
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Link
-          href={fbLink}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={`tel:${contact}`}
           sx={{ color: "#2196F3", '&:hover': { textDecoration: "underline" } }}
         >
-          Visit Facebook
+          {contact}
         </Link>
         <Button
           variant="outlined"
@@ -111,33 +116,26 @@ const BranchCard: React.FC<{
 
 const LandingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
+  const [branches, setBranches] = useState<{ name: string; address: string; contact: string; mapLink: string }[]>([]);
 
-  const branches = [
-    {
-      name: "Main Branch",
-      address: "BLK 27 LOT 17 PKG2 PHASE 10-A BAGONG SILANG CALOOCAN CITY, Caloocan, Kalakhang Maynila",
-      fbLink: "https://facebook.com/branch1",
-      mapLink: "https://maps.app.goo.gl/3Hrb9vifsrHtxNwC7",
-    },
-    {
-      name: "Branch 2",
-      address: "456 Elm Street, City B",
-      fbLink: "https://facebook.com/branch2",
-      mapLink: "https://www.google.com/maps?q=456+Elm+Street,+City+B",
-    },
-    {
-      name: "Branch 3",
-      address: "789 Oak Street, City C",
-      fbLink: "https://facebook.com/branch3",
-      mapLink: "https://www.google.com/maps?q=789+Oak+Street,+City+C",
-    },
-  ];
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await axiosInstance.get('/branches');
+        const branchData = response.data.map((branch: any) => ({
+          name: branch.branch_name,
+          address: branch.branch_address,
+          contact: branch.branch_contact,
+          mapLink: `https://www.google.com/maps?q=${branch.branch_address}`
+        }));
+        setBranches(branchData);
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
 
-  const infoBoxes = [
-    { title: "Our Mission", content: "Dedicated in rendering quality healthcare services, establishing cooperative relationships with healthcare professionals and promotion of wellness through health and awareness in enriching the quality of life in the community." },
-    { title: "Our Vision", content: "Envisions a partnership between healthcare providers and community dedicated to achieving excellence in health services and outcomes." },
-    { title: "Our Service", content: "We offer comprehensive healthcare services, including general consultations, preventive care, diagnostics, chronic disease management, minor procedures, and specialized referrals to meet your health needs." }
-  ];
+    fetchBranches();
+  }, []);
 
   const carouselImages = [
     image1,
@@ -155,6 +153,13 @@ const LandingPage: React.FC = () => {
     arrows: false,
     fade: true as const,
   };
+
+  const infoBoxes = [
+    { title: "Quality Care", content: "We provide the best care for our patients." },
+    { title: "Experienced Staff", content: "Our staff is highly trained and experienced." },
+    { title: "Modern Facilities", content: "Our facilities are equipped with the latest technology." },
+    { title: "Patient Satisfaction", content: "We prioritize our patients' satisfaction." }
+  ];
 
   return (
     <Box sx={{ backgroundColor: "#0A1929", color: "#FFFFFF", minHeight: "100vh" }}>
@@ -281,7 +286,7 @@ const LandingPage: React.FC = () => {
         </Tabs>
         <Grid container justifyContent="center">
           <Grid item xs={12} md={8}>
-            <BranchCard {...branches[activeTab]} />
+            {branches.length > 0 && <BranchCard {...branches[activeTab]} />}
           </Grid>
         </Grid>
       </Container>
