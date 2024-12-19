@@ -122,10 +122,11 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
       // Handle the 'pregnancy' section
       if (keyPath.toLowerCase() === "pregnancy") {
-        if (patientSex !== "female") {
+        if (patientSex !== "female" && patientSex !== "f") {
           return <span>N/A</span>;
         }
       }
+
 
       return (
         <div className="ml-4">
