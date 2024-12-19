@@ -49,13 +49,13 @@ export default function AccountDetails() {
 
         if (isEditing) {
             // Update account
-            await axiosInstance.put(`/employees/updateAccount/${accountData.employeeID}`, accountData, config);
+            await axiosInstance.put(`/updateAccount/${accountData.employeeID}`, accountData, config);
 
 
             setMessage("Account updated successfully!");
         } else {
             // Add new account
-            await axiosInstance.post("/employees/add", accountData, config);
+            await axiosInstance.post("/add", accountData, config);
 
             setMessage("Account added successfully!");
         }
