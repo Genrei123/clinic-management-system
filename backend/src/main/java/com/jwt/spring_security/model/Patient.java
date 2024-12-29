@@ -18,7 +18,7 @@ public class Patient {
 
     private String lastName;
     private String givenName;
-    private Character middleInitial;
+    private String middleName;
     private Character sex;
     private String address;
     private int age;
@@ -28,8 +28,6 @@ public class Patient {
 
     private String religion;
     private String occupation;
-
-    private String philhealthID;
 
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -142,11 +140,7 @@ public class Patient {
     }
 
     public Character getMiddleInitial() {
-        return middleInitial;
-    }
-
-    public void setMiddleInitial(Character middleInitial) {
-        this.middleInitial = middleInitial;
+        return middleName.charAt(0);
     }
 
     public Character getSex() {
@@ -197,13 +191,11 @@ public class Patient {
         this.occupation = occupation;
     }
 
-    public String getPhilhealthID() {
-        return philhealthID;
+    public String getMiddleName() {
+        return middleName;
     }
 
-    public void setPhilhealthID(String philhealthID) {
-        this.philhealthID = philhealthID;
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
     }
-
-    // Other getters and setters...
 }

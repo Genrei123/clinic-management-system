@@ -6,14 +6,13 @@ export const createEmptyPatient = (): Patient => ({
   imagePath: "",
   lastName: "",
   givenName: "",
-  middleInitial: "",
+  middleName: "",
   sex: "",
   address: "",
   age: 0,
   birthday: "",
   religion: "",
   occupation: "",
-  status: "",
   spouse: {
     spouseName: "",
     spouseBirthday: "",
@@ -37,7 +36,7 @@ export const createEmptyPatient = (): Patient => ({
   consultation: {
     consultation_date: "", // Corrected from `consultation_date`
     AOG: 0,
-    BP: "",
+    BP: 0,
     weight: 0,
     FH: 0,
     FHT: 0,

@@ -8,7 +8,7 @@ public class PatientDTO {
     private String imagePath; // Nullable
     private String lastName;
     private String givenName;
-    private Character middleInitial; // Nullable
+    private String middleName; // Nullable
     private Character sex;
     private String address;
     private Integer age; // Nullable
@@ -16,7 +16,6 @@ public class PatientDTO {
     private String religion; // Nullable
     private String occupation; // Nullable
     private Date lastDelivery; // Nullable
-    private String philhealthID; // Nullable
 
     // Nested DTOs for related entities
     private SpouseDTO spouse; // Nullable
@@ -62,14 +61,6 @@ public class PatientDTO {
 
     public void setGivenName(String givenName) {
         this.givenName = givenName;
-    }
-
-    public Character getMiddleInitial() {
-        return middleInitial;
-    }
-
-    public void setMiddleInitial(Character middleInitial) {
-        this.middleInitial = middleInitial;
     }
 
     public Character getSex() {
@@ -128,14 +119,6 @@ public class PatientDTO {
         this.lastDelivery = lastDelivery;
     }
 
-    public String getPhilhealthID() {
-        return philhealthID;
-    }
-
-    public void setPhilhealthID(String philhealthID) {
-        this.philhealthID = philhealthID;
-    }
-
     public SpouseDTO getSpouse() {
         return spouse;
     }
@@ -158,6 +141,14 @@ public class PatientDTO {
 
     public void setConsultation(ConsultationDTO consultation) {
         this.consultation = consultation;
+    }
+
+    public String getMiddleName() {
+        return middleName;
+    }
+
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
     }
 }
 

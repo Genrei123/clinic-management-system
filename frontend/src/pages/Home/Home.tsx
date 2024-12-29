@@ -10,6 +10,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import Patient from "../../types/Patient";
 import { createEmptyPatient } from "../../utils/Patient";
 import { getPatientLogs } from "../../services/visitService";
+import { getPatients } from "../../services/patientService";
+import { getServices } from "../../services/serviceService";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -53,13 +55,8 @@ const Home: React.FC = () => {
 
     const fetchPatients = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/getPatient", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${storedToken}`,
-          },
-        });
-        setPatients(response.data);
+        const response = await getPatients();
+        setPatients(response);
       } catch (error) {
         console.error("Error fetching patients:", error);
       } finally {
@@ -69,15 +66,7 @@ const Home: React.FC = () => {
 
     const fetchServices = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:8080/service/getServices",
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${storedToken}`,
-            },
-          }
-        );
+        const response = await getServices();
         const formattedServices = response.data.map((service: any) => ({
           name: service.service_name,
           branch: service.branch.branch_name || "Main Branch", // Assume default branch if not provided
@@ -290,7 +279,7 @@ const Home: React.FC = () => {
           <div className="mt-4 flex justify-between items-center">
             <div>
               <span className="text-gray-600">
-                Page {currentPage[tableType]} of {totalPages}
+                Page {currentPage[tableType]} of {totalPages || 1}
               </span>
             </div>
             <div className="space-x-2">
@@ -351,7 +340,6 @@ const Home: React.FC = () => {
       <PatientProfileModal
         isOpen={isModalOpen}
         onClose={closeModal}
-        formData={formData}
       />
 
       <QRCodeScannerModal

@@ -2,16 +2,20 @@ import React, { useState, useEffect } from "react";
 import Patient from "../../types/Patient";
 import { addPatient } from "../../services/patientService";
 import { addPatientLog } from "../../services/visitService";
-import { AlertCircle, CheckCircle, X, Search, UserPlus } from "lucide-react";
+import { AlertCircle, CheckCircle, X, Search, UserPlus, QrCode } from "lucide-react";
 import { createEmptyPatient } from "../../utils/Patient";
-import ConfirmationModal from "./ConfirmationModal";
+import PatientInformationSection from "./modals/PatientInformationSection";
+import MedicalHistorySection from "./modals/MedicalHistorySection";
+import ConsultationDetailsSection from "./modals/ConsultationDetailsSection";
+import PregnancyDetailsSection from "./modals/PregnancyDetailsSection";
+import SpouseDetailsSection from "./modals/SpouseDetailsSection";
 import QRCodeModal from "../../components/QRCodeModal";
+import ConfirmationModal from "./ConfirmationModal";
 import axiosInstance from "../../config/axiosConfig";
 
 interface PatientProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  formData?: Patient;
 }
 
 const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
@@ -19,420 +23,314 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   onClose,
 }) => {
   const [formData, setFormData] = useState<Patient>(createEmptyPatient());
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [visitPurpose, setVisitPurpose] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  /**
+   * handleInputChange
+   * A generic function to handle any input field changes.
+   */
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-) => {
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-
     if (name.includes(".")) {
-        const [parent, child] = name.split(".");
-        setFormData((prev) => {
-            // Create a type-safe copy of the nested object
-            const parentObj = prev[parent as keyof Patient];
-            const existingNested = (parentObj && typeof parentObj === 'object') 
-                ? { ...parentObj as object }
-                : {};
+      // Nested field (e.g., "spouse.spouseName")
+      const [parent, child] = name.split(".");
+      setFormData((prev) => {
+        const parentObj = prev[parent as keyof Patient];
+        const existingNested =
+          parentObj && typeof parentObj === "object" ? { ...parentObj } : {};
 
-            return {
-                ...prev,
-                [parent]: {
-                    ...existingNested,
-                    [child]: value,
-                },
-            };
-        });
+        return {
+          ...prev,
+          [parent]: {
+            ...existingNested,
+            [child]: value,
+          },
+        };
+      });
     } else {
-        setFormData((prev) => ({ ...prev, [name]: value }));
+      // Top-level field
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
-};
+  };
 
-  const handleCreatePatient = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-    const errors: { [key: string]: string } = {};
-    const requiredFields: (keyof typeof formData)[] = [
-      "patientID",
-      "lastName",
-      "givenName",
-      "age",
-      "sex",
-      "address",
-    ];
+  /**
+   * validateCurrentStep
+   * - Step 0 (Patient Information) is mandatory.
+   * - Steps 1-4 are optional and can be skipped.
+   */
+  const validateCurrentStep = () => {
+    // If the user is on the first step (index 0), validate required fields
+    if (currentStep === 0) {
+      const requiredFields = ["patientID", "lastName", "givenName", "age", "sex"];
+      const missingFields = requiredFields.filter((field) => !formData[field]);
 
-    requiredFields.forEach((field) => {
-      if (!formData[field]) {
-        errors[field] = `${
-          field.charAt(0).toUpperCase() + field.slice(1)
-        } is required`;
+      if (missingFields.length > 0) {
+
+        setErrorMessage(
+          `Please fill in the required fields: ${missingFields.join(", ").toUpperCase()}`
+        );
+        return false;
       }
-    });
+    }
+    return true; // All other steps are optional
+  };
 
-    if (Object.keys(errors).length > 0) {
-      setErrorMessage(
-        "Please check the following required fields: " +
-          Object.keys(errors).map((field) => `\n- ${field}`)
-      );
+  /**
+   * skipStep
+   * Allows skipping any step except the first one.
+   * Applies the same male-pregnancy skip logic as nextStep (optional).
+   */
+  const skipStep = () => {
+    if (currentStep === 0) {
+      // Cannot skip the first step
       return;
     }
 
-    // Open confirmation modal
-    setIsModalOpen(true);
+    // If not on the last step, skip to the next
+    if (currentStep < steps.length - 1) {
+      // If patient is male and skipping from Medical History (index 2) => skip Pregnancy (index 3)
+      if (formData.sex === "M" && currentStep === 2) {
+        setCurrentStep((prev) => prev + 2); // Goes directly to step 4 (Consultation)
+      } else {
+        setCurrentStep((prev) => prev + 1);
+      }
+    }
   };
 
+  /**
+   * nextStep
+   * Moves user to the next step if current step is valid.
+   */
+  const nextStep = () => {
+    if (!validateCurrentStep()) return; // Validate current step first
+
+    // If not on the last step, go to the next
+    if (currentStep < steps.length - 1) {
+      // If patient is male and currently on Medical History (index 2), skip Pregnancy (index 3)
+      if (formData.sex === "M" && currentStep === 2) {
+        setCurrentStep((prev) => prev + 2);
+      } else {
+        setCurrentStep((prev) => prev + 1);
+      }
+    }
+    setErrorMessage(null); // Clear error if any
+  };
+
+  /**
+   * prevStep
+   * Moves user to the previous step.
+   */
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+      setErrorMessage(null);
+    }
+    // If patient is male and we are on Consultation (index 4), skip back from pregnancy (index 3)
+    if (formData.sex === "M" && currentStep === 4) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
+
+  /**
+   * handleSubmitConfirmed
+   * Called after user confirms the review in ConfirmationModal.
+   * Responsible for final patient creation, logs, and generating QR code.
+   */
   const handleSubmitConfirmed = async () => {
     try {
       const newPatient = await addPatient(formData);
+      await addPatientLog(Number(newPatient.clientID), "Initial Check-up");
 
-    
-      await addPatientLog(
-        Number(newPatient.clientID),
-        "Initial Check-up"
+      // Generate QR code
+      const qrResponse = await axiosInstance.get(
+        `/generateqr?clientID=${newPatient.clientID}`,
+        {
+          responseType: "blob",
+        }
       );
-      
 
-      const qrResponse = await axiosInstance.get(`/generateqr?clientID=${newPatient.clientID}`, {
-        responseType: "blob",
-      });
-      
       const qrURL = URL.createObjectURL(qrResponse.data);
       setQrCode(qrURL);
 
       setSuccessMessage(
-        `Patient profile for ${newPatient.lastName} was successfully created and visit logged.`
+        `Patient profile for ${newPatient.lastName}, ${newPatient.givenName} (ID: ${newPatient.clientID}) was successfully created. Initial check-up logged and QR code generated.`
       );
-
-
-    
-      
-
     } catch (error) {
       console.error("Error creating patient:", error);
       setErrorMessage(
         "An error occurred while creating the patient profile. Please try again."
       );
+      setFormData(createEmptyPatient());
     } finally {
-      setIsModalOpen(false); // Close modal after submission
+      setIsModalOpen(false);
+      setFormData(createEmptyPatient()); // Reset form data after submission
     }
   };
 
+  const steps = [
+    {
+      title: "Patient Information",
+      icon: UserPlus,
+      component: (
+        <PatientInformationSection
+          formData={formData}
+          setFormData={setFormData}
+          handleInputChange={handleInputChange}
+        />
+      ),
+    },
+    {
+      title: "Spouse Information",
+      icon: UserPlus,
+      component: (
+        <SpouseDetailsSection
+          formData={formData}
+          setFormData={setFormData}
+          handleInputChange={handleInputChange}
+        />
+      ),
+    },
+    {
+      title: "Medical History",
+      icon: Search,
+      component: (
+        <MedicalHistorySection
+          formData={formData}
+          setFormData={setFormData}
+          handleInputChange={handleInputChange}
+        />
+      ),
+    },
+    {
+      title: "Pregnancy Details",
+      icon: UserPlus,
+      component: (
+        <PregnancyDetailsSection
+          formData={formData}
+          setFormData={setFormData}
+          handleInputChange={handleInputChange}
+        />
+      ),
+    },
+    {
+      title: "Consultation Details",
+      icon: UserPlus,
+      component: (
+        <ConsultationDetailsSection
+          formData={formData}
+          setFormData={setFormData}
+          handleInputChange={handleInputChange}
+        />
+      ),
+    },
+  ];
+
   useEffect(() => {
-    setErrorMessage("");
-  }, [formData, visitPurpose]);
+    // Reset error messages whenever formData or currentStep changes
+    setErrorMessage(null);
+  }, [formData, currentStep]);
+
+  useEffect(() => {
+    // Auto-clear success message after 5 seconds
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-500 bg-opacity-75 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-7xl h-[90vh] relative flex">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl h-[80vh] relative flex flex-col">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition duration-300"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
         >
           <X size={24} />
         </button>
-        <div className="w-full pl-6 overflow-y-auto items-center justify-center">
-          <div>
-            <h2 className="text-3xl font-bold mb-6 text-gray-800">
-              Create New Patient Profile
-            </h2>
-            <form
-              onSubmit={handleCreatePatient}
-              className="grid grid-cols-2 gap-4"
-            >
-              {/* Birthday input */}
-              <div>
-                <label htmlFor="birthday" className="block text-sm font-medium">
-                  Birthday
-                </label>
-                <input
-                  id="birthday"
-                  name="birthday"
-                  type="date"
-                  value={formData.birthday || ""}
-                  onChange={(e) => {
-                    handleInputChange(e); // Update the birthday field
-                    const birthday = new Date(e.target.value);
-                    const today = new Date();
-                    const age = today.getFullYear() - birthday.getFullYear();
-                    const isBirthdayPassed =
-                      today.getMonth() > birthday.getMonth() ||
-                      (today.getMonth() === birthday.getMonth() &&
-                        today.getDate() >= birthday.getDate());
-                    setFormData((prev) => ({
-                      ...prev,
-                      age: isBirthdayPassed ? age : age - 1, // Adjust age if the birthday hasn't occurred yet this year
-                    }));
-                  }}
-                  className="w-full border rounded-lg p-2"
-                />
-              </div>
 
-              {[
-                { label: "Patient ID", name: "patientID" },
-                { label: "Last Name", name: "lastName" },
-                { label: "Given Name", name: "givenName" },
-                { label: "Middle Initial", name: "middleInitial" },
-                { label: "Address", name: "address" },
-                { label: "Religion", name: "religion" },
-                { label: "Occupation", name: "occupation" },
-                { label: "Age", name: "age", type: "number" },
-              ].map(({ label, name, type = "text" }) => (
-                <div key={name}>
-                  <label htmlFor={name} className="block text-sm font-medium">
-                    {label}
-                  </label>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">
+          {steps[currentStep].title}
+        </h2>
 
-                  <input
-                    id={name}
-                    name={name}
-                    type={type}
-                    value={(formData as any)[name] || ""}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
-                  />
-                </div>
-              ))}
+        <div className="flex-1 overflow-y-auto">{steps[currentStep].component}</div>
 
-              {/* Sex input */}
-              <div>
-                <label htmlFor="sex" className="block text-sm font-medium">
-                  Sex
-                </label>
-                <select
-                  id="sex"
-                  name="sex"
-                  value={formData.sex || ""}
-                  onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2 bg-white"
+        {errorMessage && (
+          <div className="text-red-500 text-sm mt-2">{errorMessage}</div>
+        )}
+        {successMessage && (
+          <div
+            className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
+            role="alert"
+          >
+            <div className="flex">
+              <div className="py-1">
+                <svg
+                  className="fill-current h-6 w-6 text-green-500 mr-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
                 >
-                  <option value="" disabled>
-                    Select...
-                  </option>
-                  <option value="M">M</option>
-                  <option value="F">F</option>
-                </select>
+                  <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
+                </svg>
               </div>
-
-              <h3 className="col-span-2 font-bold mt-4">Spouse Details</h3>
-              {[
-                { label: "Spouse Name", name: "spouse.spouseName" },
-                {
-                  label: "Spouse Birthday",
-                  name: "spouse.spouseBirthday",
-                  type: "date",
-                },
-                { label: "Spouse Religion", name: "spouse.spouseReligion" },
-                {
-                  label: "Spouse Occupation",
-                  name: "spouse.spouseOccupation",
-                },
-                {
-                  label: "Spouse Contact Number",
-                  name: "spouse.spouseContactNumber",
-                },
-                {
-                  label: "Spouse Age",
-                  name: "spouse.spouseAge",
-                  type: "number",
-                },
-              ].map(({ label, name, type = "text" }) => (
-                <div key={name}>
-                  <label htmlFor={name} className="block text-sm font-medium">
-                    {label}
-                  </label>
-                  <input
-                    id={name}
-                    name={name}
-                    type={type}
-                    value={(formData.spouse as any)[name.split(".")[1]] || ""}
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
-                  />
-                </div>
-              ))}
-
-              {/* Pregnancy Details (conditionally rendered based on formData.sex) */}
-                {formData.sex === "F" && (
-                  <>
-                    <h3 className="col-span-2 font-bold mt-4">Pregnancy Details</h3>
-                    {[
-                      "GRAVIDA",
-                      "PARA",
-                      "TERM",
-                      "PRE_TERM",
-                      "ABORTION",
-                      "LIVING",
-                    ].map((field) => (
-                      <div key={field}>
-                        <label htmlFor={field} className="block text-sm font-medium">
-                          {field}
-                        </label>
-                        <input
-                          id={field}
-                          name={`pregnancy.${field}`}
-                          type="number"
-                          value={(formData.pregnancy as any)[field] || ""}
-                          onChange={handleInputChange}
-                          className="w-full border rounded-lg p-2"
-                        />
-                      </div>
-                    ))}
-
-                    {[
-                      { label: "LMP", name: "pregnancy.LMP", type: "date" },
-                      { label: "EDC", name: "pregnancy.EDC", type: "date" },
-                      { label: "IT_date", name: "pregnancy.IT_date", type: "date" },
-                      {
-                        label: "Menarche",
-                        name: "pregnancy.menarche",
-                        type: "date",
-                      },
-                    ].map(({ label, name, type = "text" }) => (
-                      <div key={name}>
-                        <label htmlFor={name} className="block text-sm font-medium">
-                          {label}
-                        </label>
-                        <input
-                          id={name}
-                          name={name}
-                          type={type}
-                          value={
-                            (formData.pregnancy as any)[name.split(".")[1]] || ""
-                          }
-                          onChange={handleInputChange}
-                          className="w-full border rounded-lg p-2"
-                        />
-                      </div>
-                    ))}
-                  </>
-                )}
-
-              <h3 className="col-span-2 font-bold mt-4">
-                Consultation Details
-              </h3>
-              {[
-                {
-                  label: "Consultation Date",
-                  name: "consultation.consultation_date",
-                  type: "date",
-                },
-                { label: "AOG", name: "consultation.AOG", type: "number" },
-                { label: "BP", name: "consultation.BP", type: "number" },
-                {
-                  label: "Weight",
-                  name: "consultation.weight",
-                  type: "number",
-                },
-                { label: "FH", name: "consultation.FH", type: "number" },
-                { label: "FHT", name: "consultation.FHT", type: "number" },
-                { label: "Remarks", name: "consultation.remarks" },
-              ].map(({ label, name, type = "text" }) => (
-                <div key={name}>
-                  <label htmlFor={name} className="block text-sm font-medium">
-                    {label}
-                  </label>
-                  <input
-                    id={name}
-                    name={name}
-                    type={type}
-                    value={
-                      (formData.consultation as any)[name.split(".")[1]] || ""
-                    }
-                    onChange={handleInputChange}
-                    className="w-full border rounded-lg p-2"
-                  />
-                </div>
-              ))}
-
-              <h3 className="col-span-2 font-bold mt-4">Medical History</h3>
-
-              {[
-                "smoking",
-                "drugIntake",
-                "bleedingAnemia",
-                "previousCSection",
-                "consectuivemiscarriage",
-                "postPartumHemorrhage",
-                "forcepDelivery",
-                "hypertension",
-              ].map((field) => (
-                <div key={field} className="mb-4">
-                  <label
-                    htmlFor={field}
-                    className="block text-sm font-medium mb-2"
-                  >
-                    {field.toUpperCase()}
-                  </label>
-                  <input
-                    id={field}
-                    name={`medicalHistory.${field}`}
-                    type="checkbox"
-                    checked={(formData.medicalHistory as any)[field] || false}
-                    onChange={(e) => {
-                      const { name, checked } = e.target;
-                      setFormData((prev) => ({
-                        ...prev,
-                        medicalHistory: {
-                          ...prev.medicalHistory,
-                          [field]: checked,
-                        },
-                      }));
-                    }}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-0"
-                  />
-                </div>
-              ))}
-
               <div>
-                <label
-                  htmlFor="allergies"
-                  className="block text-sm font-medium mb-2"
-                >
-                  Allergies (Specify)
-                </label>
-
-                <input
-                  id="allergies"
-                  name="medicalHistory.allergies"
-                  type="text"
-                  value={(formData.medicalHistory as any)["allergies"] || ""}
-                  onChange={handleInputChange}
-                  className="w-full border rounded-lg p-2"
-                  placeholder="Write allergies here"
-                />
+                <p className="font-bold">Success</p>
+                <p>{successMessage}</p>
               </div>
-              {errorMessage && (
-                <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 rounded flex items-center">
-                  <AlertCircle size={24} className="mr-3" />
-                  {errorMessage}
-                </div>
-              )}
-
-              {successMessage && (
-                <div className="mb-4 p-3 bg-green-100 border-l-4 border-green-500 text-green-700 rounded flex items-center">
-                  <CheckCircle size={24} className="mr-3" />
-                  {successMessage}
-                </div>
-              )}
-
-              <div className="col-span-2">
-                <button
-                  type="submit"
-                  className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition"
-                >
-                  Submit
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
+        )}
 
-          {/* Use the Confirmation Modal */}
+        <div className="flex justify-between mt-4">
+          {/* Previous Button */}
+          <button
+            onClick={prevStep}
+            disabled={currentStep === 0}
+            className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          {/* If not on the last step, show Next & Skip */}
+          {currentStep < steps.length - 1 ? (
+            <div className="flex space-x-2">
+              {/* Next Button */}
+              <button
+                onClick={nextStep}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Next
+              </button>
+              {/* Skip Button (Hide on first step) */}
+              {currentStep !== 0 && (
+                <button
+                  onClick={skipStep}
+                  className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                >
+                  Skip
+                </button>
+              )}
+            </div>
+          ) : (
+            // If on the last step, show "Review & Submit"
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Review & Submit
+            </button>
+          )}
+
+          {/* Confirmation Modal for final review */}
           <ConfirmationModal
             isOpen={isModalOpen}
             data={formData}
@@ -440,7 +338,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
             onConfirm={handleSubmitConfirmed}
           />
 
-          {/* Use the QR Code Modal */}
+          {/* QR Code Modal */}
           <QRCodeModal
             isOpen={!!qrCode}
             qrCode={qrCode}

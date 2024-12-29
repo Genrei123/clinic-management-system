@@ -16,7 +16,6 @@ public abstract class Document {
     @JoinColumn(name = "clientID")
     private Patient patientID;
 
-    private String philhealthID = patientID.getPhilhealthID();
     private Date createdAt;
     private Date updatedAt;
 
@@ -34,14 +33,6 @@ public abstract class Document {
 
     public void setPatientID(Patient patientID) {
         this.patientID = patientID;
-    }
-
-    public String getPhilhealthID() {
-        return philhealthID;
-    }
-
-    public void setPhilhealthID(String philhealthID) {
-        this.philhealthID = philhealthID;
     }
 
     public Date getCreatedAt() {

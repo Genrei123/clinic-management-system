@@ -31,14 +31,13 @@ public class PatientService {
         patient.setImagePath(patientDTO.getImagePath());
         patient.setLastName(patientDTO.getLastName());
         patient.setGivenName(patientDTO.getGivenName());
-        patient.setMiddleInitial(patientDTO.getMiddleInitial());
+        patient.setMiddleName(patientDTO.getMiddleName());
         patient.setSex(patientDTO.getSex());
         patient.setAddress(patientDTO.getAddress());
         patient.setAge(patientDTO.getAge());
         patient.setBirthday(patientDTO.getBirthday());
         patient.setReligion(patientDTO.getReligion());
         patient.setOccupation(patientDTO.getOccupation());
-        patient.setPhilhealthID(patientDTO.getPhilhealthID());
 
         // Map Spouse if provided
         if (patientDTO.getSpouse() != null) {

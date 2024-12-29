@@ -4,14 +4,13 @@ export default interface Patient {
   imagePath: string;
   lastName: string;
   givenName: string;
-  middleInitial: string;
+  middleName: string;
   sex: string;
   address: string;
   age: number;
   birthday: string;
   religion: string;
   occupation: string;
-  status: string;
   spouse: {
     spouseName: string;
     spouseBirthday: string;
@@ -37,7 +36,7 @@ export default interface Patient {
   consultation: {
     consultation_date: string; // Corrected from `consultation_date`
     AOG: number;
-    BP: string;
+    BP: number;
     weight: number;
     FH: number;
     FHT: number;
