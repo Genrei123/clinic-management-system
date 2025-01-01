@@ -1,4 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react';
+import axiosInstance from '../../../config/axiosConfig';
+import { useState } from 'react';
+
 
 interface PatientFormData {
   birthday: string
@@ -11,6 +14,9 @@ interface PatientFormData {
   occupation: string
   age: number
   sex: string
+  branch: {
+    branchID: number
+  };
 }
 
 interface PatientInformationSectionProps {
@@ -55,6 +61,21 @@ const PatientInformationSection: React.FC<PatientInformationSectionProps> = ({
     { label: 'Age', name: 'age', type: 'number' },
   ]
 
+  const [branches, setBranches] = useState([]);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await axiosInstance.get('/branches'); // API endpoint for branches
+        setBranches(response.data); // Assuming response contains branch data
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+    fetchBranches();
+
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -67,7 +88,7 @@ const PatientInformationSection: React.FC<PatientInformationSectionProps> = ({
               id={name}
               name={name}
               type={type}
-              value={formData[name]}
+              value={name === 'branch' ? formData.branch.branchID : formData[name]}
               onChange={
                 name === 'birthday'
                   ? (e) => {
@@ -98,6 +119,28 @@ const PatientInformationSection: React.FC<PatientInformationSectionProps> = ({
             </option>
             <option value="M">M</option>
             <option value="F">F</option>
+          </select>
+        </div>
+        
+        <div>
+          <label htmlFor="branch">
+            Branch
+          </label>
+          <select
+            id="branch"
+            name="branch.branchID"
+            value={formData.branch.branchID}
+            onChange={handleInputChange}
+            className="w-full border rounded-lg p-2 bg-white"
+          >
+            <option value="" disabled>
+              Select...
+            </option>
+            {branches.map((branch) => (
+              <option key={branch.branchID} value={branch.branchID}>
+                {branch.branch_name}
+              </option>
+            ))}
           </select>
         </div>
       </div>

@@ -54,4 +54,7 @@ export const createEmptyPatient = (): Patient => ({
     forcepDelivery: false,
     hypertension: false,
   },
+  branch: {
+    branchID: 1,
+  }
 });

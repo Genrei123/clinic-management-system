@@ -38,6 +38,8 @@ public class PatientService {
         patient.setBirthday(patientDTO.getBirthday());
         patient.setReligion(patientDTO.getReligion());
         patient.setOccupation(patientDTO.getOccupation());
+        patient.setBranch(patientDTO.getBranch());
+
 
         // Map Spouse if provided
         if (patientDTO.getSpouse() != null) {

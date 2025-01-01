@@ -1,5 +1,7 @@
 package com.jwt.spring_security.DTO;
 
+import com.jwt.spring_security.model.Branch;
+
 import java.util.Date;
 
 public class PatientDTO {
@@ -18,10 +20,19 @@ public class PatientDTO {
     private Date lastDelivery; // Nullable
 
     // Nested DTOs for related entities
+    private Branch branch; // Nullable
     private SpouseDTO spouse; // Nullable
     private PregnancyDTO pregnancy; // Nullable
     private ConsultationDTO consultation; // Nullable
     private MedicalHistoryDTO medicalHistory; // Nullable
+
+    public Branch getBranch() {
+        return branch;
+    }
+
+    public void setBranch(Branch branch) {
+        this.branch = branch;
+    }
 
     public MedicalHistoryDTO getMedicalHistory() {
         return medicalHistory;

@@ -55,6 +55,10 @@ export default interface Patient {
     forcepDelivery: boolean;
     hypertension: boolean;
   };
+
+  branch: {
+    branchID: number;
+  };
 }
 
 

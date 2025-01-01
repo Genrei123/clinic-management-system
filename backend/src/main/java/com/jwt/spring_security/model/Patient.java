@@ -48,8 +48,17 @@ public class Patient {
     @Column(nullable = false)
     private String status = "active"; // Default status is active
 
-    // Getters and setters
+    @OneToOne
+    private Branch branch;
 
+    // Getters and setters
+    public Branch getBranch() {
+        return branch;
+    }
+
+    public void setBranch(Branch branch) {
+        this.branch = branch;
+    }
 
     public String getStatus() {
         return status;

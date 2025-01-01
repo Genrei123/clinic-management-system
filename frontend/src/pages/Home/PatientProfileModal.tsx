@@ -37,9 +37,13 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    const parsedValue = isNaN(Number(value)) ? value : Number(value);
+    console.log("Field:", name, "Value:", parsedValue);
     if (name.includes(".")) {
+      
       // Nested field (e.g., "spouse.spouseName")
       const [parent, child] = name.split(".");
+      console.log("Nested field:", name);
       setFormData((prev) => {
         const parentObj = prev[parent as keyof Patient];
         const existingNested =
@@ -49,13 +53,13 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
           ...prev,
           [parent]: {
             ...existingNested,
-            [child]: value,
+            [child]: parsedValue,
           },
         };
       });
     } else {
       // Top-level field
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: parsedValue}));
     }
   };
 
