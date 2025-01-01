@@ -50,7 +50,7 @@ const PatientInformationSection: React.FC<PatientInformationSectionProps> = ({
   }
 
   const formFields: FormField[] = [
-    { label: 'Birthday', name: 'birthday', type: 'date' },
+    
     { label: 'Patient ID', name: 'patientID' },
     { label: 'Last Name', name: 'lastName' },
     { label: 'Given Name', name: 'givenName' },
@@ -58,6 +58,7 @@ const PatientInformationSection: React.FC<PatientInformationSectionProps> = ({
     { label: 'Address', name: 'address' },
     { label: 'Religion', name: 'religion' },
     { label: 'Occupation', name: 'occupation' },
+    { label: 'Birthday', name: 'birthday', type: 'date' },
     { label: 'Age', name: 'age', type: 'number' },
   ]
 
