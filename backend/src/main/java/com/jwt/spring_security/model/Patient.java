@@ -48,7 +48,10 @@ public class Patient {
     @Column(nullable = false)
     private String status = "active"; // Default status is active
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "branchID", referencedColumnName = "branchID", unique = false)
+
+
     private Branch branch;
 
     // Getters and setters
