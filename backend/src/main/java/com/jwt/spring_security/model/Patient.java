@@ -22,6 +22,7 @@ public class Patient {
     private Character sex;
     private String address;
     private int age;
+    private String contactNumber;
 
     @Temporal(TemporalType.DATE)
     private Date birthday;
@@ -55,6 +56,15 @@ public class Patient {
     private Branch branch;
 
     // Getters and setters
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
     public Branch getBranch() {
         return branch;
     }

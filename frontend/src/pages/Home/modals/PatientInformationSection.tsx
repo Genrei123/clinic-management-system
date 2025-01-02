@@ -14,6 +14,7 @@ interface PatientFormData {
   occupation: string
   age: number
   sex: string
+  contactNumber: string;
   branch: {
     branchID: number
   };
@@ -60,6 +61,7 @@ const PatientInformationSection: React.FC<PatientInformationSectionProps> = ({
     { label: 'Occupation', name: 'occupation' },
     { label: 'Birthday', name: 'birthday', type: 'date' },
     { label: 'Age', name: 'age', type: 'number' },
+    { label: 'Contact Number', name: 'contactNumber', type: 'number' },
   ]
 
   const [branches, setBranches] = useState([]);

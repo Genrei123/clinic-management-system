@@ -18,6 +18,7 @@ public class PatientDTO {
     private String religion; // Nullable
     private String occupation; // Nullable
     private Date lastDelivery; // Nullable
+    private String contactNumber; // Nullable
 
     // Nested DTOs for related entities
     private Branch branch; // Nullable
@@ -32,6 +33,14 @@ public class PatientDTO {
 
     public void setBranch(Branch branch) {
         this.branch = branch;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
     }
 
     public MedicalHistoryDTO getMedicalHistory() {

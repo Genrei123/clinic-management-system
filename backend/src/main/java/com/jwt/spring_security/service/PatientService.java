@@ -39,6 +39,7 @@ public class PatientService {
         patient.setReligion(patientDTO.getReligion());
         patient.setOccupation(patientDTO.getOccupation());
         patient.setBranch(patientDTO.getBranch());
+        patient.setContactNumber(patientDTO.getContactNumber());
 
 
         // Map Spouse if provided
