@@ -65,16 +65,24 @@ const Report: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [servicesResponse, renderedServicesResponse, itemsResponse] = await Promise.all([
-          axiosInstance.get<Service[]>("http://localhost:8080/service/getServices"),
-          axiosInstance.get<RenderedService[]>("http://localhost:8080/service/getRenderedServices"),
-          axiosInstance.get<Item[]>("http://localhost:8080/items")
-        ]);
+        const [servicesResponse, renderedServicesResponse, itemsResponse] =
+          await Promise.all([
+            axiosInstance.get<Service[]>(
+              "http://localhost:8080/service/getServices"
+            ),
+            axiosInstance.get<RenderedService[]>(
+              "http://localhost:8080/service/getRenderedServices"
+            ),
+            axiosInstance.get<Item[]>("http://localhost:8080/items"),
+          ]);
 
+        // (Optional) If you need to store or process services separately
         setServices(servicesResponse.data);
+
         aggregateData(renderedServicesResponse.data, itemsResponse.data);
       } catch (err: any) {
         console.error("Error fetching data:", err);
+        setError("Failed to fetch data.");
       } finally {
         setLoading(false);
       }
@@ -83,31 +91,74 @@ const Report: React.FC = () => {
     fetchData();
   }, []);
 
-  const aggregateData = (renderedServices: RenderedService[], items: Item[]) => {
+  /**
+   * Aggregates:
+   *  - serviceCountMap: how many times each service was rendered
+   *  - medicineCountMap: how many of each medicine were sold (calculated by item_quantity - item_stock)
+   *  - stockMap: current stock of each medicine
+   */
+  const aggregateData = (
+    renderedServices: RenderedService[],
+    items: Item[]
+  ) => {
     const serviceCountMap: { [key: string]: number } = {};
     const medicineCountMap: { [key: string]: number } = {};
     const stockMap: { [key: string]: number } = {};
 
-    // Initialize stockMap and medicineCountMap with current stock levels and initial quantities
+    // Initialize stockMap and medicineCountMap
     items.forEach((item) => {
       stockMap[item.item_name] = item.item_stock;
-      medicineCountMap[item.item_name] = item.item_quantity - item.item_stock;
+      // “Sold” = initial item_quantity - current item_stock
+      medicineCountMap[item.item_name] =
+        (medicineCountMap[item.item_name] || 0) +
+        (item.item_quantity - item.item_stock);
     });
 
+    // Aggregate services
     renderedServices.forEach((renderedService) => {
-      // Aggregate services
       renderedService.services.forEach((service) => {
-        serviceCountMap[service.serviceName] = (serviceCountMap[service.serviceName] || 0) + 1;
+        serviceCountMap[service.serviceName] =
+          (serviceCountMap[service.serviceName] || 0) + 1;
       });
-
-      // We don't need to aggregate medicines sold here anymore as it's calculated from the items data
     });
 
-    setServiceData(Object.entries(serviceCountMap).map(([name, value]) => ({ name, value })));
-    setMedicineData(Object.entries(medicineCountMap).map(([name, value]) => ({ name, value })));
-    setStockData(Object.entries(stockMap).map(([name, value]) => ({ name, value })));
+    // Convert maps to ChartData
+    setServiceData(
+      Object.entries(serviceCountMap).map(([name, value]) => ({
+        name,
+        value,
+      }))
+    );
+    setMedicineData(
+      Object.entries(medicineCountMap).map(([name, value]) => ({
+        name,
+        value,
+      }))
+    );
+    setStockData(
+      Object.entries(stockMap).map(([name, value]) => ({
+        name,
+        value,
+      }))
+    );
   };
 
+  /**
+   * Combine medicineData (sold) and stockData into a single array
+   * so that each row can show: Medicine Name | Sold | Current Stock
+   */
+  const combinedMedicineData = medicineData.map((medicine) => {
+    const stock = stockData.find((s) => s.name === medicine.name);
+    return {
+      name: medicine.name,
+      sold: medicine.value,
+      stock: stock ? stock.value : 0,
+    };
+  });
+
+  /** 
+   * For your pie charts, calculates the conic-gradient style
+   */
   const calculateGradient = (data: ChartData[]) => {
     const total = data.reduce((acc, item) => acc + item.value, 0);
     let cumulativePercentage = 0;
@@ -125,8 +176,19 @@ const Report: React.FC = () => {
     );
   };
 
+  /**
+   * Helper to pick colors for the segments
+   */
   const getColor = (index: number) => {
-    const colors = ["#4EAACB", "#FF1E1E", "#54FB3E", "#FFA500", "#800080", "#FFB6C1", "#8A2BE2"];
+    const colors = [
+      "#4EAACB",
+      "#FF1E1E",
+      "#54FB3E",
+      "#FFA500",
+      "#800080",
+      "#FFB6C1",
+      "#8A2BE2",
+    ];
     return colors[index % colors.length];
   };
 
@@ -138,43 +200,61 @@ const Report: React.FC = () => {
       <Sidebar />
       <div className="w-full">
         <Navbar />
-        <main className="p-6">
-          <section className="bg-white shadow rounded-lg overflow-hidden mb-6">
+
+        <main className="p-6 space-y-6">
+          {/* Services Table */}
+          <section className="bg-white shadow rounded-lg p-4">
+            <h2 className="text-xl font-bold mb-4">Services Rendered</h2>
             <table className="w-full text-left table-auto border-collapse">
               <thead className="bg-gray-200">
                 <tr>
-                  <th className="px-4 py-2">Category</th>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2">Count / Sold / Stock</th>
+                  <th className="px-4 py-2">Service Name</th>
+                  <th className="px-4 py-2">Times Rendered</th>
                 </tr>
               </thead>
               <tbody>
                 {serviceData.map((service, index) => (
-                  <tr key={`service-${index}`} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="border px-4 py-2">Service</td>
+                  <tr
+                    key={service.name}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
                     <td className="border px-4 py-2">{service.name}</td>
                     <td className="border px-4 py-2">{service.value}</td>
-                  </tr>
-                ))}
-                {medicineData.map((medicine, index) => (
-                  <tr key={`medicine-${index}`} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="border px-4 py-2">Medicine Sold</td>
-                    <td className="border px-4 py-2">{medicine.name}</td>
-                    <td className="border px-4 py-2">{medicine.value}</td>
-                  </tr>
-                ))}
-                {stockData.map((stock, index) => (
-                  <tr key={`stock-${index}`} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                    <td className="border px-4 py-2">Current Stock</td>
-                    <td className="border px-4 py-2">{stock.name}</td>
-                    <td className="border px-4 py-2">{stock.value}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </section>
 
+          {/* Medicines Table */}
+          <section className="bg-white shadow rounded-lg p-4">
+            <h2 className="text-xl font-bold mb-4">Medicines</h2>
+            <table className="w-full text-left table-auto border-collapse">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="px-4 py-2">Medicine Name</th>
+                  <th className="px-4 py-2">Sold</th>
+                  <th className="px-4 py-2">Current Stock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {combinedMedicineData.map((med, index) => (
+                  <tr
+                    key={med.name}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="border px-4 py-2">{med.name}</td>
+                    <td className="border px-4 py-2">{med.sold}</td>
+                    <td className="border px-4 py-2">{med.stock}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Pie Charts Section */}
           <section className="grid grid-cols-2 gap-6">
+            {/* Services Pie Chart */}
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4">Services Rendered</h2>
               <div className="flex items-center justify-center">
@@ -201,6 +281,7 @@ const Report: React.FC = () => {
               </ul>
             </div>
 
+            {/* Medicines Pie Chart */}
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4">Medicines Sold</h2>
               <div className="flex items-center justify-center">
@@ -227,8 +308,6 @@ const Report: React.FC = () => {
               </ul>
             </div>
           </section>
-
-        
         </main>
       </div>
     </div>
@@ -236,8 +315,8 @@ const Report: React.FC = () => {
 };
 
 export default Report;
+
 // This function can be used to process or store the services data if needed
 const setServices = (data: Service[]) => {
   console.log("Services data:", data);
 };
-

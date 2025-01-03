@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 // Create an axios instance
 const axiosInstance = axios.create({
@@ -8,14 +8,9 @@ const axiosInstance = axios.create({
   },
 });
 
-// Interceptor to dynamically add the token to headers before each request
+// Interceptor to add the Authorization header
 axiosInstance.interceptors.request.use((config) => {
-  const storedToken = localStorage.getItem("token"); // Fetch the token dynamically
-  
-  if (!storedToken) {
-      console.warn("No token found in localStorage.");
-  }
-
+  const storedToken = localStorage.getItem("token");
   if (storedToken) {
     config.headers.Authorization = `Bearer ${storedToken}`;
   }
@@ -24,6 +19,14 @@ axiosInstance.interceptors.request.use((config) => {
   return Promise.reject(error); // Handle request errors
 });
 
+// List of protected routes
+const protectedRoutes = [
+  "/dashboard",
+  "/profile",
+  "/settings",
+  // Add other protected routes here
+];
+
 // Interceptor to handle errors such as 401 Unauthorized
 axiosInstance.interceptors.response.use(
   (response) => response, // Pass through successful responses
@@ -31,7 +34,12 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       console.warn("Unauthorized: Token expired or invalid. Redirecting to login.");
       localStorage.removeItem("token"); // Remove the token
-      window.location.href = "/login"; // Redirect to login page
+
+      // Check if the current URL is a protected route
+      const currentPath = window.location.pathname;
+      if (protectedRoutes.includes(currentPath)) {
+        window.location.href = "/"; // Redirect to login page
+      }
     }
     return Promise.reject(error); // Pass the error to the calling code
   }

@@ -48,15 +48,16 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
     spouse_contact_number: "Spouse's Contact Number",
     spouse_age: "Spouse's Age",
     // Pregnancy keys
+    pregnancy_id: "Pregnancy ID",
     gravida: "Number of Pregnancies",
     para: "Number of Births",
     term: "Full-term Births",
     pre_term: "Pre-term Births",
     abortion: "Number of Abortions",
     living: "Living Children",
-    LMP: "Last Menstrual Period",
+    lmp: "Last Menstrual Period",
     edc: "Estimated Due Date",
-    IT_date: "Initial Treatment Date",
+    it_date: "Initial Treatment Date",
     menarche: "Age at First Menstruation",
     // Consultation keys
     consultation_id: "Medical History ID",
@@ -213,6 +214,8 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
   if (!isOpen) return null;
 
+  
+
   return (
     <>
       <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
@@ -222,7 +225,8 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
             <table className="w-full table-auto border-collapse">
               <tbody>
                 {Object.entries(formData)
-                  .filter(([key]) => key !== "imagePath" && key !== "clientID" && key !== "status" && key !== "middleInitial" && key !== "varcharID")
+                  .filter(([key]) => key !== "imagePath" && key !== "clientID" && key !== "status" && key !== "middleInitial" && key !== "varcharID" && key !== "it_date")
+                  
                   .map(([key, value]) => (
                     
                     <tr key={key} className="border-b border-gray-200 last:border-b-0">
@@ -230,6 +234,9 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
                         {friendlyTerms[key] || key}:
                       </td>
                       <td className="py-3 pl-6 text-left align-top">
+
+                        
+                        
                         {renderValue(value, key)}
                       </td>
                     </tr>
