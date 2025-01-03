@@ -14,6 +14,7 @@ export const createEmptyPatient = (): Patient => ({
   religion: "",
   occupation: "",
   contactNumber: "",
+  status: "",
   spouse: {
     spouseName: "",
     spouseBirthday: "",

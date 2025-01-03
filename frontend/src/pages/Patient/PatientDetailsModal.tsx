@@ -21,10 +21,11 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
   // Friendly terms mapping
   const friendlyTerms: { [key: string]: string } = {
-    clientID: "Patient ID",
+    patientID : "Patient ID",
+    varcharID : "Patient ID",
     lastName: "Last Name",
     givenName: "First Name",
-    middleInitial: "Middle Initial",
+    middleName: "Middle Name",
     sex: "Sex",
     address: "Address",
     age: "Age",
@@ -37,7 +38,54 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
     pregnancy: "Pregnancy Information",
     consultation: "Consultation Information",
     medicalHistory: "Medical History",
-    // Add more mappings as needed
+    contactNumber: "Contact Number",
+    // Nested spouse keys
+    spouse_id: "Spouse ID",
+    spouse_name: "Spouse Name",
+    spouse_birthday: "Spouse's Date of Birth",
+    spouse_religion: "Spouse's Religion",
+    spouse_occupation: "Spouse's Occupation",
+    spouse_contact_number: "Spouse's Contact Number",
+    spouse_age: "Spouse's Age",
+    // Pregnancy keys
+    gravida: "Number of Pregnancies",
+    para: "Number of Births",
+    term: "Full-term Births",
+    pre_term: "Pre-term Births",
+    abortion: "Number of Abortions",
+    living: "Living Children",
+    LMP: "Last Menstrual Period",
+    edc: "Estimated Due Date",
+    IT_date: "Initial Treatment Date",
+    menarche: "Age at First Menstruation",
+    // Consultation keys
+    consultation_id: "Medical History ID",
+    consultation_date: "Consultation Date",
+    aog: "Age of Gestation (weeks)",
+    bp: "Blood Pressure",
+    weight: "Weight",
+    fh: "Fundal Height",
+    fht: "Fetal Heart Tone",
+    remarks: "Remarks",
+    // Medical history keys
+    medical_history_id: "Medical History ID",
+    smoking: "Smoker",
+    allergies: "Allergies",
+    drug_intake: "Taking Medications",
+    bleeding_anemia: "History of Bleeding/Anemia",
+    diabetes_congenital_anomalies: "Diabetes or Congenital Anomalies",
+    previous_C_section: "Previous C-Section",
+    consectuive_miscarriages: "Consecutive Miscarriages",
+    post_partum_hemorrhage: "Postpartum Hemorrhage",
+    forcep_delivery: "Forceps Delivery",
+    hypertension: "Hypertension",
+    // Branch keys
+    branch: "Branch Information",
+    branchID: "Branch ID",
+    branch_name: "Branch Name",
+    branch_address: "Branch Address",
+    branch_contact: "Branch Contact Number",
+    
   };
 
   useEffect(() => {
@@ -90,7 +138,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
 
     if (typeof value === "object" && value !== null) {
       // Handle the 'spouse' section
-      if (keyPath.toLowerCase() === "spouse") {
+      if (keyPath.toLowerCase() === "spouse_id") {
         const hasSpouse =
           value &&
           Object.keys(value).some(
@@ -174,8 +222,9 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
             <table className="w-full table-auto border-collapse">
               <tbody>
                 {Object.entries(formData)
-                  .filter(([key]) => key !== "imagePath")
+                  .filter(([key]) => key !== "imagePath" && key !== "clientID" && key !== "status" && key !== "middleInitial" && key !== "varcharID")
                   .map(([key, value]) => (
+                    
                     <tr key={key} className="border-b border-gray-200 last:border-b-0">
                       <td className="py-3 pr-6 font-medium text-right align-top w-1/4">
                         {friendlyTerms[key] || key}:

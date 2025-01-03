@@ -12,6 +12,7 @@ import SpouseDetailsSection from "./modals/SpouseDetailsSection";
 import QRCodeModal from "../../components/QRCodeModal";
 import ConfirmationModal from "./ConfirmationModal";
 import axiosInstance from "../../config/axiosConfig";
+import SuccessAlert from "../../components/SuccessAlert";
 
 interface PatientProfileModalProps {
   isOpen: boolean;
@@ -165,11 +166,15 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
       setSuccessMessage(
         `Patient profile for ${newPatient.lastName}, ${newPatient.givenName} (ID: ${newPatient.clientID}) was successfully created. Initial check-up logged and QR code generated.`
       );
+      alert("Successfully created patient profile.");
+      onClose();
     } catch (error) {
       console.error("Error creating patient:", error);
       setErrorMessage(
         "An error occurred while creating the patient profile. Please try again."
       );
+      alert("An error occurred while creating the patient profile. Please try again.");
+      onClose();
       setFormData(createEmptyPatient());
     } finally {
       setIsModalOpen(false);
@@ -245,7 +250,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
     if (successMessage) {
       const timer = setTimeout(() => {
         setSuccessMessage(null);
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
@@ -253,6 +258,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
   if (!isOpen) return null;
 
   return (
+    
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-500 bg-opacity-75 flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl h-[80vh] relative flex flex-col">
         <button
@@ -271,29 +277,7 @@ const PatientProfileModal: React.FC<PatientProfileModalProps> = ({
         {errorMessage && (
           <div className="text-red-500 text-sm mt-2">{errorMessage}</div>
         )}
-        {successMessage && (
-          <div
-            className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
-            role="alert"
-          >
-            <div className="flex">
-              <div className="py-1">
-                <svg
-                  className="fill-current h-6 w-6 text-green-500 mr-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold">Success</p>
-                <p>{successMessage}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         <div className="flex justify-between mt-4">
           {/* Previous Button */}
           <button

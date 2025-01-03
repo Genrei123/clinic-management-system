@@ -20,7 +20,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     patientID: "Patient ID",
     lastName: "Last Name",
     givenName: "First Name",
-    middleInitial: "Middle Initial",
+    middleName: "Middle Name",
     sex: "Sex",
     address: "Address",
     age: "Age",
@@ -33,6 +33,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     pregnancy: "Pregnancy Information",
     consultation: "Consultation Information",
     medicalHistory: "Medical History",
+    contactNumber: "Contact Number",
     // Nested spouse keys
     spouseName: "Spouse Name",
     spouseBirthday: "Spouse's Date of Birth",
@@ -52,7 +53,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     IT_date: "Initial Treatment Date",
     menarche: "Age at First Menstruation",
     // Consultation keys
-    consultationDate: "Consultation Date",
+    consultation_date: "Consultation Date",
     AOG: "Age of Gestation (weeks)",
     BP: "Blood Pressure",
     weight: "Weight",
@@ -112,7 +113,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             <tbody>
               {Object.entries(data)
                 .filter(
-                  ([key]) => key !== "imagePath" && key !== "clientID" // Filter unused keys
+                  ([key]) => key !== "imagePath" && key !== "clientID" && key !== "status" && key !== "branch" // Filter unused keys
                 )
                 .map(([key, value]) => (
                   <tr

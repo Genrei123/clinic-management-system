@@ -12,6 +12,7 @@ export default interface Patient {
   religion: string;
   occupation: string;
   contactNumber: string;
+  status: string;
   spouse: {
     spouseName: string;
     spouseBirthday: string;

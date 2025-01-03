@@ -28,10 +28,10 @@ const SuccessAlert: React.FC<SuccessAlertProps> = ({ patientName, onDismiss }) =
 
         <div className="flex-1">
           <strong className="block font-medium text-gray-900">
-            {patientName} Profile Created
+            Patient Profile Created
           </strong>
           <p className="mt-1 text-sm text-gray-700">
-            The profile for {patientName} has been successfully created.
+            The profile has been successfully created.
           </p>
         </div>
 

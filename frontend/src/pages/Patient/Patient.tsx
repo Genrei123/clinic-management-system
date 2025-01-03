@@ -2,13 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import Navbar from "../../components/Navbar";
-import {
-  Camera,
-  Upload,
-  FileText,
-  UserCheck,
-  Calendar,
-} from "lucide-react";
+import { Camera, Upload, FileText, UserCheck, Calendar, Phone } from "lucide-react";
 import { getPatientById } from "../../services/patientService";
 import useModal from "../Home/useModal";
 import RenderServicesModal from "./RenderServicesModal";
@@ -45,6 +39,8 @@ interface Patient {
   patientID: string;
   clientID: Number;
   name: string;
+  sex: string;
+  contactNumber: string;
   expectedDateConfinement?: string;
   visitHistory: Visit[];
   files: File[];
@@ -70,6 +66,8 @@ const Patient: React.FC = () => {
     clientID: 0,
     name: "",
     expectedDateConfinement: "",
+    sex: "",
+    contactNumber: "",
     visitHistory: [],
     files: [],
     renderedServices: [],
@@ -96,7 +94,9 @@ const Patient: React.FC = () => {
         } catch (serviceError: any) {
           // Generic error handling for services fetch
           if (serviceError.response?.status === 404) {
-            console.log(`No services found for patient ${patientInfo.clientID}`);
+            console.log(
+              `No services found for patient ${patientInfo.clientID}`
+            );
           } else {
             console.warn("Error fetching services:", serviceError);
           }
@@ -117,10 +117,12 @@ const Patient: React.FC = () => {
           id: patientInfo?.patientID || "",
           patientID: patientInfo?.patientID || "",
           clientID: patientInfo?.clientID || 0,
+          sex: patientInfo?.sex || "",
+          contactNumber: patientInfo?.contactNumber || "",
           name: patientInfo
-            ? `${patientInfo.givenName || ""} ${
-                patientInfo.middleInitial || ""
-              } ${patientInfo.lastName || ""}`.trim()
+            ? `${patientInfo.givenName || ""} ${patientInfo.middleName || ""} ${
+                patientInfo.lastName || ""
+              }`.trim()
             : "",
           expectedDateConfinement: patientInfo.pregnancy?.edc
             ? new Date(patientInfo.pregnancy.edc).toISOString().split("T")[0]
@@ -142,6 +144,8 @@ const Patient: React.FC = () => {
           patientID: "",
           clientID: 0,
           name: "",
+          sex: "",
+          contactNumber: "",
           expectedDateConfinement: "",
           visitHistory: [],
           files: [],
@@ -246,6 +250,8 @@ const Patient: React.FC = () => {
     );
   }, [selectedForm, navigate, patient.id]);
 
+  const handleServiceRender = () => {};
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -301,42 +307,70 @@ const Patient: React.FC = () => {
                       </span>{" "}
                       {patient.id}
                     </p>
-                    <p className="flex items-center text-gray-700">
-                      <Calendar className="w-5 h-5 mr-2 text-blue-500" />
-                      <span className="font-semibold mr-2">EDC:</span>{" "}
-                      {patient.expectedDateConfinement}
-                    </p>
+
+                    {patient.sex === "F" ? (
+                      <>
+                        <p className="flex items-center text-gray-700">
+                          <Calendar className="w-5 h-5 mr-2 text-blue-500" />
+                          <span className="font-semibold mr-2">
+                            Expected Date of Confinement:
+                          </span>
+                          {patient.expectedDateConfinement}
+                        </p>
+
+                        <p className= "flex items-cecnter text-gray-700">
+                          <Phone className="w-5 h-5 mr-2 text-blue-500" />
+                          <span className="font-semibold mr-2">
+                            Contact Number:
+                          </span>
+                          {patient.contactNumber}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-semibold mr-2">
+                          Contact Number:
+                        </span>
+                        {patient.contactNumber}
+                      </>
+                    )}
                   </div>
                 </div>
 
                 <div className="space-y-6">
                   <div className="bg-gray-50 p-4 rounded-lg shadow">
                     <div className="space-y-4">
-                      <div>
-                        <label
-                          htmlFor="claim-form"
-                          className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                          Select Claim Form
-                        </label>
-                        <select
-                          id="claim-form"
-                          onChange={(e) => setSelectedForm(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Select Claim Form</option>
-                          <option value="CSF">CSF</option>
-                          <option value="Claim Form 1">Claim Form 1</option>
-                          <option value="Claim Form 2">Claim Form 2</option>
-                        </select>
-                      </div>
-                      <button
-                        onClick={handleGeneratePDF}
-                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
-                      >
-                        <FileText className="w-5 h-5 mr-2" />
-                        Generate PDF
-                      </button>
+                      {/* Only female get a claim form */}
+                      {patient.sex === "F" && (
+                        <>
+                          <div>
+                            <label
+                              htmlFor="claim-form"
+                              className="block text-sm font-medium text-gray-700 mb-1"
+                            >
+                              Select Claim Form
+                            </label>
+                            <select
+                              id="claim-form"
+                              onChange={(e) => setSelectedForm(e.target.value)}
+                              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Select Claim Form</option>
+                              <option value="CSF">CSF</option>
+                              <option value="Claim Form 1">Claim Form 1</option>
+                              <option value="Claim Form 2">Claim Form 2</option>
+                            </select>
+                          </div>
+
+                          <button
+                            onClick={handleGeneratePDF}
+                            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 ease-in-out flex items-center justify-center"
+                          >
+                            <FileText className="w-5 h-5 mr-2" />
+                            Generate PDF
+                          </button>
+                        </>
+                      )}
 
                       <input
                         type="file"
