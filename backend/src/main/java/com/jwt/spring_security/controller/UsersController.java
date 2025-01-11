@@ -81,5 +81,28 @@ public class UsersController {
         return userRepo.findAll();
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        try {
+            usersService.sendResetPasswordEmail(email);
+            return ResponseEntity.ok(Map.of("message", "Reset link sent in the e-mail."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "E-mail is not registered."));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+        try {
+            usersService.resetPassword(token, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Password reset successful!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Failed to reset password."));
+        }
+    }
+
 
 }

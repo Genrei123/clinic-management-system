@@ -4,35 +4,39 @@ import com.jwt.spring_security.model.Users;
 import com.jwt.spring_security.repo.UserRepo;
 import com.jwt.spring_security.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class UsersService {
 
     @Autowired
-    UserRepo userRepo;
+    private UserRepo userRepo;
 
     @Autowired
-    AuthenticationManager authManager;
+    private AuthenticationManager authManager;
 
     @Autowired
     private JWTService jwtService;
 
-    private BCryptPasswordEncoder passwordEncoder; // Injected BCryptPasswordEncoder
+    @Autowired
+    private JavaMailSender mailSender;
 
-    // get all users
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    // Get all users
     public Iterable<Users> getAllUsers() {
         return userRepo.findAll();
     }
-
-
 
     public Users registerUser(Users user) {
         // Validate and set role
@@ -47,7 +51,7 @@ public class UsersService {
         }
 
         // Encrypts Password
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Use injected encoder
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // Saves User
         return userRepo.save(user);
@@ -88,7 +92,7 @@ public class UsersService {
             existingUser.setUsername(userDetails.getUsername());
 
             if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-                String encryptedPassword = passwordEncoder.encode(userDetails.getPassword()); // Use injected encoder
+                String encryptedPassword = passwordEncoder.encode(userDetails.getPassword());
                 existingUser.setPassword(encryptedPassword);
             }
 
@@ -104,5 +108,38 @@ public class UsersService {
             return true;
         }
         return false;
+    }
+
+    public void sendResetPasswordEmail(String email) {
+        logger.info("Password reset request for email: {}", email);
+        Users user = userRepo.findByEmail(email);
+        if (user == null) {
+            logger.error("E-mail not found: {}", email);
+            throw new RuntimeException("E-mail is not registered.");
+        }
+
+        String token = UUID.randomUUID().toString();
+        user.setResetToken(token);
+        userRepo.save(user);
+
+        String resetLink = "http://localhost:5173/reset-password/" + token;
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Password Reset Request");
+        message.setText("To reset your password, click the link below:\n" + resetLink);
+        mailSender.send(message);
+
+        logger.info("Password reset email sent to: {}", email);
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        Users user = userRepo.findByResetToken(token);
+        if (user == null) {
+            throw new RuntimeException("Invalid token.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        userRepo.save(user);
     }
 }
