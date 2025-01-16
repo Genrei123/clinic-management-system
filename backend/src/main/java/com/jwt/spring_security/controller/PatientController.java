@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.Instant;
@@ -55,19 +56,27 @@ public class PatientController {
                 return ResponseEntity.badRequest().body("No file was uploaded.");
             }
 
-            // Upload the file to Imgur
-            String imageUrl = uploadImageToImgur(file);
-            if (imageUrl == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload to Imgur.");
+            // Use a standard static folder within the backend resources
+            String uploadDir = new File("images").getAbsolutePath();
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs();  // Create directory if it doesn't exist
             }
 
-            // Save the returned image URL in the patient record
-            patient.setImagePath(imageUrl);
+            // Generate a unique filename
+            String uniqueFilename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(uploadDir, uniqueFilename);
+
+            // Save the file locally
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Save relative path in the patient record
+            patient.setImagePath("/images/" + uniqueFilename);
             patientRepo.save(patient);
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Image uploaded successfully");
-            response.put("imagePath", imageUrl);
+            response.put("imagePath", "/images/" + uniqueFilename);
 
             return ResponseEntity.ok(response);
 

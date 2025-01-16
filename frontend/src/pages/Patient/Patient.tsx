@@ -133,7 +133,7 @@ const Patient: React.FC = () => {
         });
 
         if (patientInfo?.imagePath) {
-          setPatientImage(patientInfo.imagePath);
+          setPatientImage("http://localhost:8080" + patientInfo.imagePath);
         } else {
           setPatientImage(null);
         }
